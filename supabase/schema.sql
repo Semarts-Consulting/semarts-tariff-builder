@@ -142,6 +142,40 @@ create table if not exists public.direct_cost_data (
   constraint direct_cost_data_project_cost_unique unique (project_local_id, description, cost_by_type)
 );
 
+create table if not exists public.employee_cost_import_batches (
+  import_batch_id text primary key,
+  project_local_id text not null references public.projects(local_id) on delete cascade,
+  source_file_name text not null,
+  uploaded_at timestamptz not null,
+  row_count integer not null default 0,
+  total_fte numeric not null default 0,
+  weighted_fte numeric not null default 0,
+  has_issues boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.employee_cost_data (
+  id uuid primary key default gen_random_uuid(),
+  project_local_id text not null references public.projects(local_id) on delete cascade,
+  import_batch_id text not null references public.employee_cost_import_batches(import_batch_id) on delete cascade,
+  role text not null,
+  role_type text not null,
+  fte numeric not null,
+  time_percent numeric not null,
+  source_file_name text not null,
+  uploaded_at timestamptz not null,
+  row_fingerprint text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint employee_cost_data_fte_non_negative check (fte >= 0),
+  constraint employee_cost_data_time_percent_range check (time_percent >= 0 and time_percent <= 100),
+  constraint employee_cost_data_role_type_check check (
+    role_type in ('Exco', 'Director', 'Head', 'Senior Manager', 'Manager', 'Colleague')
+  ),
+  constraint employee_cost_data_project_role_unique unique (project_local_id, role, role_type)
+);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -202,6 +236,16 @@ create trigger direct_cost_data_set_updated_at
 before update on public.direct_cost_data
 for each row execute function public.set_updated_at();
 
+drop trigger if exists employee_cost_import_batches_set_updated_at on public.employee_cost_import_batches;
+create trigger employee_cost_import_batches_set_updated_at
+before update on public.employee_cost_import_batches
+for each row execute function public.set_updated_at();
+
+drop trigger if exists employee_cost_data_set_updated_at on public.employee_cost_data;
+create trigger employee_cost_data_set_updated_at
+before update on public.employee_cost_data
+for each row execute function public.set_updated_at();
+
 alter table public.projects enable row level security;
 alter table public.project_data_inputs enable row level security;
 alter table public.project_cost_pools enable row level security;
@@ -212,6 +256,8 @@ alter table public.asset_import_batches enable row level security;
 alter table public.asset_data enable row level security;
 alter table public.direct_cost_import_batches enable row level security;
 alter table public.direct_cost_data enable row level security;
+alter table public.employee_cost_import_batches enable row level security;
+alter table public.employee_cost_data enable row level security;
 
 -- RLS policies should be added with authentication.
 -- Until auth is implemented, keep the app on local browser storage.

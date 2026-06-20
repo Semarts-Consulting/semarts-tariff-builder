@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import type {
   AssetInput,
   DirectCostInput,
+  EmployeeCostInput,
   LocalProjectBackup,
   HalfHourlyImportRow,
   Project,
@@ -261,6 +262,85 @@ function fromDirectCostDataRow(row: {
     description: row.description,
     costByType: row.cost_by_type,
     annualValue: row.annual_value,
+    comment: "",
+    sourceFileName: row.source_file_name,
+    uploadedAt: row.uploaded_at,
+    importBatchId: row.import_batch_id,
+    rowFingerprint: row.row_fingerprint
+  };
+}
+
+function hasEmployeeCostIssues(row: EmployeeCostInput) {
+  return !row.role.trim() || row.fte < 0 || row.timePercent < 0 || row.timePercent > 100;
+}
+
+function getEmployeeCostBatchRows(projectId: string, rows: EmployeeCostInput[], userId: string) {
+  const batches = new Map<string, EmployeeCostInput[]>();
+
+  rows.forEach((row) => {
+    const batchId = row.importBatchId || `manual-${row.id}`;
+    const existingRows = batches.get(batchId) ?? [];
+    existingRows.push(row);
+    batches.set(batchId, existingRows);
+  });
+
+  return Array.from(batches.entries()).map(([importBatchId, batchRows]) => {
+    const latestRow = [...batchRows].sort((a, b) =>
+      (b.uploadedAt || "").localeCompare(a.uploadedAt || "")
+    )[0];
+
+    return {
+      user_id: userId,
+      import_batch_id: importBatchId,
+      project_local_id: projectId,
+      source_file_name: latestRow?.sourceFileName || "Manual entry",
+      uploaded_at: latestRow?.uploadedAt || new Date().toISOString(),
+      row_count: batchRows.length,
+      total_fte: batchRows.reduce((total, row) => total + row.fte, 0),
+      weighted_fte: batchRows.reduce(
+        (total, row) => total + row.fte * (row.timePercent / 100),
+        0
+      ),
+      has_issues: batchRows.some(hasEmployeeCostIssues)
+    };
+  });
+}
+
+function toEmployeeCostDataRow(projectId: string, row: EmployeeCostInput, userId: string) {
+  const uploadedAt = row.uploadedAt || new Date().toISOString();
+  const importBatchId = row.importBatchId || `manual-${row.id}`;
+
+  return {
+    user_id: userId,
+    project_local_id: projectId,
+    import_batch_id: importBatchId,
+    role: row.role,
+    role_type: row.roleType,
+    fte: row.fte,
+    time_percent: row.timePercent,
+    source_file_name: row.sourceFileName || "Manual entry",
+    uploaded_at: uploadedAt,
+    row_fingerprint: row.rowFingerprint || row.id
+  };
+}
+
+function fromEmployeeCostDataRow(row: {
+  id: string;
+  role: string;
+  role_type: EmployeeCostInput["roleType"];
+  fte: number;
+  time_percent: number;
+  source_file_name: string;
+  uploaded_at: string;
+  import_batch_id: string;
+  row_fingerprint: string;
+}): EmployeeCostInput {
+  return {
+    id: row.id,
+    role: row.role,
+    roleType: row.role_type,
+    fte: row.fte,
+    timePercent: row.time_percent,
     comment: "",
     sourceFileName: row.source_file_name,
     uploadedAt: row.uploaded_at,
@@ -808,6 +888,122 @@ export async function clearDirectCostDataFromSupabase(projectId: string) {
 
   const { error } = await supabase
     .from("direct_cost_import_batches")
+    .delete()
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function saveEmployeeCostDataToSupabase(
+  projectId: string,
+  rows: EmployeeCostInput[]
+) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const batchRows = getEmployeeCostBatchRows(projectId, rows, userId);
+  const dataRows = rows.map((row) => toEmployeeCostDataRow(projectId, row, userId));
+
+  if (batchRows.length > 0) {
+    const { error } = await supabase
+      .from("employee_cost_import_batches")
+      .upsert(batchRows, { onConflict: "import_batch_id" });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  if (dataRows.length > 0) {
+    const { error } = await supabase
+      .from("employee_cost_data")
+      .upsert(dataRows, { onConflict: "project_local_id,role,role_type" });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  return true;
+}
+
+export async function loadEmployeeCostDataFromSupabase(projectId: string) {
+  if (!supabase) {
+    return [];
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("employee_cost_data")
+    .select(
+      "id, role, role_type, fte, time_percent, source_file_name, uploaded_at, import_batch_id, row_fingerprint"
+    )
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId)
+    .order("role", { ascending: true })
+    .order("role_type", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map(fromEmployeeCostDataRow);
+}
+
+export async function deleteEmployeeCostBatchFromSupabase(batchId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("employee_cost_import_batches")
+    .delete()
+    .eq("import_batch_id", batchId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function clearEmployeeCostDataFromSupabase(projectId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("employee_cost_import_batches")
     .delete()
     .eq("project_local_id", projectId)
     .eq("user_id", userId);

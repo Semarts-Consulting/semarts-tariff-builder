@@ -129,8 +129,11 @@ export type EmployeeCostInput = {
   roleType: EmployeeRoleType;
   fte: number;
   timePercent: number;
-  hourlyRate: number;
   comment: string;
+  sourceFileName: string;
+  uploadedAt: string;
+  importBatchId: string;
+  rowFingerprint: string;
 };
 
 export type IndirectOverheadInput = {

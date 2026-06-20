@@ -4,6 +4,7 @@ import type {
   CostPoolRow,
   DataInputRow,
   DirectCostInput,
+  EmployeeCostInput,
   ProjectStatus
 } from "@/types/project";
 
@@ -308,6 +309,72 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["direct_cost_data"]["Insert"]>;
+        Relationships: [];
+      };
+      employee_cost_import_batches: {
+        Row: {
+          import_batch_id: string;
+          project_local_id: string;
+          user_id: string | null;
+          source_file_name: string;
+          uploaded_at: string;
+          row_count: number;
+          total_fte: number;
+          weighted_fte: number;
+          has_issues: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          import_batch_id: string;
+          project_local_id: string;
+          user_id?: string | null;
+          source_file_name: string;
+          uploaded_at: string;
+          row_count?: number;
+          total_fte?: number;
+          weighted_fte?: number;
+          has_issues?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["employee_cost_import_batches"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      employee_cost_data: {
+        Row: {
+          id: string;
+          project_local_id: string;
+          user_id: string | null;
+          import_batch_id: string;
+          role: string;
+          role_type: EmployeeCostInput["roleType"];
+          fte: number;
+          time_percent: number;
+          source_file_name: string;
+          uploaded_at: string;
+          row_fingerprint: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_local_id: string;
+          user_id?: string | null;
+          import_batch_id: string;
+          role: string;
+          role_type: EmployeeCostInput["roleType"];
+          fte: number;
+          time_percent: number;
+          source_file_name: string;
+          uploaded_at: string;
+          row_fingerprint: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["employee_cost_data"]["Insert"]>;
         Relationships: [];
       };
     };

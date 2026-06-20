@@ -262,8 +262,11 @@ export function createEmployeeCostInput(): EmployeeCostInput {
     roleType: "Manager",
     fte: 0,
     timePercent: 0,
-    hourlyRate: 0,
-    comment: ""
+    comment: "",
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: ""
   };
 }
 

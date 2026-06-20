@@ -22,14 +22,18 @@ import {
   clearAssetDataFromSupabase,
   clearBoundaryMeterDataFromSupabase,
   clearDirectCostDataFromSupabase,
+  clearEmployeeCostDataFromSupabase,
   deleteAssetBatchFromSupabase,
   deleteBoundaryMeterBatchFromSupabase,
   deleteDirectCostBatchFromSupabase,
+  deleteEmployeeCostBatchFromSupabase,
   loadAssetDataFromSupabase,
   loadBoundaryMeterDataFromSupabase,
   loadDirectCostDataFromSupabase,
+  loadEmployeeCostDataFromSupabase,
   saveAssetDataToSupabase,
   saveDirectCostDataToSupabase,
+  saveEmployeeCostDataToSupabase,
   saveProjectToSupabase,
   saveBoundaryMeterDataToSupabase
 } from "@/lib/supabase-sync";
@@ -119,6 +123,7 @@ const directCostHeaders = [
   "Cost by Type",
   "Annual Value"
 ];
+const employeeCostHeaders = ["Role", "Role Type", "FTE", "% Time"];
 
 function toNumber(value: string) {
   return Number(value) || 0;
@@ -154,10 +159,6 @@ function getAnnualTenantKwh(row: TenantInput) {
 
 function getQuarterTotal(row: PotllSupplyInput) {
   return row.quarterKwh.reduce((total, quarterValue) => total + quarterValue, 0);
-}
-
-function getEmployeeAnnualCost(row: EmployeeCostInput) {
-  return row.fte * (row.timePercent / 100) * row.hourlyRate * 8 * 5 * 52;
 }
 
 function normaliseHeader(value: unknown) {
@@ -982,6 +983,203 @@ function getDirectCostUploadBatches(rows: DirectCostInput[]) {
         fileName: latestRow?.sourceFileName || "Unknown file",
         uploadedAt: latestRow?.uploadedAt || "",
         totalAnnualValue: batchRows.reduce((total, row) => total + row.annualValue, 0)
+      };
+    })
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+}
+
+function createEmployeeCostImportBatchId() {
+  return `employee-cost-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function validateEmployeeCostHeaders(headerRow: unknown[]) {
+  return employeeCostHeaders.every(
+    (header, index) => normaliseHeader(headerRow[index]) === normaliseHeader(header)
+  );
+}
+
+function parseEmployeeRoleType(value: unknown): EmployeeRoleType | null {
+  const text = String(value ?? "").trim();
+
+  return roleTypes.includes(text as EmployeeRoleType) ? (text as EmployeeRoleType) : null;
+}
+
+function createEmployeeCostKey(row: Pick<EmployeeCostInput, "role" | "roleType">) {
+  return [row.role, row.roleType]
+    .map((value) => String(value).trim().toLowerCase())
+    .join("::");
+}
+
+function createEmployeeCostFingerprint(
+  row: Pick<EmployeeCostInput, "role" | "roleType" | "fte" | "timePercent">
+) {
+  return [row.role, row.roleType, row.fte, row.timePercent]
+    .map((value) => String(value).trim().toLowerCase())
+    .join("|");
+}
+
+function parseEmployeeCostRows(
+  rows: unknown[][],
+  sourceFileName: string,
+  uploadedAt: string,
+  importBatchId: string
+) {
+  const parsedRows: EmployeeCostInput[] = [];
+  const errors: string[] = [];
+
+  if (rows.length === 0 || !validateEmployeeCostHeaders(rows[0] ?? [])) {
+    return {
+      parsedRows,
+      errors: ["The selected workbook does not match the employee cost template headers."]
+    };
+  }
+
+  rows.slice(1).forEach((row, index) => {
+    const excelRowNumber = index + 2;
+    const hasValues = row.some((value) => String(value ?? "").trim() !== "");
+
+    if (!hasValues) {
+      return;
+    }
+
+    const role = String(row[0] ?? "").trim();
+    const roleType = parseEmployeeRoleType(row[1]);
+    const fte = parseRequiredNumber(row[2]);
+    const timePercent = parseRequiredNumber(row[3]);
+
+    if (!role) errors.push(`Row ${excelRowNumber}: Role is required.`);
+    if (!roleType) {
+      errors.push(`Row ${excelRowNumber}: Role Type must be ${roleTypes.join(", ")}.`);
+    }
+    if (fte === null || fte < 0) {
+      errors.push(`Row ${excelRowNumber}: FTE must be zero or greater.`);
+    }
+    if (timePercent === null || timePercent < 0 || timePercent > 100) {
+      errors.push(`Row ${excelRowNumber}: % Time must be between 0 and 100.`);
+    }
+
+    if (!role || !roleType || fte === null || fte < 0 || timePercent === null || timePercent < 0 || timePercent > 100) {
+      return;
+    }
+
+    const baseRow = {
+      role,
+      roleType,
+      fte,
+      timePercent
+    };
+
+    parsedRows.push({
+      id: createImportedRowId("employee-cost-import", parsedRows.length + 1),
+      ...baseRow,
+      comment: "",
+      sourceFileName,
+      uploadedAt,
+      importBatchId,
+      rowFingerprint: createEmployeeCostFingerprint(baseRow)
+    });
+  });
+
+  return { parsedRows, errors };
+}
+
+function mergeEmployeeCostRows(existingRows: EmployeeCostInput[], incomingRows: EmployeeCostInput[]) {
+  const byKey = new Map(existingRows.map((row) => [createEmployeeCostKey(row), row]));
+  const seenIncomingFingerprints = new Set<string>();
+  let added = 0;
+  let replaced = 0;
+  let skippedDuplicates = 0;
+
+  incomingRows.forEach((row) => {
+    const key = createEmployeeCostKey(row);
+    const fingerprint = row.rowFingerprint || createEmployeeCostFingerprint(row);
+    const existing = byKey.get(key);
+
+    if (seenIncomingFingerprints.has(fingerprint)) {
+      skippedDuplicates += 1;
+      return;
+    }
+
+    seenIncomingFingerprints.add(fingerprint);
+
+    if (existing && (existing.rowFingerprint || createEmployeeCostFingerprint(existing)) === fingerprint) {
+      skippedDuplicates += 1;
+      return;
+    }
+
+    if (existing) {
+      replaced += 1;
+    } else {
+      added += 1;
+    }
+
+    byKey.set(key, row);
+  });
+
+  return {
+    rows: Array.from(byKey.values()).sort((a, b) => a.role.localeCompare(b.role)),
+    added,
+    replaced,
+    skippedDuplicates
+  };
+}
+
+function getEmployeeCostRowReview(row: EmployeeCostInput) {
+  const issues: string[] = [];
+
+  if (!row.role.trim()) issues.push("Missing role");
+  if (row.fte < 0) issues.push("Invalid FTE");
+  if (row.timePercent < 0 || row.timePercent > 100) issues.push("Invalid % time");
+
+  return {
+    issues,
+    status: issues.length > 0 ? "Needs review" : "Healthy"
+  };
+}
+
+function getEmployeeCostSummary(rows: EmployeeCostInput[]) {
+  const totalFte = rows.reduce((total, row) => total + row.fte, 0);
+  const weightedFte = rows.reduce((total, row) => total + row.fte * (row.timePercent / 100), 0);
+  const invalidRows = rows.filter((row) => getEmployeeCostRowReview(row).issues.length > 0).length;
+  const roleTypeCount = new Set(rows.map((row) => row.roleType).filter(Boolean)).size;
+
+  return {
+    rowCount: rows.length,
+    totalFte,
+    weightedFte,
+    roleTypeCount,
+    invalidRows,
+    uploadBatches: getEmployeeCostUploadBatches(rows)
+  };
+}
+
+function getEmployeeCostUploadBatches(rows: EmployeeCostInput[]) {
+  const batches = new Map<string, EmployeeCostInput[]>();
+
+  rows
+    .filter((row) => row.importBatchId)
+    .forEach((row) => {
+      const currentRows = batches.get(row.importBatchId) ?? [];
+      currentRows.push(row);
+      batches.set(row.importBatchId, currentRows);
+    });
+
+  return Array.from(batches.entries())
+    .map(([batchId, batchRows]) => {
+      const latestRow = [...batchRows].sort((a, b) =>
+        (b.uploadedAt || "").localeCompare(a.uploadedAt || "")
+      )[0];
+
+      return {
+        batchId,
+        rowCount: batchRows.length,
+        fileName: latestRow?.sourceFileName || "Unknown file",
+        uploadedAt: latestRow?.uploadedAt || "",
+        totalFte: batchRows.reduce((total, row) => total + row.fte, 0),
+        weightedFte: batchRows.reduce(
+          (total, row) => total + row.fte * (row.timePercent / 100),
+          0
+        )
       };
     })
     .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
@@ -2037,6 +2235,11 @@ export function WorkbookCostInputsForm({
   const [directCostCloudStatus, setDirectCostCloudStatus] = useState("");
   const [directCostBatchToRemove, setDirectCostBatchToRemove] = useState("");
   const [confirmClearDirectCosts, setConfirmClearDirectCosts] = useState(false);
+  const [employeeCostImportStatus, setEmployeeCostImportStatus] = useState("");
+  const [employeeCostImportErrors, setEmployeeCostImportErrors] = useState<string[]>([]);
+  const [employeeCostCloudStatus, setEmployeeCostCloudStatus] = useState("");
+  const [employeeCostBatchToRemove, setEmployeeCostBatchToRemove] = useState("");
+  const [confirmClearEmployeeCosts, setConfirmClearEmployeeCosts] = useState(false);
   const assetSummary = useMemo(
     () => getAssetSummary(methodologyInputs.assets),
     [methodologyInputs.assets]
@@ -2044,6 +2247,10 @@ export function WorkbookCostInputsForm({
   const directCostSummary = useMemo(
     () => getDirectCostSummary(methodologyInputs.directCosts),
     [methodologyInputs.directCosts]
+  );
+  const employeeCostSummary = useMemo(
+    () => getEmployeeCostSummary(methodologyInputs.employeeCosts),
+    [methodologyInputs.employeeCosts]
   );
 
   useEffect(() => {
@@ -2074,6 +2281,41 @@ export function WorkbookCostInputsForm({
         }
 
         setDirectCostCloudStatus(`Cloud load failed: ${getErrorMessage(error)}`);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, section, showAllSections, setMethodologyInputs]);
+
+  useEffect(() => {
+    if (!showAllSections && section !== "direct-employee") {
+      return;
+    }
+
+    let isMounted = true;
+
+    loadEmployeeCostDataFromSupabase(projectId)
+      .then((cloudRows) => {
+        if (!isMounted || cloudRows.length === 0) {
+          return;
+        }
+
+        const nextInputs = {
+          ...getProjectMethodologyInputs(projectId),
+          employeeCosts: cloudRows
+        };
+
+        saveProjectMethodologyInputs(nextInputs);
+        setMethodologyInputs(nextInputs);
+        setEmployeeCostCloudStatus("Loaded direct employee costs from cloud.");
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setEmployeeCostCloudStatus(`Cloud load failed: ${getErrorMessage(error)}`);
       });
 
     return () => {
@@ -2231,6 +2473,160 @@ export function WorkbookCostInputsForm({
       setDirectCostImportStatus("");
     });
     event.target.value = "";
+  }
+
+  async function downloadEmployeeCostTemplate() {
+    const sheetData: SheetData = [
+      employeeCostHeaders.map((header) => ({
+        value: header,
+        type: String,
+        fontWeight: "bold"
+      }))
+    ];
+    const file = await writeXlsxFile(sheetData, { sheet: "Direct Employee Costs" });
+    await file.toFile("direct-employee-costs-template.xlsx");
+  }
+
+  async function importEmployeeCostWorkbook(file: File) {
+    const rows = await readSheet(file);
+    const uploadedAt = new Date().toISOString();
+    const importBatchId = createEmployeeCostImportBatchId();
+    const result = parseEmployeeCostRows(rows, file.name, uploadedAt, importBatchId);
+
+    if (result.errors.length > 0) {
+      setEmployeeCostImportErrors(result.errors.slice(0, 12));
+      setEmployeeCostImportStatus("");
+      return;
+    }
+
+    const merged = mergeEmployeeCostRows(methodologyInputs.employeeCosts, result.parsedRows);
+    const nextInputs = {
+      ...methodologyInputs,
+      employeeCosts: merged.rows
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Direct employee costs saved locally.");
+    setEmployeeCostImportErrors([]);
+    setEmployeeCostImportStatus(
+      `Imported ${result.parsedRows.length} rows. Added ${merged.added}, replaced ${merged.replaced}, skipped ${merged.skippedDuplicates} duplicate rows.`
+    );
+
+    try {
+      await saveProjectToSupabase(getProjectById(projectId));
+      const cloudSaved = await saveEmployeeCostDataToSupabase(projectId, merged.rows);
+      setEmployeeCostCloudStatus(
+        cloudSaved ? "Direct employee costs saved to cloud." : "Saved locally only."
+      );
+    } catch (error) {
+      setEmployeeCostCloudStatus(
+        `Saved locally. Cloud save failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  function handleEmployeeCostFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file || isArchived) {
+      return;
+    }
+
+    importEmployeeCostWorkbook(file).catch((error: unknown) => {
+      setEmployeeCostImportErrors([`Import failed: ${getErrorMessage(error)}`]);
+      setEmployeeCostImportStatus("");
+    });
+    event.target.value = "";
+  }
+
+  async function saveEmployeeCostsToCloud() {
+    try {
+      await saveProjectToSupabase(getProjectById(projectId));
+      const cloudSaved = await saveEmployeeCostDataToSupabase(
+        projectId,
+        methodologyInputs.employeeCosts
+      );
+      setEmployeeCostCloudStatus(
+        cloudSaved ? "Direct employee costs saved to cloud." : "Saved locally only."
+      );
+    } catch (error) {
+      setEmployeeCostCloudStatus(`Cloud save failed: ${getErrorMessage(error)}`);
+    }
+  }
+
+  async function restoreEmployeeCostsFromCloud() {
+    try {
+      const cloudRows = await loadEmployeeCostDataFromSupabase(projectId);
+      const nextInputs = {
+        ...methodologyInputs,
+        employeeCosts: cloudRows
+      };
+
+      setMethodologyInputs(nextInputs);
+      save(nextInputs, "Direct employee costs restored from cloud.");
+      setEmployeeCostCloudStatus(
+        cloudRows.length > 0
+          ? "Direct employee costs restored from cloud."
+          : "No cloud direct employee costs found."
+      );
+    } catch (error) {
+      setEmployeeCostCloudStatus(`Cloud restore failed: ${getErrorMessage(error)}`);
+    }
+  }
+
+  async function removeEmployeeCostUploadBatch(batchId: string) {
+    if (isArchived) return;
+    const nextInputs = {
+      ...methodologyInputs,
+      employeeCosts: methodologyInputs.employeeCosts.filter((row) => row.importBatchId !== batchId)
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Direct employee cost import batch removed.");
+    setEmployeeCostBatchToRemove("");
+    setEmployeeCostImportStatus("");
+    setEmployeeCostImportErrors([]);
+
+    try {
+      const cloudDeleted = await deleteEmployeeCostBatchFromSupabase(batchId);
+      setEmployeeCostCloudStatus(
+        cloudDeleted
+          ? "Direct employee cost batch removed from cloud."
+          : "Batch removed locally only."
+      );
+    } catch (error) {
+      setEmployeeCostCloudStatus(
+        `Batch removed locally. Cloud delete failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async function clearEmployeeCostData() {
+    if (isArchived) return;
+    const nextInputs = {
+      ...methodologyInputs,
+      employeeCosts: []
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Direct employee costs cleared locally.");
+    setEmployeeCostBatchToRemove("");
+    setConfirmClearEmployeeCosts(false);
+    setEmployeeCostImportStatus("");
+    setEmployeeCostImportErrors([]);
+
+    try {
+      const cloudCleared = await clearEmployeeCostDataFromSupabase(projectId);
+      setEmployeeCostCloudStatus(
+        cloudCleared
+          ? "Direct employee costs cleared from cloud."
+          : "Direct employee costs cleared locally only."
+      );
+    } catch (error) {
+      setEmployeeCostCloudStatus(
+        `Direct employee costs cleared locally. Cloud clear failed: ${getErrorMessage(error)}`
+      );
+    }
   }
 
   async function saveDirectCostsToCloud() {
@@ -2752,20 +3148,209 @@ export function WorkbookCostInputsForm({
           }
           disabled={isArchived}
         >
-        <table className="w-full min-w-[920px] border-collapse text-sm">
+        <div className="mb-5 space-y-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                downloadEmployeeCostTemplate().catch((error: unknown) => {
+                  setEmployeeCostImportErrors([
+                    `Template download failed: ${getErrorMessage(error)}`
+                  ]);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+            >
+              Download employee template
+            </button>
+            <button
+              type="button"
+              disabled={isArchived}
+              onClick={() => {
+                saveEmployeeCostsToCloud().catch((error: unknown) => {
+                  setEmployeeCostCloudStatus(`Cloud save failed: ${getErrorMessage(error)}`);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Save to cloud
+            </button>
+            <button
+              type="button"
+              disabled={isArchived}
+              onClick={() => {
+                restoreEmployeeCostsFromCloud().catch((error: unknown) => {
+                  setEmployeeCostCloudStatus(`Cloud restore failed: ${getErrorMessage(error)}`);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Restore from cloud
+            </button>
+            {confirmClearEmployeeCosts ? (
+              <button
+                type="button"
+                disabled={isArchived}
+                onClick={() => {
+                  clearEmployeeCostData().catch((error: unknown) => {
+                    setEmployeeCostCloudStatus(
+                      `Direct employee cost clear failed: ${getErrorMessage(error)}`
+                    );
+                  });
+                }}
+                className="rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:border-red-400 disabled:cursor-not-allowed disabled:text-ink/40"
+              >
+                Confirm clear all
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isArchived || methodologyInputs.employeeCosts.length === 0}
+                onClick={() => setConfirmClearEmployeeCosts(true)}
+                className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+              >
+                Clear all
+              </button>
+            )}
+            <label className="block rounded-md border border-dashed border-line bg-field px-4 py-3">
+              <span className="text-sm font-semibold">Upload employee template</span>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                disabled={isArchived}
+                onChange={handleEmployeeCostFileChange}
+                className="mt-2 block w-full text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-5">
+            <SummaryMetric label="Rows" value={formatNumber(employeeCostSummary.rowCount)} />
+            <SummaryMetric label="Total FTE" value={formatNumber(employeeCostSummary.totalFte)} />
+            <SummaryMetric
+              label="Weighted FTE"
+              value={formatNumber(employeeCostSummary.weightedFte)}
+            />
+            <SummaryMetric
+              label="Role types"
+              value={formatNumber(employeeCostSummary.roleTypeCount)}
+            />
+            <SummaryMetric
+              label="Rows needing review"
+              value={formatNumber(employeeCostSummary.invalidRows)}
+            />
+          </div>
+
+          <div className="rounded-md border border-line bg-white p-4 text-sm text-ink/70">
+            <p className="font-semibold text-ink">Required headers</p>
+            <p className="mt-2 break-words">{employeeCostHeaders.join(", ")}</p>
+          </div>
+
+          <div className="rounded-md border border-line bg-white p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="font-semibold text-ink">Recent employee cost uploads</p>
+              <p className="text-xs font-medium uppercase text-ink/50">
+                {formatNumber(employeeCostSummary.uploadBatches.length)} batches
+              </p>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[760px] border-collapse text-sm">
+                <thead className="bg-field text-left text-xs uppercase text-ink/60">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">File</th>
+                    <th className="px-3 py-2 font-semibold">Uploaded</th>
+                    <th className="px-3 py-2 font-semibold">Rows</th>
+                    <th className="px-3 py-2 font-semibold">Total FTE</th>
+                    <th className="px-3 py-2 font-semibold">Weighted FTE</th>
+                    <th className="px-3 py-2 font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employeeCostSummary.uploadBatches.map((batch) => (
+                    <tr key={batch.batchId} className="border-t border-line">
+                      <td className="px-3 py-2">{batch.fileName}</td>
+                      <td className="px-3 py-2">
+                        {batch.uploadedAt ? new Date(batch.uploadedAt).toLocaleString("en-GB") : ""}
+                      </td>
+                      <td className="px-3 py-2">{formatNumber(batch.rowCount)}</td>
+                      <td className="px-3 py-2">{formatNumber(batch.totalFte)}</td>
+                      <td className="px-3 py-2">{formatNumber(batch.weightedFte)}</td>
+                      <td className="px-3 py-2">
+                        {employeeCostBatchToRemove === batch.batchId ? (
+                          <button
+                            type="button"
+                            disabled={isArchived}
+                            onClick={() => {
+                              removeEmployeeCostUploadBatch(batch.batchId).catch(
+                                (error: unknown) => {
+                                  setEmployeeCostCloudStatus(
+                                    `Batch removal failed: ${getErrorMessage(error)}`
+                                  );
+                                }
+                              );
+                            }}
+                            className="rounded-md border border-red-200 px-3 py-1 text-xs font-semibold text-red-700 hover:border-red-400 disabled:cursor-not-allowed disabled:text-ink/40"
+                          >
+                            Confirm remove
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={isArchived}
+                            onClick={() => setEmployeeCostBatchToRemove(batch.batchId)}
+                            className="rounded-md border border-line px-3 py-1 text-xs font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+                          >
+                            Remove batch
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {employeeCostSummary.uploadBatches.length === 0 ? (
+                    <tr className="border-t border-line">
+                      <td colSpan={6} className="px-3 py-4 text-center text-ink/60">
+                        No employee cost upload batches yet.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {employeeCostImportStatus ? (
+            <p className="text-sm font-medium text-semarts-dark">{employeeCostImportStatus}</p>
+          ) : null}
+          {employeeCostCloudStatus ? (
+            <p className="text-sm font-medium text-semarts-dark">{employeeCostCloudStatus}</p>
+          ) : null}
+          {employeeCostImportErrors.length > 0 ? (
+            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <p className="font-semibold">Import needs review</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {employeeCostImportErrors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+        <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead className="bg-field text-left text-xs uppercase text-ink/60">
             <tr>
               <th className="px-4 py-3 font-semibold">Role</th>
               <th className="px-4 py-3 font-semibold">Role type</th>
               <th className="px-4 py-3 font-semibold">FTE</th>
               <th className="px-4 py-3 font-semibold">% time</th>
-              <th className="px-4 py-3 font-semibold">Hourly rate</th>
-              <th className="px-4 py-3 font-semibold">Annual cost</th>
+              <th className="px-4 py-3 font-semibold">Status</th>
               <th className="px-4 py-3 font-semibold">Action</th>
             </tr>
           </thead>
           <tbody>
-            {methodologyInputs.employeeCosts.map((row) => (
+            {methodologyInputs.employeeCosts.map((row) => {
+              const review = getEmployeeCostRowReview(row);
+
+              return (
               <tr key={row.id} className="border-t border-line">
                 <td className="px-4 py-3">
                   <TextInput
@@ -2807,16 +3392,18 @@ export function WorkbookCostInputsForm({
                   />
                 </td>
                 <td className="px-4 py-3">
-                  <NumberCell
-                    value={row.hourlyRate}
-                    disabled={isArchived}
-                    onChange={(value) =>
-                      updateEmployeeCost(row.id, { hourlyRate: toNumber(value) })
-                    }
-                  />
-                </td>
-                <td className="px-4 py-3 font-medium">
-                  {formatNumber(getEmployeeAnnualCost(row))}
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      review.status === "Healthy"
+                        ? "bg-field text-semarts-dark"
+                        : "bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {review.status}
+                  </span>
+                  {review.issues.length > 0 ? (
+                    <p className="mt-2 text-xs text-red-700">{review.issues.join(", ")}</p>
+                  ) : null}
                 </td>
                 <td className="px-4 py-3">
                   <RemoveButton
@@ -2832,7 +3419,8 @@ export function WorkbookCostInputsForm({
                   />
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         </WorkbookTableSection>
