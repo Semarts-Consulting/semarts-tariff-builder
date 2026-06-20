@@ -53,6 +53,37 @@ export type ProjectCostPools = {
   lastUpdated: string;
 };
 
+export type AllocationBasis =
+  | "Customer count"
+  | "Annual kWh"
+  | "Peak demand"
+  | "Equal share"
+  | "Manual";
+
+export type TariffComponent = "Fixed" | "Energy" | "Demand" | "Pass-through";
+
+export type AllocationClassShare = {
+  customerClass: string;
+  percent: number;
+};
+
+export type AllocationMethodRow = {
+  id: string;
+  costPoolId: string;
+  costPoolName: string;
+  basis: AllocationBasis;
+  tariffComponent: TariffComponent;
+  classShares: AllocationClassShare[];
+  notes: string;
+};
+
+export type ProjectAllocationMethods = {
+  projectId: string;
+  rows: AllocationMethodRow[];
+  assumptions: string;
+  lastUpdated: string;
+};
+
 export type ProjectSection = {
   title: string;
   description: string;

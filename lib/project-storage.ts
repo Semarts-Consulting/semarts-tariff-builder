@@ -1,8 +1,12 @@
 import { sampleProjects } from "@/lib/sample-data";
 import type {
+  AllocationBasis,
+  AllocationClassShare,
+  AllocationMethodRow,
   CostPoolRow,
   DataInputRow,
   Project,
+  ProjectAllocationMethods,
   ProjectCostPools,
   ProjectDataInputs
 } from "@/types/project";
@@ -10,6 +14,7 @@ import type {
 const storageKey = "semarts.projects";
 const dataInputsStorageKey = "semarts.project-data-inputs";
 const costPoolsStorageKey = "semarts.project-cost-pools";
+const allocationMethodsStorageKey = "semarts.project-allocation-methods";
 
 function hasBrowserStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -42,6 +47,19 @@ function parseProjectDataInputs(value: string | null): ProjectDataInputs[] {
 }
 
 function parseProjectCostPools(value: string | null): ProjectCostPools[] {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function parseProjectAllocationMethods(value: string | null): ProjectAllocationMethods[] {
   if (!value) {
     return [];
   }
@@ -220,4 +238,131 @@ export function saveProjectCostPools(costPools: ProjectCostPools) {
   ];
 
   window.localStorage.setItem(costPoolsStorageKey, JSON.stringify(nextCostPools));
+}
+
+function getCustomerClasses(projectId: string) {
+  const project = getProjectById(projectId);
+  const inputClasses = getProjectDataInputs(projectId).rows
+    .map((row) => row.customerClass.trim())
+    .filter(Boolean);
+
+  return inputClasses.length > 0 ? inputClasses : project.customerClasses;
+}
+
+function equalShares(customerClasses: string[]): AllocationClassShare[] {
+  if (customerClasses.length === 0) {
+    return [];
+  }
+
+  const basePercent = Math.floor((100 / customerClasses.length) * 100) / 100;
+  let assignedPercent = 0;
+
+  return customerClasses.map((customerClass, index) => {
+    const percent =
+      index === customerClasses.length - 1 ? Number((100 - assignedPercent).toFixed(2)) : basePercent;
+    assignedPercent += percent;
+    return { customerClass, percent };
+  });
+}
+
+export function calculateAllocationShares(
+  projectId: string,
+  basis: AllocationBasis
+): AllocationClassShare[] {
+  const dataInputRows = getProjectDataInputs(projectId).rows.filter((row) =>
+    row.customerClass.trim()
+  );
+  const customerClasses = getCustomerClasses(projectId);
+
+  if (basis === "Equal share" || basis === "Manual" || dataInputRows.length === 0) {
+    return equalShares(customerClasses);
+  }
+
+  const fieldByBasis = {
+    "Customer count": "customerCount",
+    "Annual kWh": "annualKwh",
+    "Peak demand": "peakDemandKw"
+  } as const;
+  const field = fieldByBasis[basis];
+  const total = dataInputRows.reduce((sum, row) => sum + row[field], 0);
+
+  if (total <= 0) {
+    return equalShares(customerClasses);
+  }
+
+  let assignedPercent = 0;
+  return dataInputRows.map((row, index) => {
+    const percent =
+      index === dataInputRows.length - 1
+        ? Number((100 - assignedPercent).toFixed(2))
+        : Number(((row[field] / total) * 100).toFixed(2));
+    assignedPercent += percent;
+    return { customerClass: row.customerClass, percent };
+  });
+}
+
+export function createAllocationMethodRow(
+  projectId: string,
+  costPool: CostPoolRow
+): AllocationMethodRow {
+  return {
+    id: `allocation-${costPool.id}`,
+    costPoolId: costPool.id,
+    costPoolName: costPool.name,
+    basis: "Customer count",
+    tariffComponent: "Fixed",
+    classShares: calculateAllocationShares(projectId, "Customer count"),
+    notes: ""
+  };
+}
+
+export function createDefaultAllocationMethods(projectId: string): ProjectAllocationMethods {
+  const costPools = getProjectCostPools(projectId);
+
+  return {
+    projectId,
+    rows: costPools.rows.map((costPool) => createAllocationMethodRow(projectId, costPool)),
+    assumptions: "",
+    lastUpdated: todayLabel()
+  };
+}
+
+export function getStoredAllocationMethods() {
+  if (!hasBrowserStorage()) {
+    return [];
+  }
+
+  return parseProjectAllocationMethods(
+    window.localStorage.getItem(allocationMethodsStorageKey)
+  );
+}
+
+export function getProjectAllocationMethods(projectId: string) {
+  return (
+    getStoredAllocationMethods().find(
+      (allocationMethods) => allocationMethods.projectId === projectId
+    ) ?? createDefaultAllocationMethods(projectId)
+  );
+}
+
+export function saveProjectAllocationMethods(allocationMethods: ProjectAllocationMethods) {
+  if (!hasBrowserStorage()) {
+    return;
+  }
+
+  const storedAllocationMethods = getStoredAllocationMethods();
+  const nextAllocationMethods = [
+    {
+      ...allocationMethods,
+      lastUpdated: todayLabel()
+    },
+    ...storedAllocationMethods.filter(
+      (storedAllocationMethod) => storedAllocationMethod.projectId !== allocationMethods.projectId
+    )
+  ];
+
+  window.localStorage.setItem(
+    allocationMethodsStorageKey,
+    JSON.stringify(nextAllocationMethods)
+  );
 }

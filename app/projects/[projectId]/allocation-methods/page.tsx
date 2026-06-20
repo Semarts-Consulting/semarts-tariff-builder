@@ -1,23 +1,20 @@
-import { PlaceholderPanel } from "@/components/PlaceholderPanel";
+import { AllocationMethodsForm } from "@/components/AllocationMethodsForm";
 import { SectionHeader } from "@/components/SectionHeader";
 
-export default function AllocationMethodsPage() {
+export default async function AllocationMethodsPage({
+  params
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+
   return (
     <div>
       <SectionHeader
         title="Allocation methods"
-        description="Placeholder for assigning cost pools to tariff classes and tariff components."
+        description="Assign recoverable cost pools to customer classes and tariff components."
       />
-      <PlaceholderPanel
-        title="Planned MVP allocation rules"
-        items={[
-          "Allocation percentage by customer class",
-          "Fixed, energy, and demand cost splits",
-          "Customer-related allocation factors",
-          "Energy-related allocation factors",
-          "Demand-related allocation factors"
-        ]}
-      />
+      <AllocationMethodsForm projectId={projectId} />
     </div>
   );
 }
