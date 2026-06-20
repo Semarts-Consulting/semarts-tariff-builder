@@ -5,6 +5,7 @@ import type {
   DataInputRow,
   DirectCostInput,
   EmployeeCostInput,
+  IndirectOverheadInput,
   ProjectStatus
 } from "@/types/project";
 
@@ -375,6 +376,66 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["employee_cost_data"]["Insert"]>;
+        Relationships: [];
+      };
+      indirect_overhead_import_batches: {
+        Row: {
+          import_batch_id: string;
+          project_local_id: string;
+          user_id: string | null;
+          source_file_name: string;
+          uploaded_at: string;
+          row_count: number;
+          total_annual_cost: number;
+          has_issues: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          import_batch_id: string;
+          project_local_id: string;
+          user_id?: string | null;
+          source_file_name: string;
+          uploaded_at: string;
+          row_count?: number;
+          total_annual_cost?: number;
+          has_issues?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["indirect_overhead_import_batches"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      indirect_overhead_data: {
+        Row: {
+          id: string;
+          project_local_id: string;
+          user_id: string | null;
+          import_batch_id: string;
+          description: string;
+          annual_cost: number;
+          source_file_name: string;
+          uploaded_at: string;
+          row_fingerprint: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_local_id: string;
+          user_id?: string | null;
+          import_batch_id: string;
+          description: string;
+          annual_cost: IndirectOverheadInput["annualCost"];
+          source_file_name: string;
+          uploaded_at: string;
+          row_fingerprint: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["indirect_overhead_data"]["Insert"]>;
         Relationships: [];
       };
     };

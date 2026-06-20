@@ -275,7 +275,11 @@ export function createIndirectOverheadInput(): IndirectOverheadInput {
     id: createWorkbookRowId("overhead"),
     description: "",
     annualCost: 0,
-    comment: ""
+    comment: "",
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: ""
   };
 }
 

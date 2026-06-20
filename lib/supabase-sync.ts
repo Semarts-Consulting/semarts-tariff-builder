@@ -4,6 +4,7 @@ import type {
   AssetInput,
   DirectCostInput,
   EmployeeCostInput,
+  IndirectOverheadInput,
   LocalProjectBackup,
   HalfHourlyImportRow,
   Project,
@@ -341,6 +342,83 @@ function fromEmployeeCostDataRow(row: {
     roleType: row.role_type,
     fte: row.fte,
     timePercent: row.time_percent,
+    comment: "",
+    sourceFileName: row.source_file_name,
+    uploadedAt: row.uploaded_at,
+    importBatchId: row.import_batch_id,
+    rowFingerprint: row.row_fingerprint
+  };
+}
+
+function hasIndirectOverheadIssues(row: IndirectOverheadInput) {
+  return !row.description.trim() || row.annualCost < 0;
+}
+
+function getIndirectOverheadBatchRows(
+  projectId: string,
+  rows: IndirectOverheadInput[],
+  userId: string
+) {
+  const batches = new Map<string, IndirectOverheadInput[]>();
+
+  rows.forEach((row) => {
+    const batchId = row.importBatchId || `manual-${row.id}`;
+    const existingRows = batches.get(batchId) ?? [];
+    existingRows.push(row);
+    batches.set(batchId, existingRows);
+  });
+
+  return Array.from(batches.entries()).map(([importBatchId, batchRows]) => {
+    const latestRow = [...batchRows].sort((a, b) =>
+      (b.uploadedAt || "").localeCompare(a.uploadedAt || "")
+    )[0];
+
+    return {
+      user_id: userId,
+      import_batch_id: importBatchId,
+      project_local_id: projectId,
+      source_file_name: latestRow?.sourceFileName || "Manual entry",
+      uploaded_at: latestRow?.uploadedAt || new Date().toISOString(),
+      row_count: batchRows.length,
+      total_annual_cost: batchRows.reduce((total, row) => total + row.annualCost, 0),
+      has_issues: batchRows.some(hasIndirectOverheadIssues)
+    };
+  });
+}
+
+function toIndirectOverheadDataRow(
+  projectId: string,
+  row: IndirectOverheadInput,
+  userId: string
+) {
+  const uploadedAt = row.uploadedAt || new Date().toISOString();
+  const importBatchId = row.importBatchId || `manual-${row.id}`;
+
+  return {
+    user_id: userId,
+    project_local_id: projectId,
+    import_batch_id: importBatchId,
+    description: row.description,
+    annual_cost: row.annualCost,
+    source_file_name: row.sourceFileName || "Manual entry",
+    uploaded_at: uploadedAt,
+    row_fingerprint: row.rowFingerprint || row.id
+  };
+}
+
+function fromIndirectOverheadDataRow(row: {
+  id: string;
+  description: string;
+  annual_cost: number;
+  source_file_name: string;
+  uploaded_at: string;
+  import_batch_id: string;
+  row_fingerprint: string;
+}): IndirectOverheadInput {
+  return {
+    id: row.id,
+    description: row.description,
+    annualCost: row.annual_cost,
     comment: "",
     sourceFileName: row.source_file_name,
     uploadedAt: row.uploaded_at,
@@ -1004,6 +1082,121 @@ export async function clearEmployeeCostDataFromSupabase(projectId: string) {
 
   const { error } = await supabase
     .from("employee_cost_import_batches")
+    .delete()
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function saveIndirectOverheadDataToSupabase(
+  projectId: string,
+  rows: IndirectOverheadInput[]
+) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const batchRows = getIndirectOverheadBatchRows(projectId, rows, userId);
+  const dataRows = rows.map((row) => toIndirectOverheadDataRow(projectId, row, userId));
+
+  if (batchRows.length > 0) {
+    const { error } = await supabase
+      .from("indirect_overhead_import_batches")
+      .upsert(batchRows, { onConflict: "import_batch_id" });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  if (dataRows.length > 0) {
+    const { error } = await supabase
+      .from("indirect_overhead_data")
+      .upsert(dataRows, { onConflict: "project_local_id,description" });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  return true;
+}
+
+export async function loadIndirectOverheadDataFromSupabase(projectId: string) {
+  if (!supabase) {
+    return [];
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("indirect_overhead_data")
+    .select(
+      "id, description, annual_cost, source_file_name, uploaded_at, import_batch_id, row_fingerprint"
+    )
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId)
+    .order("description", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map(fromIndirectOverheadDataRow);
+}
+
+export async function deleteIndirectOverheadBatchFromSupabase(batchId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("indirect_overhead_import_batches")
+    .delete()
+    .eq("import_batch_id", batchId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function clearIndirectOverheadDataFromSupabase(projectId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("indirect_overhead_import_batches")
     .delete()
     .eq("project_local_id", projectId)
     .eq("user_id", userId);

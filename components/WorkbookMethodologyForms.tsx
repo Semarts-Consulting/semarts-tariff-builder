@@ -23,17 +23,21 @@ import {
   clearBoundaryMeterDataFromSupabase,
   clearDirectCostDataFromSupabase,
   clearEmployeeCostDataFromSupabase,
+  clearIndirectOverheadDataFromSupabase,
   deleteAssetBatchFromSupabase,
   deleteBoundaryMeterBatchFromSupabase,
   deleteDirectCostBatchFromSupabase,
   deleteEmployeeCostBatchFromSupabase,
+  deleteIndirectOverheadBatchFromSupabase,
   loadAssetDataFromSupabase,
   loadBoundaryMeterDataFromSupabase,
   loadDirectCostDataFromSupabase,
   loadEmployeeCostDataFromSupabase,
+  loadIndirectOverheadDataFromSupabase,
   saveAssetDataToSupabase,
   saveDirectCostDataToSupabase,
   saveEmployeeCostDataToSupabase,
+  saveIndirectOverheadDataToSupabase,
   saveProjectToSupabase,
   saveBoundaryMeterDataToSupabase
 } from "@/lib/supabase-sync";
@@ -124,6 +128,7 @@ const directCostHeaders = [
   "Annual Value"
 ];
 const employeeCostHeaders = ["Role", "Role Type", "FTE", "% Time"];
+const indirectOverheadHeaders = ["Description", "Annual Cost"];
 
 function toNumber(value: string) {
   return Number(value) || 0;
@@ -1185,6 +1190,179 @@ function getEmployeeCostUploadBatches(rows: EmployeeCostInput[]) {
     .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
 }
 
+function createIndirectOverheadImportBatchId() {
+  return `indirect-overhead-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function validateIndirectOverheadHeaders(headerRow: unknown[]) {
+  return indirectOverheadHeaders.every(
+    (header, index) => normaliseHeader(headerRow[index]) === normaliseHeader(header)
+  );
+}
+
+function createIndirectOverheadKey(row: Pick<IndirectOverheadInput, "description">) {
+  return row.description.trim().toLowerCase();
+}
+
+function createIndirectOverheadFingerprint(
+  row: Pick<IndirectOverheadInput, "description" | "annualCost">
+) {
+  return [row.description, row.annualCost]
+    .map((value) => String(value).trim().toLowerCase())
+    .join("|");
+}
+
+function parseIndirectOverheadRows(
+  rows: unknown[][],
+  sourceFileName: string,
+  uploadedAt: string,
+  importBatchId: string
+) {
+  const parsedRows: IndirectOverheadInput[] = [];
+  const errors: string[] = [];
+
+  if (rows.length === 0 || !validateIndirectOverheadHeaders(rows[0] ?? [])) {
+    return {
+      parsedRows,
+      errors: ["The selected workbook does not match the indirect overhead template headers."]
+    };
+  }
+
+  rows.slice(1).forEach((row, index) => {
+    const excelRowNumber = index + 2;
+    const hasValues = row.some((value) => String(value ?? "").trim() !== "");
+
+    if (!hasValues) {
+      return;
+    }
+
+    const description = String(row[0] ?? "").trim();
+    const annualCost = parseRequiredNumber(row[1]);
+
+    if (!description) errors.push(`Row ${excelRowNumber}: Description is required.`);
+    if (annualCost === null || annualCost < 0) {
+      errors.push(`Row ${excelRowNumber}: Annual Cost must be zero or greater.`);
+    }
+
+    if (!description || annualCost === null || annualCost < 0) {
+      return;
+    }
+
+    const baseRow = {
+      description,
+      annualCost
+    };
+
+    parsedRows.push({
+      id: createImportedRowId("indirect-overhead-import", parsedRows.length + 1),
+      ...baseRow,
+      comment: "",
+      sourceFileName,
+      uploadedAt,
+      importBatchId,
+      rowFingerprint: createIndirectOverheadFingerprint(baseRow)
+    });
+  });
+
+  return { parsedRows, errors };
+}
+
+function mergeIndirectOverheadRows(
+  existingRows: IndirectOverheadInput[],
+  incomingRows: IndirectOverheadInput[]
+) {
+  const byKey = new Map(existingRows.map((row) => [createIndirectOverheadKey(row), row]));
+  const seenIncomingFingerprints = new Set<string>();
+  let added = 0;
+  let replaced = 0;
+  let skippedDuplicates = 0;
+
+  incomingRows.forEach((row) => {
+    const key = createIndirectOverheadKey(row);
+    const fingerprint = row.rowFingerprint || createIndirectOverheadFingerprint(row);
+    const existing = byKey.get(key);
+
+    if (seenIncomingFingerprints.has(fingerprint)) {
+      skippedDuplicates += 1;
+      return;
+    }
+
+    seenIncomingFingerprints.add(fingerprint);
+
+    if (existing && (existing.rowFingerprint || createIndirectOverheadFingerprint(existing)) === fingerprint) {
+      skippedDuplicates += 1;
+      return;
+    }
+
+    if (existing) {
+      replaced += 1;
+    } else {
+      added += 1;
+    }
+
+    byKey.set(key, row);
+  });
+
+  return {
+    rows: Array.from(byKey.values()).sort((a, b) => a.description.localeCompare(b.description)),
+    added,
+    replaced,
+    skippedDuplicates
+  };
+}
+
+function getIndirectOverheadRowReview(row: IndirectOverheadInput) {
+  const issues: string[] = [];
+
+  if (!row.description.trim()) issues.push("Missing description");
+  if (row.annualCost < 0) issues.push("Invalid annual cost");
+
+  return {
+    issues,
+    status: issues.length > 0 ? "Needs review" : "Healthy"
+  };
+}
+
+function getIndirectOverheadSummary(rows: IndirectOverheadInput[]) {
+  const totalAnnualCost = rows.reduce((total, row) => total + row.annualCost, 0);
+  const invalidRows = rows.filter((row) => getIndirectOverheadRowReview(row).issues.length > 0).length;
+
+  return {
+    rowCount: rows.length,
+    totalAnnualCost,
+    invalidRows,
+    uploadBatches: getIndirectOverheadUploadBatches(rows)
+  };
+}
+
+function getIndirectOverheadUploadBatches(rows: IndirectOverheadInput[]) {
+  const batches = new Map<string, IndirectOverheadInput[]>();
+
+  rows
+    .filter((row) => row.importBatchId)
+    .forEach((row) => {
+      const currentRows = batches.get(row.importBatchId) ?? [];
+      currentRows.push(row);
+      batches.set(row.importBatchId, currentRows);
+    });
+
+  return Array.from(batches.entries())
+    .map(([batchId, batchRows]) => {
+      const latestRow = [...batchRows].sort((a, b) =>
+        (b.uploadedAt || "").localeCompare(a.uploadedAt || "")
+      )[0];
+
+      return {
+        batchId,
+        rowCount: batchRows.length,
+        fileName: latestRow?.sourceFileName || "Unknown file",
+        uploadedAt: latestRow?.uploadedAt || "",
+        totalAnnualCost: batchRows.reduce((total, row) => total + row.annualCost, 0)
+      };
+    })
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+}
+
 function validateAssumptions(assumptions: TariffAssumptions) {
   const errors: string[] = [];
 
@@ -2240,6 +2418,11 @@ export function WorkbookCostInputsForm({
   const [employeeCostCloudStatus, setEmployeeCostCloudStatus] = useState("");
   const [employeeCostBatchToRemove, setEmployeeCostBatchToRemove] = useState("");
   const [confirmClearEmployeeCosts, setConfirmClearEmployeeCosts] = useState(false);
+  const [indirectOverheadImportStatus, setIndirectOverheadImportStatus] = useState("");
+  const [indirectOverheadImportErrors, setIndirectOverheadImportErrors] = useState<string[]>([]);
+  const [indirectOverheadCloudStatus, setIndirectOverheadCloudStatus] = useState("");
+  const [indirectOverheadBatchToRemove, setIndirectOverheadBatchToRemove] = useState("");
+  const [confirmClearIndirectOverheads, setConfirmClearIndirectOverheads] = useState(false);
   const assetSummary = useMemo(
     () => getAssetSummary(methodologyInputs.assets),
     [methodologyInputs.assets]
@@ -2251,6 +2434,10 @@ export function WorkbookCostInputsForm({
   const employeeCostSummary = useMemo(
     () => getEmployeeCostSummary(methodologyInputs.employeeCosts),
     [methodologyInputs.employeeCosts]
+  );
+  const indirectOverheadSummary = useMemo(
+    () => getIndirectOverheadSummary(methodologyInputs.indirectOverheads),
+    [methodologyInputs.indirectOverheads]
   );
 
   useEffect(() => {
@@ -2316,6 +2503,41 @@ export function WorkbookCostInputsForm({
         }
 
         setEmployeeCostCloudStatus(`Cloud load failed: ${getErrorMessage(error)}`);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, section, showAllSections, setMethodologyInputs]);
+
+  useEffect(() => {
+    if (!showAllSections && section !== "indirect-overheads") {
+      return;
+    }
+
+    let isMounted = true;
+
+    loadIndirectOverheadDataFromSupabase(projectId)
+      .then((cloudRows) => {
+        if (!isMounted || cloudRows.length === 0) {
+          return;
+        }
+
+        const nextInputs = {
+          ...getProjectMethodologyInputs(projectId),
+          indirectOverheads: cloudRows
+        };
+
+        saveProjectMethodologyInputs(nextInputs);
+        setMethodologyInputs(nextInputs);
+        setIndirectOverheadCloudStatus("Loaded indirect overheads from cloud.");
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setIndirectOverheadCloudStatus(`Cloud load failed: ${getErrorMessage(error)}`);
       });
 
     return () => {
@@ -2537,6 +2759,161 @@ export function WorkbookCostInputsForm({
       setEmployeeCostImportStatus("");
     });
     event.target.value = "";
+  }
+
+  async function downloadIndirectOverheadTemplate() {
+    const sheetData: SheetData = [
+      indirectOverheadHeaders.map((header) => ({
+        value: header,
+        type: String,
+        fontWeight: "bold"
+      }))
+    ];
+    const file = await writeXlsxFile(sheetData, { sheet: "Indirect Overheads" });
+    await file.toFile("indirect-overheads-template.xlsx");
+  }
+
+  async function importIndirectOverheadWorkbook(file: File) {
+    const rows = await readSheet(file);
+    const uploadedAt = new Date().toISOString();
+    const importBatchId = createIndirectOverheadImportBatchId();
+    const result = parseIndirectOverheadRows(rows, file.name, uploadedAt, importBatchId);
+
+    if (result.errors.length > 0) {
+      setIndirectOverheadImportErrors(result.errors.slice(0, 12));
+      setIndirectOverheadImportStatus("");
+      return;
+    }
+
+    const merged = mergeIndirectOverheadRows(
+      methodologyInputs.indirectOverheads,
+      result.parsedRows
+    );
+    const nextInputs = {
+      ...methodologyInputs,
+      indirectOverheads: merged.rows
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Indirect overheads saved locally.");
+    setIndirectOverheadImportErrors([]);
+    setIndirectOverheadImportStatus(
+      `Imported ${result.parsedRows.length} rows. Added ${merged.added}, replaced ${merged.replaced}, skipped ${merged.skippedDuplicates} duplicate rows.`
+    );
+
+    try {
+      await saveProjectToSupabase(getProjectById(projectId));
+      const cloudSaved = await saveIndirectOverheadDataToSupabase(projectId, merged.rows);
+      setIndirectOverheadCloudStatus(
+        cloudSaved ? "Indirect overheads saved to cloud." : "Saved locally only."
+      );
+    } catch (error) {
+      setIndirectOverheadCloudStatus(
+        `Saved locally. Cloud save failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  function handleIndirectOverheadFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file || isArchived) {
+      return;
+    }
+
+    importIndirectOverheadWorkbook(file).catch((error: unknown) => {
+      setIndirectOverheadImportErrors([`Import failed: ${getErrorMessage(error)}`]);
+      setIndirectOverheadImportStatus("");
+    });
+    event.target.value = "";
+  }
+
+  async function saveIndirectOverheadsToCloud() {
+    try {
+      await saveProjectToSupabase(getProjectById(projectId));
+      const cloudSaved = await saveIndirectOverheadDataToSupabase(
+        projectId,
+        methodologyInputs.indirectOverheads
+      );
+      setIndirectOverheadCloudStatus(
+        cloudSaved ? "Indirect overheads saved to cloud." : "Saved locally only."
+      );
+    } catch (error) {
+      setIndirectOverheadCloudStatus(`Cloud save failed: ${getErrorMessage(error)}`);
+    }
+  }
+
+  async function restoreIndirectOverheadsFromCloud() {
+    try {
+      const cloudRows = await loadIndirectOverheadDataFromSupabase(projectId);
+      const nextInputs = {
+        ...methodologyInputs,
+        indirectOverheads: cloudRows
+      };
+
+      setMethodologyInputs(nextInputs);
+      save(nextInputs, "Indirect overheads restored from cloud.");
+      setIndirectOverheadCloudStatus(
+        cloudRows.length > 0
+          ? "Indirect overheads restored from cloud."
+          : "No cloud indirect overheads found."
+      );
+    } catch (error) {
+      setIndirectOverheadCloudStatus(`Cloud restore failed: ${getErrorMessage(error)}`);
+    }
+  }
+
+  async function removeIndirectOverheadUploadBatch(batchId: string) {
+    if (isArchived) return;
+    const nextInputs = {
+      ...methodologyInputs,
+      indirectOverheads: methodologyInputs.indirectOverheads.filter(
+        (row) => row.importBatchId !== batchId
+      )
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Indirect overhead import batch removed.");
+    setIndirectOverheadBatchToRemove("");
+    setIndirectOverheadImportStatus("");
+    setIndirectOverheadImportErrors([]);
+
+    try {
+      const cloudDeleted = await deleteIndirectOverheadBatchFromSupabase(batchId);
+      setIndirectOverheadCloudStatus(
+        cloudDeleted ? "Indirect overhead batch removed from cloud." : "Batch removed locally only."
+      );
+    } catch (error) {
+      setIndirectOverheadCloudStatus(
+        `Batch removed locally. Cloud delete failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async function clearIndirectOverheadData() {
+    if (isArchived) return;
+    const nextInputs = {
+      ...methodologyInputs,
+      indirectOverheads: []
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Indirect overheads cleared locally.");
+    setIndirectOverheadBatchToRemove("");
+    setConfirmClearIndirectOverheads(false);
+    setIndirectOverheadImportStatus("");
+    setIndirectOverheadImportErrors([]);
+
+    try {
+      const cloudCleared = await clearIndirectOverheadDataFromSupabase(projectId);
+      setIndirectOverheadCloudStatus(
+        cloudCleared ? "Indirect overheads cleared from cloud." : "Indirect overheads cleared locally only."
+      );
+    } catch (error) {
+      setIndirectOverheadCloudStatus(
+        `Indirect overheads cleared locally. Cloud clear failed: ${getErrorMessage(error)}`
+      );
+    }
   }
 
   async function saveEmployeeCostsToCloud() {
@@ -3442,16 +3819,204 @@ export function WorkbookCostInputsForm({
           }
           disabled={isArchived}
         >
-        <table className="w-full min-w-[680px] border-collapse text-sm">
+        <div className="mb-5 space-y-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                downloadIndirectOverheadTemplate().catch((error: unknown) => {
+                  setIndirectOverheadImportErrors([
+                    `Template download failed: ${getErrorMessage(error)}`
+                  ]);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+            >
+              Download overhead template
+            </button>
+            <button
+              type="button"
+              disabled={isArchived}
+              onClick={() => {
+                saveIndirectOverheadsToCloud().catch((error: unknown) => {
+                  setIndirectOverheadCloudStatus(`Cloud save failed: ${getErrorMessage(error)}`);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Save to cloud
+            </button>
+            <button
+              type="button"
+              disabled={isArchived}
+              onClick={() => {
+                restoreIndirectOverheadsFromCloud().catch((error: unknown) => {
+                  setIndirectOverheadCloudStatus(`Cloud restore failed: ${getErrorMessage(error)}`);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Restore from cloud
+            </button>
+            {confirmClearIndirectOverheads ? (
+              <button
+                type="button"
+                disabled={isArchived}
+                onClick={() => {
+                  clearIndirectOverheadData().catch((error: unknown) => {
+                    setIndirectOverheadCloudStatus(
+                      `Indirect overhead clear failed: ${getErrorMessage(error)}`
+                    );
+                  });
+                }}
+                className="rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:border-red-400 disabled:cursor-not-allowed disabled:text-ink/40"
+              >
+                Confirm clear all
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isArchived || methodologyInputs.indirectOverheads.length === 0}
+                onClick={() => setConfirmClearIndirectOverheads(true)}
+                className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+              >
+                Clear all
+              </button>
+            )}
+            <label className="block rounded-md border border-dashed border-line bg-field px-4 py-3">
+              <span className="text-sm font-semibold">Upload overhead template</span>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                disabled={isArchived}
+                onChange={handleIndirectOverheadFileChange}
+                className="mt-2 block w-full text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <SummaryMetric label="Rows" value={formatNumber(indirectOverheadSummary.rowCount)} />
+            <SummaryMetric
+              label="Annual cost"
+              value={formatNumber(indirectOverheadSummary.totalAnnualCost)}
+            />
+            <SummaryMetric
+              label="Rows needing review"
+              value={formatNumber(indirectOverheadSummary.invalidRows)}
+            />
+          </div>
+
+          <div className="rounded-md border border-line bg-white p-4 text-sm text-ink/70">
+            <p className="font-semibold text-ink">Required headers</p>
+            <p className="mt-2 break-words">{indirectOverheadHeaders.join(", ")}</p>
+          </div>
+
+          <div className="rounded-md border border-line bg-white p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="font-semibold text-ink">Recent overhead uploads</p>
+              <p className="text-xs font-medium uppercase text-ink/50">
+                {formatNumber(indirectOverheadSummary.uploadBatches.length)} batches
+              </p>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[720px] border-collapse text-sm">
+                <thead className="bg-field text-left text-xs uppercase text-ink/60">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">File</th>
+                    <th className="px-3 py-2 font-semibold">Uploaded</th>
+                    <th className="px-3 py-2 font-semibold">Rows</th>
+                    <th className="px-3 py-2 font-semibold">Annual cost</th>
+                    <th className="px-3 py-2 font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {indirectOverheadSummary.uploadBatches.map((batch) => (
+                    <tr key={batch.batchId} className="border-t border-line">
+                      <td className="px-3 py-2">{batch.fileName}</td>
+                      <td className="px-3 py-2">
+                        {batch.uploadedAt ? new Date(batch.uploadedAt).toLocaleString("en-GB") : ""}
+                      </td>
+                      <td className="px-3 py-2">{formatNumber(batch.rowCount)}</td>
+                      <td className="px-3 py-2">{formatNumber(batch.totalAnnualCost)}</td>
+                      <td className="px-3 py-2">
+                        {indirectOverheadBatchToRemove === batch.batchId ? (
+                          <button
+                            type="button"
+                            disabled={isArchived}
+                            onClick={() => {
+                              removeIndirectOverheadUploadBatch(batch.batchId).catch(
+                                (error: unknown) => {
+                                  setIndirectOverheadCloudStatus(
+                                    `Batch removal failed: ${getErrorMessage(error)}`
+                                  );
+                                }
+                              );
+                            }}
+                            className="rounded-md border border-red-200 px-3 py-1 text-xs font-semibold text-red-700 hover:border-red-400 disabled:cursor-not-allowed disabled:text-ink/40"
+                          >
+                            Confirm remove
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={isArchived}
+                            onClick={() => setIndirectOverheadBatchToRemove(batch.batchId)}
+                            className="rounded-md border border-line px-3 py-1 text-xs font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+                          >
+                            Remove batch
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {indirectOverheadSummary.uploadBatches.length === 0 ? (
+                    <tr className="border-t border-line">
+                      <td colSpan={5} className="px-3 py-4 text-center text-ink/60">
+                        No overhead upload batches yet.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {indirectOverheadImportStatus ? (
+            <p className="text-sm font-medium text-semarts-dark">
+              {indirectOverheadImportStatus}
+            </p>
+          ) : null}
+          {indirectOverheadCloudStatus ? (
+            <p className="text-sm font-medium text-semarts-dark">
+              {indirectOverheadCloudStatus}
+            </p>
+          ) : null}
+          {indirectOverheadImportErrors.length > 0 ? (
+            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <p className="font-semibold">Import needs review</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {indirectOverheadImportErrors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+        <table className="w-full min-w-[760px] border-collapse text-sm">
           <thead className="bg-field text-left text-xs uppercase text-ink/60">
             <tr>
               <th className="px-4 py-3 font-semibold">Description</th>
               <th className="px-4 py-3 font-semibold">Annual cost</th>
+              <th className="px-4 py-3 font-semibold">Status</th>
               <th className="px-4 py-3 font-semibold">Action</th>
             </tr>
           </thead>
           <tbody>
-            {methodologyInputs.indirectOverheads.map((row) => (
+            {methodologyInputs.indirectOverheads.map((row) => {
+              const review = getIndirectOverheadRowReview(row);
+
+              return (
               <tr key={row.id} className="border-t border-line">
                 <td className="px-4 py-3">
                   <TextInput
@@ -3468,6 +4033,20 @@ export function WorkbookCostInputsForm({
                   />
                 </td>
                 <td className="px-4 py-3">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      review.status === "Healthy"
+                        ? "bg-field text-semarts-dark"
+                        : "bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {review.status}
+                  </span>
+                  {review.issues.length > 0 ? (
+                    <p className="mt-2 text-xs text-red-700">{review.issues.join(", ")}</p>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3">
                   <RemoveButton
                     disabled={isArchived}
                     onClick={() =>
@@ -3481,7 +4060,8 @@ export function WorkbookCostInputsForm({
                   />
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         </WorkbookTableSection>

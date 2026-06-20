@@ -141,6 +141,10 @@ export type IndirectOverheadInput = {
   description: string;
   annualCost: number;
   comment: string;
+  sourceFileName: string;
+  uploadedAt: string;
+  importBatchId: string;
+  rowFingerprint: string;
 };
 
 export type SupplyChargeInput = {
