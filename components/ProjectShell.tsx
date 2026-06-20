@@ -30,6 +30,12 @@ export function ProjectShell({ children, projectId }: ProjectShellProps) {
           <span>-</span>
           <span>{project.status}</span>
         </div>
+        {project.status === "Archived" ? (
+          <div className="mt-5 rounded-md border border-warm-gold/40 bg-white p-4 text-sm text-ink/70">
+            This project is archived. Workflow pages are read-only until the project is
+            restored in Settings.
+          </div>
+        ) : null}
         <ProjectNav projectId={projectId} />
       </div>
       <div className="py-8">{children}</div>

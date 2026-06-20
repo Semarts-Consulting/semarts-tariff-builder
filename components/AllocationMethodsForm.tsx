@@ -7,6 +7,7 @@ import {
   getProjectCostPools,
   saveProjectAllocationMethods
 } from "@/lib/project-storage";
+import { isProjectArchived } from "@/lib/project-state";
 import { saveAllocationMethodsToSupabase } from "@/lib/supabase-sync";
 import type {
   AllocationBasis,
@@ -55,9 +56,11 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
     lastUpdated: ""
   });
   const [saveState, setSaveState] = useState("");
+  const [isArchived, setIsArchived] = useState(false);
 
   useEffect(() => {
     setAllocationMethods(getProjectAllocationMethods(projectId));
+    setIsArchived(isProjectArchived(projectId));
   }, [projectId]);
 
   const costPools = useMemo(() => getProjectCostPools(projectId), [projectId]);
@@ -86,6 +89,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
   }, [allocationMethods.rows, recoverableCostByPool]);
 
   function updateRow(rowId: string, updates: Partial<AllocationMethodRow>) {
+    if (isArchived) return;
     setAllocationMethods((current) => ({
       ...current,
       rows: current.rows.map((row) => (row.id === rowId ? { ...row, ...updates } : row))
@@ -94,6 +98,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
   }
 
   function updateBasis(row: AllocationMethodRow, basis: AllocationBasis) {
+    if (isArchived) return;
     updateRow(row.id, {
       basis,
       classShares:
@@ -102,6 +107,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
   }
 
   function updateShare(row: AllocationMethodRow, customerClass: string, value: string) {
+    if (isArchived) return;
     updateRow(row.id, {
       basis: "Manual",
       classShares: row.classShares.map((share) =>
@@ -113,6 +119,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
   }
 
   function updateAssumptions(event: ChangeEvent<HTMLTextAreaElement>) {
+    if (isArchived) return;
     setAllocationMethods((current) => ({
       ...current,
       assumptions: event.target.value
@@ -121,6 +128,11 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
   }
 
   async function saveInputs() {
+    if (isArchived) {
+      setSaveState("Archived projects are read-only. Restore the project in Settings to edit.");
+      return;
+    }
+
     saveProjectAllocationMethods(allocationMethods);
     const savedAllocationMethods = getProjectAllocationMethods(projectId);
     setAllocationMethods(savedAllocationMethods);
@@ -185,6 +197,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
                   <span className="text-sm font-medium">Allocation basis</span>
                   <select
                     value={row.basis}
+                    disabled={isArchived}
                     onChange={(event) => updateBasis(row, event.target.value as AllocationBasis)}
                     className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
                   >
@@ -198,6 +211,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
                   <span className="text-sm font-medium">Tariff component</span>
                   <select
                     value={row.tariffComponent}
+                    disabled={isArchived}
                     onChange={(event) =>
                       updateRow(row.id, {
                         tariffComponent: event.target.value as TariffComponent
@@ -216,6 +230,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
                   <input
                     type="text"
                     value={row.notes}
+                    disabled={isArchived}
                     onChange={(event) => updateRow(row.id, { notes: event.target.value })}
                     className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
                   />
@@ -232,6 +247,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
                       max="100"
                       step="0.01"
                       value={share.percent}
+                      disabled={isArchived}
                       onChange={(event) => updateShare(row, share.customerClass, event.target.value)}
                       className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
                     />
@@ -248,6 +264,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
         <textarea
           value={allocationMethods.assumptions}
           onChange={updateAssumptions}
+          disabled={isArchived}
           rows={4}
           className="mt-2 w-full resize-y rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
         />
@@ -257,7 +274,8 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
         <button
           type="button"
           onClick={saveInputs}
-          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark"
+          disabled={isArchived}
+          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30"
         >
           Save allocation methods
         </button>

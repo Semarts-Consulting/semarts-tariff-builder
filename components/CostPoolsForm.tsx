@@ -6,6 +6,7 @@ import {
   getProjectCostPools,
   saveProjectCostPools
 } from "@/lib/project-storage";
+import { isProjectArchived } from "@/lib/project-state";
 import { saveCostPoolsToSupabase } from "@/lib/supabase-sync";
 import type { CostPoolCategory, CostPoolRow, ProjectCostPools } from "@/types/project";
 
@@ -55,14 +56,17 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
     lastUpdated: ""
   });
   const [saveState, setSaveState] = useState("");
+  const [isArchived, setIsArchived] = useState(false);
 
   useEffect(() => {
     setCostPools(getProjectCostPools(projectId));
+    setIsArchived(isProjectArchived(projectId));
   }, [projectId]);
 
   const totals = useMemo(() => getTotals(costPools.rows), [costPools.rows]);
 
   function updateRow(rowId: string, updates: Partial<CostPoolRow>) {
+    if (isArchived) return;
     setCostPools((current) => ({
       ...current,
       rows: current.rows.map((row) => (row.id === rowId ? { ...row, ...updates } : row))
@@ -71,6 +75,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
   }
 
   function updateNumber(rowId: string, field: NumberField, value: string) {
+    if (isArchived) return;
     const parsedValue = Number(value) || 0;
     updateRow(rowId, {
       [field]: field === "recoverablePercent" ? Math.min(parsedValue, 100) : parsedValue
@@ -78,6 +83,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
   }
 
   function updateAssumptions(event: ChangeEvent<HTMLTextAreaElement>) {
+    if (isArchived) return;
     setCostPools((current) => ({
       ...current,
       assumptions: event.target.value
@@ -86,6 +92,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
   }
 
   function addRow() {
+    if (isArchived) return;
     setCostPools((current) => ({
       ...current,
       rows: [...current.rows, createCostPoolRow()]
@@ -94,6 +101,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
   }
 
   function removeRow(rowId: string) {
+    if (isArchived) return;
     setCostPools((current) => ({
       ...current,
       rows: current.rows.filter((row) => row.id !== rowId)
@@ -102,6 +110,11 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
   }
 
   async function saveInputs() {
+    if (isArchived) {
+      setSaveState("Archived projects are read-only. Restore the project in Settings to edit.");
+      return;
+    }
+
     saveProjectCostPools(costPools);
     const savedCostPools = getProjectCostPools(projectId);
     setCostPools(savedCostPools);
@@ -143,6 +156,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
           <button
             type="button"
             onClick={addRow}
+            disabled={isArchived}
             className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
           >
             Add pool
@@ -169,6 +183,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
                     <input
                       type="text"
                       value={row.name}
+                      disabled={isArchived}
                       onChange={(event) => updateRow(row.id, { name: event.target.value })}
                       className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
                     />
@@ -176,6 +191,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
                   <td className="px-4 py-3">
                     <select
                       value={row.category}
+                      disabled={isArchived}
                       onChange={(event) =>
                         updateRow(row.id, { category: event.target.value as CostPoolCategory })
                       }
@@ -191,6 +207,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
                       type="number"
                       min="0"
                       value={row.annualAmount}
+                      disabled={isArchived}
                       onChange={(event) =>
                         updateNumber(row.id, "annualAmount", event.target.value)
                       }
@@ -203,6 +220,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
                       min="0"
                       max="100"
                       value={row.recoverablePercent}
+                      disabled={isArchived}
                       onChange={(event) =>
                         updateNumber(row.id, "recoverablePercent", event.target.value)
                       }
@@ -216,6 +234,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
                     <input
                       type="text"
                       value={row.notes}
+                      disabled={isArchived}
                       onChange={(event) => updateRow(row.id, { notes: event.target.value })}
                       className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
                     />
@@ -224,6 +243,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
                     <button
                       type="button"
                       onClick={() => removeRow(row.id)}
+                      disabled={isArchived}
                       className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
                     >
                       Remove
@@ -241,6 +261,7 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
         <textarea
           value={costPools.assumptions}
           onChange={updateAssumptions}
+          disabled={isArchived}
           rows={4}
           className="mt-2 w-full resize-y rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
         />
@@ -250,7 +271,8 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
         <button
           type="button"
           onClick={saveInputs}
-          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark"
+          disabled={isArchived}
+          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30"
         >
           Save cost pools
         </button>

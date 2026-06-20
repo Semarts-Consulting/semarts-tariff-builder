@@ -6,6 +6,7 @@ import {
   getProjectDataInputs,
   saveProjectDataInputs
 } from "@/lib/project-storage";
+import { isProjectArchived } from "@/lib/project-state";
 import { saveDataInputsToSupabase } from "@/lib/supabase-sync";
 import type { DataInputRow, ProjectDataInputs } from "@/types/project";
 
@@ -38,14 +39,17 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
     lastUpdated: ""
   });
   const [saveState, setSaveState] = useState("");
+  const [isArchived, setIsArchived] = useState(false);
 
   useEffect(() => {
     setDataInputs(getProjectDataInputs(projectId));
+    setIsArchived(isProjectArchived(projectId));
   }, [projectId]);
 
   const totals = useMemo(() => getTotals(dataInputs.rows), [dataInputs.rows]);
 
   function updateRow(rowId: string, updates: Partial<DataInputRow>) {
+    if (isArchived) return;
     setDataInputs((current) => ({
       ...current,
       rows: current.rows.map((row) => (row.id === rowId ? { ...row, ...updates } : row))
@@ -54,10 +58,12 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
   }
 
   function updateNumber(rowId: string, field: NumberField, value: string) {
+    if (isArchived) return;
     updateRow(rowId, { [field]: Number(value) || 0 });
   }
 
   function updateAssumptions(event: ChangeEvent<HTMLTextAreaElement>) {
+    if (isArchived) return;
     setDataInputs((current) => ({
       ...current,
       assumptions: event.target.value
@@ -66,6 +72,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
   }
 
   function addRow() {
+    if (isArchived) return;
     setDataInputs((current) => ({
       ...current,
       rows: [...current.rows, createDataInputRow()]
@@ -74,6 +81,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
   }
 
   function removeRow(rowId: string) {
+    if (isArchived) return;
     setDataInputs((current) => ({
       ...current,
       rows: current.rows.filter((row) => row.id !== rowId)
@@ -82,6 +90,11 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
   }
 
   async function saveInputs() {
+    if (isArchived) {
+      setSaveState("Archived projects are read-only. Restore the project in Settings to edit.");
+      return;
+    }
+
     saveProjectDataInputs(dataInputs);
     const savedDataInputs = getProjectDataInputs(projectId);
     setDataInputs(savedDataInputs);
@@ -121,6 +134,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
           <button
             type="button"
             onClick={addRow}
+            disabled={isArchived}
             className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
           >
             Add class
@@ -146,6 +160,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
                     <input
                       type="text"
                       value={row.customerClass}
+                      disabled={isArchived}
                       onChange={(event) =>
                         updateRow(row.id, { customerClass: event.target.value })
                       }
@@ -157,6 +172,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
                       type="number"
                       min="0"
                       value={row.customerCount}
+                      disabled={isArchived}
                       onChange={(event) =>
                         updateNumber(row.id, "customerCount", event.target.value)
                       }
@@ -168,6 +184,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
                       type="number"
                       min="0"
                       value={row.annualKwh}
+                      disabled={isArchived}
                       onChange={(event) => updateNumber(row.id, "annualKwh", event.target.value)}
                       className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
                     />
@@ -177,6 +194,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
                       type="number"
                       min="0"
                       value={row.peakDemandKw}
+                      disabled={isArchived}
                       onChange={(event) =>
                         updateNumber(row.id, "peakDemandKw", event.target.value)
                       }
@@ -187,6 +205,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
                     <input
                       type="text"
                       value={row.notes}
+                      disabled={isArchived}
                       onChange={(event) => updateRow(row.id, { notes: event.target.value })}
                       className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
                     />
@@ -195,6 +214,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
                     <button
                       type="button"
                       onClick={() => removeRow(row.id)}
+                      disabled={isArchived}
                       className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
                     >
                       Remove
@@ -212,6 +232,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
         <textarea
           value={dataInputs.assumptions}
           onChange={updateAssumptions}
+          disabled={isArchived}
           rows={4}
           className="mt-2 w-full resize-y rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
         />
@@ -221,7 +242,8 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
         <button
           type="button"
           onClick={saveInputs}
-          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark"
+          disabled={isArchived}
+          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30"
         >
           Save inputs
         </button>
