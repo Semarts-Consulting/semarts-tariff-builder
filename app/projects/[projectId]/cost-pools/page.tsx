@@ -14,9 +14,13 @@ const sectionCopy: Record<CostInputSection, { title: string; description: string
     title: "Indirect Overheads",
     description: "Capture central overhead inputs and supporting assumptions."
   },
-  supply: {
-    title: "Supply",
-    description: "Capture supply, DUoS, TNUoS, admin and margin inputs."
+  "transmission-distribution": {
+    title: "Transmission & Distribution",
+    description: "Capture MPAN-level transmission and distribution charging inputs."
+  },
+  "supply-contract": {
+    title: "Supply Contract",
+    description: "Capture supply contract, admin and margin inputs."
   },
   "asset-data": {
     title: "Asset Data",
@@ -28,7 +32,8 @@ function getSection(value: string | string[] | undefined): CostInputSection {
   if (
     value === "direct-employee" ||
     value === "indirect-overheads" ||
-    value === "supply"
+    value === "transmission-distribution" ||
+    value === "supply-contract"
   ) {
     return value;
   }

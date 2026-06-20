@@ -162,6 +162,53 @@ export type SupplyChargeInput = {
   profitPercent: number;
 };
 
+export type SupplyVoltage = "EHV" | "HV" | "LV";
+
+export type SupplyChargeBasis = "Fixed" | "Pass Through";
+
+export type SupplyContractLosses = "CM" | "GSP" | "NBP";
+
+export type SupplyContractChargeType = "Consumption" | "Fixed" | "Capacity";
+
+export type SupplyContractUnitOfMeasurement =
+  | "per kWh"
+  | "per MWh"
+  | "per day"
+  | "per Month"
+  | "per year"
+  | "per kVA per day"
+  | "per kVA per Month";
+
+export type SupplyContractRateUnit = "£" | "p";
+
+export type SupplyContractChargeInput = {
+  id: string;
+  chargeName: string;
+  losses: SupplyContractLosses;
+  chargeType: SupplyContractChargeType;
+  unitOfMeasurement: SupplyContractUnitOfMeasurement;
+  rateUnit: SupplyContractRateUnit;
+  rate: number;
+};
+
+export type SupplyDetailsInput = {
+  id: string;
+  mpan: string;
+  supplyCapacityKva: number;
+  voltage: SupplyVoltage;
+  transmission: SupplyChargeBasis;
+  distribution: SupplyChargeBasis;
+  tnuosNonLocationalChargePerDay: number;
+  tnuosTriadChargePerKw: number;
+  duosFixedChargePerDay: number;
+  duosImportCapacityPencePerKvaPerDay: number;
+  duosRedUnitPencePerKwh: number;
+  duosAmberUnitPencePerKwh: number;
+  duosGreenUnitPencePerKwh: number;
+  duosSuperRedUnitPencePerKwh: number;
+  supplyContractCharges: SupplyContractChargeInput[];
+};
+
 export type TenantInput = {
   id: string;
   customerName: string;
@@ -216,6 +263,7 @@ export type ProjectMethodologyInputs = {
   directCosts: DirectCostInput[];
   employeeCosts: EmployeeCostInput[];
   indirectOverheads: IndirectOverheadInput[];
+  supplyDetails: SupplyDetailsInput[];
   supplyCharges: SupplyChargeInput;
   tenants: TenantInput[];
   assets: AssetInput[];

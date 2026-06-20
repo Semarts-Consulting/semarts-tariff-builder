@@ -13,6 +13,8 @@ import {
   createEmployeeCostInput,
   createIndirectOverheadInput,
   createPotllSupplyInput,
+  createSupplyContractChargeInput,
+  createSupplyDetailsInput,
   createTenantInput,
   getProjectById,
   getProjectMethodologyInputs,
@@ -50,7 +52,14 @@ import type {
   IndirectOverheadInput,
   PotllSupplyInput,
   ProjectMethodologyInputs,
-  SupplyChargeInput,
+  SupplyChargeBasis,
+  SupplyContractChargeType,
+  SupplyContractChargeInput,
+  SupplyContractLosses,
+  SupplyContractRateUnit,
+  SupplyContractUnitOfMeasurement,
+  SupplyDetailsInput,
+  SupplyVoltage,
   TariffAssumptions,
   TenantInput,
   WorkbookVoltage
@@ -65,7 +74,8 @@ export type CostInputSection =
   | "direct-non-employee"
   | "direct-employee"
   | "indirect-overheads"
-  | "supply";
+  | "transmission-distribution"
+  | "supply-contract";
 
 type AssumptionNumberField = keyof Pick<
   TariffAssumptions,
@@ -85,9 +95,36 @@ type AssumptionDateField = keyof Pick<
   "referenceYearStart" | "referenceYearEnd" | "tariffYearStart" | "tariffYearEnd"
 >;
 
-type SupplyChargeField = keyof SupplyChargeInput;
+type SupplyDetailsChargeField = keyof Pick<
+  SupplyDetailsInput,
+  | "tnuosNonLocationalChargePerDay"
+  | "tnuosTriadChargePerKw"
+  | "duosFixedChargePerDay"
+  | "duosImportCapacityPencePerKvaPerDay"
+  | "duosRedUnitPencePerKwh"
+  | "duosAmberUnitPencePerKwh"
+  | "duosGreenUnitPencePerKwh"
+  | "duosSuperRedUnitPencePerKwh"
+>;
 
 const voltages: WorkbookVoltage[] = ["EHV", "HV", "LV MD", "LV"];
+const supplyVoltages: SupplyVoltage[] = ["EHV", "HV", "LV"];
+const supplyChargeBases: SupplyChargeBasis[] = ["Fixed", "Pass Through"];
+const supplyContractLosses: SupplyContractLosses[] = ["CM", "GSP", "NBP"];
+const supplyContractChargeTypes: SupplyContractChargeType[] = [
+  "Consumption",
+  "Fixed",
+  "Capacity"
+];
+const supplyContractRateUnits: SupplyContractRateUnit[] = ["£", "p"];
+const supplyContractUnitsByChargeType: Record<
+  SupplyContractChargeType,
+  SupplyContractUnitOfMeasurement[]
+> = {
+  Consumption: ["per kWh", "per MWh"],
+  Fixed: ["per day", "per Month", "per year"],
+  Capacity: ["per kVA per day", "per kVA per Month"]
+};
 const assetVoltages: AssetInput["voltage"][] = ["EHV", "HV", "LV", "Metering"];
 const assetNetworkLevels = ["EHV", "EHV Local", "HV", "HV Local", "LV", "Metering"] as const;
 type AssetNetworkLevel = (typeof assetNetworkLevels)[number];
@@ -129,6 +166,46 @@ const directCostHeaders = [
 ];
 const employeeCostHeaders = ["Role", "Role Type", "FTE", "% Time"];
 const indirectOverheadHeaders = ["Description", "Annual Cost"];
+const transmissionChargeFields: { field: SupplyDetailsChargeField; label: string }[] = [
+  {
+    field: "tnuosNonLocationalChargePerDay",
+    label: "TNUoS non-locational charge per day"
+  },
+  {
+    field: "tnuosTriadChargePerKw",
+    label: "TNUoS triad charge per kW"
+  }
+];
+const commonDistributionChargeFields: { field: SupplyDetailsChargeField; label: string }[] = [
+  {
+    field: "duosFixedChargePerDay",
+    label: "DUoS fixed charge per day"
+  },
+  {
+    field: "duosImportCapacityPencePerKvaPerDay",
+    label: "DUoS import capacity pence per kVA per day"
+  }
+];
+const lvHvDistributionChargeFields: { field: SupplyDetailsChargeField; label: string }[] = [
+  {
+    field: "duosRedUnitPencePerKwh",
+    label: "DUoS red unit pence per kWh"
+  },
+  {
+    field: "duosAmberUnitPencePerKwh",
+    label: "DUoS amber unit pence per kWh"
+  },
+  {
+    field: "duosGreenUnitPencePerKwh",
+    label: "DUoS green unit pence per kWh"
+  }
+];
+const ehvDistributionChargeFields: { field: SupplyDetailsChargeField; label: string }[] = [
+  {
+    field: "duosSuperRedUnitPencePerKwh",
+    label: "DUoS super red unit pence per kWh"
+  }
+];
 
 function toNumber(value: string) {
   return Number(value) || 0;
@@ -164,6 +241,10 @@ function getAnnualTenantKwh(row: TenantInput) {
 
 function getQuarterTotal(row: PotllSupplyInput) {
   return row.quarterKwh.reduce((total, quarterValue) => total + quarterValue, 0);
+}
+
+function getDefaultSupplyContractUnit(chargeType: SupplyContractChargeType) {
+  return supplyContractUnitsByChargeType[chargeType][0];
 }
 
 function normaliseHeader(value: unknown) {
@@ -1397,6 +1478,63 @@ function validateAssumptions(assumptions: TariffAssumptions) {
   return errors;
 }
 
+function validateSupplyDetails(supplyDetails: SupplyDetailsInput[]) {
+  const errors: string[] = [];
+
+  supplyDetails.forEach((row, index) => {
+    const mpan = row.mpan.trim();
+
+    if (mpan && !/^\d{13}$/.test(mpan)) {
+      errors.push(`Supply details row ${index + 1}: MPAN must be a 13 digit code.`);
+    }
+
+    if (row.supplyCapacityKva < 0) {
+      errors.push(`Supply details row ${index + 1}: supply capacity cannot be negative.`);
+    }
+
+    const fieldsToValidate: { field: SupplyDetailsChargeField; label: string }[] = [];
+
+    if (row.transmission === "Fixed") {
+      fieldsToValidate.push(...transmissionChargeFields);
+    }
+
+    if (row.distribution === "Fixed") {
+      fieldsToValidate.push(
+        ...commonDistributionChargeFields,
+        ...(row.voltage === "EHV"
+          ? ehvDistributionChargeFields
+          : lvHvDistributionChargeFields)
+      );
+    }
+
+    fieldsToValidate.forEach(({ field, label }) => {
+      if (row[field] < 0) {
+        errors.push(`Supply details row ${index + 1}: ${label} cannot be negative.`);
+      }
+    });
+
+    row.supplyContractCharges.forEach((charge, chargeIndex) => {
+      if (charge.rate < 0) {
+        errors.push(
+          `Supply contract row ${index + 1}.${chargeIndex + 1}: rate cannot be negative.`
+        );
+      }
+
+      if (
+        !supplyContractUnitsByChargeType[charge.chargeType].includes(
+          charge.unitOfMeasurement
+        )
+      ) {
+        errors.push(
+          `Supply contract row ${index + 1}.${chargeIndex + 1}: unit does not match charge type.`
+        );
+      }
+    });
+  });
+
+  return errors;
+}
+
 function useWorkbookMethodology(projectId: string) {
   const [methodologyInputs, setMethodologyInputs] = useState<ProjectMethodologyInputs>(
     () => createDefaultMethodologyInputs(projectId)
@@ -2439,6 +2577,17 @@ export function WorkbookCostInputsForm({
     () => getIndirectOverheadSummary(methodologyInputs.indirectOverheads),
     [methodologyInputs.indirectOverheads]
   );
+  const supplyDetailsValidationErrors = useMemo(
+    () => validateSupplyDetails(methodologyInputs.supplyDetails),
+    [methodologyInputs.supplyDetails]
+  );
+  const supplyRowsRequiringCharges = useMemo(
+    () =>
+      methodologyInputs.supplyDetails.filter(
+        (row) => row.transmission === "Fixed" || row.distribution === "Fixed"
+      ),
+    [methodologyInputs.supplyDetails]
+  );
 
   useEffect(() => {
     if (!showAllSections && section !== "direct-non-employee") {
@@ -2582,14 +2731,69 @@ export function WorkbookCostInputsForm({
     };
   }, [projectId, section, showAllSections, setMethodologyInputs]);
 
-  function updateSupplyCharge(field: SupplyChargeField, value: string) {
+  function updateSupplyDetails(rowId: string, updates: Partial<SupplyDetailsInput>) {
     if (isArchived) return;
     setMethodologyInputs({
       ...methodologyInputs,
-      supplyCharges: {
-        ...methodologyInputs.supplyCharges,
-        [field]: toNumber(value)
-      }
+      supplyDetails: methodologyInputs.supplyDetails.map((row) =>
+        row.id === rowId ? { ...row, ...updates } : row
+      )
+    });
+  }
+
+  function addSupplyContractCharge(supplyId: string) {
+    if (isArchived) return;
+    setMethodologyInputs({
+      ...methodologyInputs,
+      supplyDetails: methodologyInputs.supplyDetails.map((row) =>
+        row.id === supplyId
+          ? {
+              ...row,
+              supplyContractCharges: [
+                ...row.supplyContractCharges,
+                createSupplyContractChargeInput()
+              ]
+            }
+          : row
+      )
+    });
+  }
+
+  function updateSupplyContractCharge(
+    supplyId: string,
+    chargeId: string,
+    updates: Partial<SupplyContractChargeInput>
+  ) {
+    if (isArchived) return;
+    setMethodologyInputs({
+      ...methodologyInputs,
+      supplyDetails: methodologyInputs.supplyDetails.map((row) =>
+        row.id === supplyId
+          ? {
+              ...row,
+              supplyContractCharges: row.supplyContractCharges.map((charge) =>
+                charge.id === chargeId ? { ...charge, ...updates } : charge
+              )
+            }
+          : row
+      )
+    });
+  }
+
+  function removeSupplyContractCharge(supplyId: string, chargeId: string) {
+    if (isArchived) return;
+    setMethodologyInputs({
+      ...methodologyInputs,
+      supplyDetails: methodologyInputs.supplyDetails.map((row) =>
+        row.id === supplyId
+          ? {
+              ...row,
+              supplyContractCharges: row.supplyContractCharges.filter(
+                (charge) => charge.id !== chargeId
+              )
+            }
+          : row
+      )
     });
   }
 
@@ -3420,6 +3624,87 @@ export function WorkbookCostInputsForm({
                   ) : null}
                 </tbody>
               </table>
+            </div>
+            <div className="mt-5 space-y-4">
+              {methodologyInputs.supplyDetails
+                .filter(
+                  (row) => row.transmission === "Fixed" || row.distribution === "Fixed"
+                )
+                .map((row) => {
+                  const distributionChargeFields =
+                    row.voltage === "EHV"
+                      ? ehvDistributionChargeFields
+                      : lvHvDistributionChargeFields;
+                  const showTransmissionCharges = row.transmission === "Fixed";
+                  const showDistributionCharges = row.distribution === "Fixed";
+                  const rowLabel = row.mpan ? `MPAN ${row.mpan}` : "New supply MPAN";
+
+                  return (
+                    <div key={row.id} className="rounded-md border border-line bg-white p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <h4 className="font-semibold">{rowLabel}</h4>
+                          <p className="mt-1 text-xs text-ink/60">
+                            {row.voltage} supply, {formatNumber(row.supplyCapacityKva)} kVA
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                          <span className="rounded-md border border-line bg-field px-2 py-1">
+                            Transmission: {row.transmission}
+                          </span>
+                          <span className="rounded-md border border-line bg-field px-2 py-1">
+                            Distribution: {row.distribution}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                        {showTransmissionCharges ? (
+                          <div className="rounded-md border border-line bg-field p-4">
+                            <h5 className="font-semibold">Transmission charges</h5>
+                            <div className="mt-4 grid gap-4 md:grid-cols-2">
+                              {transmissionChargeFields.map(({ field, label }) => (
+                                <NumberInput
+                                  key={field}
+                                  label={label}
+                                  value={row[field]}
+                                  disabled={isArchived}
+                                  onChange={(value) =>
+                                    updateSupplyDetails(row.id, {
+                                      [field]: toNumber(value)
+                                    })
+                                  }
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                        {showDistributionCharges ? (
+                          <div className="rounded-md border border-line bg-field p-4">
+                            <h5 className="font-semibold">Distribution charges</h5>
+                            <div className="mt-4 grid gap-4 md:grid-cols-2">
+                              {[
+                                ...commonDistributionChargeFields,
+                                ...distributionChargeFields
+                              ].map(({ field, label }) => (
+                                <NumberInput
+                                  key={field}
+                                  label={label}
+                                  value={row[field]}
+                                  disabled={isArchived}
+                                  onChange={(value) =>
+                                    updateSupplyDetails(row.id, {
+                                      [field]: toNumber(value)
+                                    })
+                                  }
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           </div>
 
@@ -4405,30 +4690,405 @@ export function WorkbookCostInputsForm({
         </WorkbookTableSection>
       ) : null}
 
-      {showAllSections || section === "supply" ? (
+      {showAllSections || section === "transmission-distribution" ? (
         <section className="rounded-md border border-line bg-white p-6 shadow-sm">
-        <h2 className="font-semibold">Supply, DUoS, TNUoS and margin inputs</h2>
+        <h2 className="font-semibold">Transmission and Distribution</h2>
         <p className="mt-1 text-sm text-ink/70">
           Source: Inputs and Selections A112:B146.
         </p>
-        <div className="mt-5 grid gap-4 md:grid-cols-4">
-          {(Object.keys(methodologyInputs.supplyCharges) as SupplyChargeField[]).map((field) => (
-            <NumberInput
-              key={field}
-              label={field.replace(/([A-Z])/g, " $1")}
-              value={methodologyInputs.supplyCharges[field]}
-              disabled={isArchived}
-              onChange={(value) => updateSupplyCharge(field, value)}
-            />
-          ))}
+        <div className="mt-5 space-y-5">
+          <div className="rounded-md border border-line bg-field p-4">
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="font-semibold">Supply details</h3>
+              <button
+                type="button"
+                disabled={isArchived}
+                onClick={() =>
+                  setMethodologyInputs({
+                    ...methodologyInputs,
+                    supplyDetails: [
+                      ...methodologyInputs.supplyDetails,
+                      createSupplyDetailsInput()
+                    ]
+                  })
+                }
+                className="rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold hover:border-semarts"
+              >
+                Add supply
+              </button>
+            </div>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[880px] border-collapse text-sm">
+                <thead className="bg-white text-left text-xs uppercase text-ink/60">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">MPAN</th>
+                    <th className="px-3 py-2 font-semibold">Supply Capacity (kVA)</th>
+                    <th className="px-3 py-2 font-semibold">Voltage</th>
+                    <th className="px-3 py-2 font-semibold">Transmission</th>
+                    <th className="px-3 py-2 font-semibold">Distribution</th>
+                    <th className="px-3 py-2 font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {methodologyInputs.supplyDetails.map((row) => (
+                    <tr key={row.id} className="border-t border-line">
+                      <td className="px-3 py-2">
+                        <input
+                          value={row.mpan}
+                          disabled={isArchived}
+                          maxLength={13}
+                          inputMode="numeric"
+                          onChange={(event) =>
+                            updateSupplyDetails(row.id, {
+                              mpan: event.target.value.replace(/\D/g, "").slice(0, 13)
+                            })
+                          }
+                          className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <NumberCell
+                          value={row.supplyCapacityKva}
+                          disabled={isArchived}
+                          onChange={(value) =>
+                            updateSupplyDetails(row.id, {
+                              supplyCapacityKva: toNumber(value)
+                            })
+                          }
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={row.voltage}
+                          disabled={isArchived}
+                          onChange={(event) =>
+                            updateSupplyDetails(row.id, {
+                              voltage: event.target.value as SupplyVoltage
+                            })
+                          }
+                          className="w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                        >
+                          {supplyVoltages.map((voltage) => (
+                            <option key={voltage}>{voltage}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={row.transmission}
+                          disabled={isArchived}
+                          onChange={(event) =>
+                            updateSupplyDetails(row.id, {
+                              transmission: event.target.value as SupplyChargeBasis
+                            })
+                          }
+                          className="w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                        >
+                          {supplyChargeBases.map((basis) => (
+                            <option key={basis}>{basis}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <select
+                          value={row.distribution}
+                          disabled={isArchived}
+                          onChange={(event) =>
+                            updateSupplyDetails(row.id, {
+                              distribution: event.target.value as SupplyChargeBasis
+                            })
+                          }
+                          className="w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                        >
+                          {supplyChargeBases.map((basis) => (
+                            <option key={basis}>{basis}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-3 py-2">
+                        <RemoveButton
+                          disabled={isArchived}
+                          onClick={() =>
+                            setMethodologyInputs({
+                              ...methodologyInputs,
+                              supplyDetails: methodologyInputs.supplyDetails.filter(
+                                (supply) => supply.id !== row.id
+                              )
+                            })
+                          }
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                  {methodologyInputs.supplyDetails.length === 0 ? (
+                    <tr className="border-t border-line">
+                      <td colSpan={6} className="px-3 py-4 text-center text-ink/60">
+                        No supply MPANs entered yet.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-5 border-t border-line pt-5">
+              <h4 className="font-semibold">MPAN-specific fixed charges</h4>
+              {supplyRowsRequiringCharges.length === 0 ? (
+                <p className="mt-3 rounded-md border border-line bg-white px-4 py-3 text-sm text-ink/60">
+                  No fixed transmission or distribution charges required.
+                </p>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  {supplyRowsRequiringCharges.map((row) => {
+                    const distributionChargeFields =
+                      row.voltage === "EHV"
+                        ? ehvDistributionChargeFields
+                        : lvHvDistributionChargeFields;
+                    const showTransmissionCharges = row.transmission === "Fixed";
+                    const showDistributionCharges = row.distribution === "Fixed";
+                    const rowLabel = row.mpan ? `MPAN ${row.mpan}` : "New supply MPAN";
+
+                    return (
+                      <div key={row.id} className="rounded-md border border-line bg-white p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <h5 className="font-semibold">{rowLabel}</h5>
+                            <p className="mt-1 text-xs text-ink/60">
+                              {row.voltage} supply, {formatNumber(row.supplyCapacityKva)} kVA
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                            <span className="rounded-md border border-line bg-field px-2 py-1">
+                              Transmission: {row.transmission}
+                            </span>
+                            <span className="rounded-md border border-line bg-field px-2 py-1">
+                              Distribution: {row.distribution}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                          {showTransmissionCharges ? (
+                            <div className="rounded-md border border-line bg-field p-4">
+                              <h6 className="font-semibold">Transmission charges</h6>
+                              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                                {transmissionChargeFields.map(({ field, label }) => (
+                                  <NumberInput
+                                    key={field}
+                                    label={label}
+                                    value={row[field]}
+                                    disabled={isArchived}
+                                    onChange={(value) =>
+                                      updateSupplyDetails(row.id, {
+                                        [field]: toNumber(value)
+                                      })
+                                    }
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+                          {showDistributionCharges ? (
+                            <div className="rounded-md border border-line bg-field p-4">
+                              <h6 className="font-semibold">Distribution charges</h6>
+                              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                                {[
+                                  ...commonDistributionChargeFields,
+                                  ...distributionChargeFields
+                                ].map(({ field, label }) => (
+                                  <NumberInput
+                                    key={field}
+                                    label={label}
+                                    value={row[field]}
+                                    disabled={isArchived}
+                                    onChange={(value) =>
+                                      updateSupplyDetails(row.id, {
+                                        [field]: toNumber(value)
+                                      })
+                                    }
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+        </section>
+      ) : null}
+
+      {showAllSections || section === "supply-contract" ? (
+        <section className="rounded-md border border-line bg-white p-6 shadow-sm">
+          <h2 className="font-semibold">Supply Contract</h2>
+          <p className="mt-1 text-sm text-ink/70">
+            Source: Inputs and Selections A112:B146.
+          </p>
+          <div className="mt-5 space-y-5">
+            {methodologyInputs.supplyDetails.map((supply) => {
+              const supplyLabel = supply.mpan ? `MPAN ${supply.mpan}` : "New supply MPAN";
+
+              return (
+                <div key={supply.id} className="rounded-md border border-line bg-field p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold">{supplyLabel}</h3>
+                      <p className="mt-1 text-xs text-ink/60">
+                        {supply.voltage} supply, {formatNumber(supply.supplyCapacityKva)} kVA
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isArchived}
+                      onClick={() => addSupplyContractCharge(supply.id)}
+                      className="rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold hover:border-semarts"
+                    >
+                      Add charge
+                    </button>
+                  </div>
+                  <div className="mt-4 overflow-x-auto">
+                    <table className="w-full min-w-[720px] border-collapse text-sm">
+                      <thead className="bg-white text-left text-xs uppercase text-ink/60">
+                        <tr>
+                          <th className="px-3 py-2 font-semibold">Charge Name</th>
+                          <th className="px-3 py-2 font-semibold">Losses</th>
+                          <th className="px-3 py-2 font-semibold">Charge Type</th>
+                          <th className="px-3 py-2 font-semibold">Unit of Measurement</th>
+                          <th className="px-3 py-2 font-semibold">Rate Unit</th>
+                          <th className="px-3 py-2 font-semibold">Rate</th>
+                          <th className="px-3 py-2 font-semibold">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {supply.supplyContractCharges.map((charge) => (
+                          <tr key={charge.id} className="border-t border-line">
+                            <td className="px-3 py-2">
+                              <input
+                                value={charge.chargeName}
+                                disabled={isArchived}
+                                onChange={(event) =>
+                                  updateSupplyContractCharge(supply.id, charge.id, {
+                                    chargeName: event.target.value
+                                  })
+                                }
+                                className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={charge.losses}
+                                disabled={isArchived}
+                                onChange={(event) =>
+                                  updateSupplyContractCharge(supply.id, charge.id, {
+                                    losses: event.target.value as SupplyContractLosses
+                                  })
+                                }
+                                className="w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                              >
+                                {supplyContractLosses.map((losses) => (
+                                  <option key={losses}>{losses}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={charge.chargeType}
+                                disabled={isArchived}
+                                onChange={(event) => {
+                                  const chargeType = event.target.value as SupplyContractChargeType;
+
+                                  updateSupplyContractCharge(supply.id, charge.id, {
+                                    chargeType,
+                                    unitOfMeasurement: getDefaultSupplyContractUnit(chargeType)
+                                  });
+                                }}
+                                className="w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                              >
+                                {supplyContractChargeTypes.map((chargeType) => (
+                                  <option key={chargeType}>{chargeType}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={charge.unitOfMeasurement}
+                                disabled={isArchived}
+                                onChange={(event) =>
+                                  updateSupplyContractCharge(supply.id, charge.id, {
+                                    unitOfMeasurement: event.target.value as SupplyContractUnitOfMeasurement
+                                  })
+                                }
+                                className="w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                              >
+                                {supplyContractUnitsByChargeType[charge.chargeType].map((unit) => (
+                                  <option key={unit}>{unit}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
+                                value={charge.rateUnit}
+                                disabled={isArchived}
+                                onChange={(event) =>
+                                  updateSupplyContractCharge(supply.id, charge.id, {
+                                    rateUnit: event.target.value as SupplyContractRateUnit
+                                  })
+                                }
+                                className="w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                              >
+                                {supplyContractRateUnits.map((rateUnit) => (
+                                  <option key={rateUnit}>{rateUnit}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <NumberCell
+                                value={charge.rate}
+                                disabled={isArchived}
+                                onChange={(value) =>
+                                  updateSupplyContractCharge(supply.id, charge.id, {
+                                    rate: toNumber(value)
+                                  })
+                                }
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <RemoveButton
+                                disabled={isArchived}
+                                onClick={() => removeSupplyContractCharge(supply.id, charge.id)}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                        {supply.supplyContractCharges.length === 0 ? (
+                          <tr className="border-t border-line">
+                            <td colSpan={7} className="px-3 py-4 text-center text-ink/60">
+                              No supply contract charges entered yet.
+                            </td>
+                          </tr>
+                        ) : null}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
+            {methodologyInputs.supplyDetails.length === 0 ? (
+              <div className="rounded-md border border-line bg-field p-4 text-sm text-ink/60">
+                Add MPANs in Transmission & Distribution before entering supply contract charges.
+              </div>
+            ) : null}
+          </div>
         </section>
       ) : null}
 
       <SaveFooter
         disabled={isArchived}
         saveState={saveState}
-        validationErrors={[]}
+        validationErrors={supplyDetailsValidationErrors}
         onSave={() => save(methodologyInputs, "Workbook cost inputs saved locally.")}
       />
     </div>

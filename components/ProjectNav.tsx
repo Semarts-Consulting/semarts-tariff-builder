@@ -30,7 +30,8 @@ const modelSections = [
       { title: "Direct - Non-Employee", section: "direct-non-employee" },
       { title: "Direct - Employee", section: "direct-employee" },
       { title: "Indirect Overheads", section: "indirect-overheads" },
-      { title: "Supply", section: "supply" }
+      { title: "Transmission & Distribution", section: "transmission-distribution" },
+      { title: "Supply Contract", section: "supply-contract" }
     ]
   },
   { title: "Allocation Methods", href: "allocation-methods", items: [] },

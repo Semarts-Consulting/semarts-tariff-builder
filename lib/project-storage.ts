@@ -103,6 +103,58 @@ function todayLabel() {
   }).format(new Date());
 }
 
+function normalizeProjectMethodologyInputs(
+  inputs: ProjectMethodologyInputs
+): ProjectMethodologyInputs {
+  const defaults = createDefaultMethodologyInputs(inputs.projectId);
+  const legacySupplyDetails = inputs.supplyDetails as
+    | ProjectMethodologyInputs["supplyDetails"]
+    | Omit<ProjectMethodologyInputs["supplyDetails"][number], "id">
+    | undefined;
+  const supplyDetails = Array.isArray(legacySupplyDetails)
+    ? legacySupplyDetails.map((row) => ({
+        ...createSupplyDetailsInput(),
+        ...row,
+        supplyContractCharges: (row.supplyContractCharges ?? []).map((charge) => {
+          const legacyCharge = charge as typeof charge & { lossesApplied?: boolean };
+
+          return {
+            ...createSupplyContractChargeInput(),
+            ...charge,
+            losses:
+              legacyCharge.losses ??
+              (legacyCharge.lossesApplied ? "GSP" : "NBP"),
+            chargeType: legacyCharge.chargeType ?? "Consumption",
+            unitOfMeasurement: legacyCharge.unitOfMeasurement || "per kWh",
+            rateUnit: legacyCharge.rateUnit ?? "p"
+          };
+        })
+      }))
+    : legacySupplyDetails
+      ? [
+          {
+            ...createSupplyDetailsInput(),
+            ...legacySupplyDetails,
+            supplyContractCharges: []
+          }
+        ]
+      : defaults.supplyDetails;
+
+  return {
+    ...defaults,
+    ...inputs,
+    assumptions: {
+      ...defaults.assumptions,
+      ...inputs.assumptions
+    },
+    supplyDetails,
+    supplyCharges: {
+      ...defaults.supplyCharges,
+      ...inputs.supplyCharges
+    }
+  };
+}
+
 export function createProjectId(name: string) {
   const slug = name
     .trim()
@@ -325,6 +377,38 @@ export function createPotllSupplyInput(): PotllSupplyInput {
   };
 }
 
+export function createSupplyContractChargeInput(): ProjectMethodologyInputs["supplyDetails"][number]["supplyContractCharges"][number] {
+  return {
+    id: createWorkbookRowId("supply-contract-charge"),
+    chargeName: "",
+    losses: "NBP",
+    chargeType: "Consumption",
+    unitOfMeasurement: "per kWh",
+    rateUnit: "p",
+    rate: 0
+  };
+}
+
+export function createSupplyDetailsInput(): ProjectMethodologyInputs["supplyDetails"][number] {
+  return {
+    id: createWorkbookRowId("supply"),
+    mpan: "",
+    supplyCapacityKva: 0,
+    voltage: "HV",
+    transmission: "Fixed",
+    distribution: "Fixed",
+    tnuosNonLocationalChargePerDay: 0,
+    tnuosTriadChargePerKw: 0,
+    duosFixedChargePerDay: 0,
+    duosImportCapacityPencePerKvaPerDay: 0,
+    duosRedUnitPencePerKwh: 0,
+    duosAmberUnitPencePerKwh: 0,
+    duosGreenUnitPencePerKwh: 0,
+    duosSuperRedUnitPencePerKwh: 0,
+    supplyContractCharges: []
+  };
+}
+
 export function createHalfHourlyImportRow(): HalfHourlyImportRow {
   return {
     id: createWorkbookRowId("hh-import"),
@@ -360,6 +444,7 @@ export function createDefaultMethodologyInputs(projectId: string): ProjectMethod
     directCosts: [],
     employeeCosts: [],
     indirectOverheads: [],
+    supplyDetails: [],
     supplyCharges: {
       dayUnitRatePencePerKwh: 0,
       nightUnitRatePencePerKwh: 0,
@@ -390,7 +475,7 @@ export function getStoredMethodologyInputs() {
 
   return parseProjectMethodologyInputs(
     window.localStorage.getItem(methodologyInputsStorageKey)
-  );
+  ).map(normalizeProjectMethodologyInputs);
 }
 
 export function getProjectMethodologyInputs(projectId: string) {
