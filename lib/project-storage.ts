@@ -127,6 +127,59 @@ export function saveProject(project: Project) {
   window.localStorage.setItem(storageKey, JSON.stringify(nextProjects));
 }
 
+export function reconcileProjectCustomerClasses(
+  projectId: string,
+  nextCustomerClasses: string[]
+) {
+  const existingDataInputs = getProjectDataInputs(projectId);
+  const existingAllocationMethods = getProjectAllocationMethods(projectId);
+  const existingRowsByClass = new Map(
+    existingDataInputs.rows.map((row) => [row.customerClass, row])
+  );
+  const nextClassSet = new Set(nextCustomerClasses);
+  const nextDataInputs: ProjectDataInputs = {
+    ...existingDataInputs,
+    rows: nextCustomerClasses.map(
+      (customerClass) => existingRowsByClass.get(customerClass) ?? createDataInputRow(customerClass)
+    ),
+    lastUpdated: todayLabel()
+  };
+  const nextAllocationMethods: ProjectAllocationMethods = {
+    ...existingAllocationMethods,
+    rows: existingAllocationMethods.rows.map((row) => {
+      const existingSharesByClass = new Map(
+        row.classShares.map((share) => [share.customerClass, share.percent])
+      );
+      const classShares = nextCustomerClasses.map((customerClass) => ({
+        customerClass,
+        percent: existingSharesByClass.get(customerClass) ?? 0
+      }));
+      const remainingShareTotal = classShares.reduce((total, share) => total + share.percent, 0);
+
+      return {
+        ...row,
+        basis: row.basis === "Manual" ? row.basis : "Manual",
+        classShares:
+          remainingShareTotal > 0 || classShares.length === 0
+            ? classShares
+            : equalShares(nextCustomerClasses),
+        notes: row.classShares.some((share) => !nextClassSet.has(share.customerClass))
+          ? `${row.notes ? `${row.notes} ` : ""}Customer classes reconciled.`
+          : row.notes
+      };
+    }),
+    lastUpdated: todayLabel()
+  };
+
+  saveProjectDataInputs(nextDataInputs);
+  saveProjectAllocationMethods(nextAllocationMethods);
+
+  return {
+    dataInputs: nextDataInputs,
+    allocationMethods: nextAllocationMethods
+  };
+}
+
 export function deleteProject(projectId: string) {
   if (!hasBrowserStorage()) {
     return;

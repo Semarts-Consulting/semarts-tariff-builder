@@ -2,8 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { deleteProject, getProjectById, saveProject } from "@/lib/project-storage";
-import { deleteProjectFromSupabase, saveProjectToSupabase } from "@/lib/supabase-sync";
+import {
+  deleteProject,
+  getProjectById,
+  reconcileProjectCustomerClasses,
+  saveProject
+} from "@/lib/project-storage";
+import {
+  deleteProjectFromSupabase,
+  saveAllocationMethodsToSupabase,
+  saveDataInputsToSupabase,
+  saveProjectToSupabase
+} from "@/lib/supabase-sync";
 import type { Project, ProjectStatus } from "@/types/project";
 
 type ProjectSettingsFormProps = {
@@ -67,12 +77,35 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
     if (!project) {
       return;
     }
+    const nextCustomerClasses = splitCustomerClasses(customerClasses);
+    const previousCustomerClasses = project.customerClasses.join("|");
+    const customerClassesChanged = previousCustomerClasses !== nextCustomerClasses.join("|");
+    const reconciledData =
+      customerClassesChanged && nextCustomerClasses.length > 0
+        ? reconcileProjectCustomerClasses(project.id, nextCustomerClasses)
+        : null;
 
     await saveUpdatedProject({
       ...project,
-      customerClasses: splitCustomerClasses(customerClasses),
+      customerClasses: nextCustomerClasses,
       lastUpdated: getTodayLabel()
     });
+
+    if (reconciledData) {
+      try {
+        await Promise.all([
+          saveDataInputsToSupabase(reconciledData.dataInputs),
+          saveAllocationMethodsToSupabase(reconciledData.allocationMethods)
+        ]);
+        setStatusMessage("Project saved and customer classes reconciled.");
+      } catch (error) {
+        setStatusMessage(
+          error instanceof Error
+            ? `Project saved and reconciled locally. Cloud reconciliation failed: ${error.message}`
+            : "Project saved and reconciled locally. Cloud reconciliation failed."
+        );
+      }
+    }
   }
 
   async function handleArchiveToggle() {
