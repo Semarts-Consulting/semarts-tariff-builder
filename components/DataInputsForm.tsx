@@ -6,6 +6,7 @@ import {
   getProjectDataInputs,
   saveProjectDataInputs
 } from "@/lib/project-storage";
+import { saveDataInputsToSupabase } from "@/lib/supabase-sync";
 import type { DataInputRow, ProjectDataInputs } from "@/types/project";
 
 type DataInputsFormProps = {
@@ -80,10 +81,21 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
     setSaveState("");
   }
 
-  function saveInputs() {
+  async function saveInputs() {
     saveProjectDataInputs(dataInputs);
-    setDataInputs(getProjectDataInputs(projectId));
-    setSaveState("Saved");
+    const savedDataInputs = getProjectDataInputs(projectId);
+    setDataInputs(savedDataInputs);
+
+    try {
+      const cloudSaved = await saveDataInputsToSupabase(savedDataInputs);
+      setSaveState(cloudSaved ? "Saved locally and to cloud" : "Saved locally");
+    } catch (error) {
+      setSaveState(
+        error instanceof Error
+          ? `Saved locally. Cloud save failed: ${error.message}`
+          : "Saved locally. Cloud save failed."
+      );
+    }
   }
 
   return (

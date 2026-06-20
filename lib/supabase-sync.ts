@@ -1,6 +1,12 @@
 import { importLocalProjectBackup } from "@/lib/project-storage";
 import { supabase } from "@/lib/supabase";
-import type { LocalProjectBackup, Project } from "@/types/project";
+import type {
+  LocalProjectBackup,
+  Project,
+  ProjectAllocationMethods,
+  ProjectCostPools,
+  ProjectDataInputs
+} from "@/types/project";
 
 function toProjectRow(project: Project, userId: string) {
   return {
@@ -57,6 +63,131 @@ async function getSignedInUserId() {
   }
 
   return data.user.id;
+}
+
+export async function getOptionalSignedInUserId() {
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data.user) {
+    return null;
+  }
+
+  return data.user.id;
+}
+
+export async function saveProjectToSupabase(project: Project) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase.from("projects").upsert(toProjectRow(project, userId), {
+    onConflict: "local_id"
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function saveDataInputsToSupabase(dataInputs: ProjectDataInputs) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase.from("project_data_inputs").upsert(
+    {
+      user_id: userId,
+      project_local_id: dataInputs.projectId,
+      rows: dataInputs.rows,
+      assumptions: dataInputs.assumptions,
+      last_updated: dataInputs.lastUpdated
+    },
+    { onConflict: "project_local_id" }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function saveCostPoolsToSupabase(costPools: ProjectCostPools) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase.from("project_cost_pools").upsert(
+    {
+      user_id: userId,
+      project_local_id: costPools.projectId,
+      rows: costPools.rows,
+      assumptions: costPools.assumptions,
+      last_updated: costPools.lastUpdated
+    },
+    { onConflict: "project_local_id" }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function saveAllocationMethodsToSupabase(
+  allocationMethods: ProjectAllocationMethods
+) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase.from("project_allocation_methods").upsert(
+    {
+      user_id: userId,
+      project_local_id: allocationMethods.projectId,
+      rows: allocationMethods.rows,
+      assumptions: allocationMethods.assumptions,
+      last_updated: allocationMethods.lastUpdated
+    },
+    { onConflict: "project_local_id" }
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
 }
 
 export async function pushBackupToSupabase(backup: LocalProjectBackup) {

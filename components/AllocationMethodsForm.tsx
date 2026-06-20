@@ -7,6 +7,7 @@ import {
   getProjectCostPools,
   saveProjectAllocationMethods
 } from "@/lib/project-storage";
+import { saveAllocationMethodsToSupabase } from "@/lib/supabase-sync";
 import type {
   AllocationBasis,
   AllocationMethodRow,
@@ -119,10 +120,21 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
     setSaveState("");
   }
 
-  function saveInputs() {
+  async function saveInputs() {
     saveProjectAllocationMethods(allocationMethods);
-    setAllocationMethods(getProjectAllocationMethods(projectId));
-    setSaveState("Saved");
+    const savedAllocationMethods = getProjectAllocationMethods(projectId);
+    setAllocationMethods(savedAllocationMethods);
+
+    try {
+      const cloudSaved = await saveAllocationMethodsToSupabase(savedAllocationMethods);
+      setSaveState(cloudSaved ? "Saved locally and to cloud" : "Saved locally");
+    } catch (error) {
+      setSaveState(
+        error instanceof Error
+          ? `Saved locally. Cloud save failed: ${error.message}`
+          : "Saved locally. Cloud save failed."
+      );
+    }
   }
 
   return (

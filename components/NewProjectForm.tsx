@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { createProjectId, saveProject } from "@/lib/project-storage";
+import { saveProjectToSupabase } from "@/lib/supabase-sync";
 import type { Project } from "@/types/project";
 
 const todayFormatter = new Intl.DateTimeFormat("en-GB", {
@@ -43,7 +44,7 @@ export function NewProjectForm() {
     [effectiveDate, networkName, projectName, tariffYear]
   );
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!canSubmit) {
@@ -64,6 +65,16 @@ export function NewProjectForm() {
     };
 
     saveProject(project);
+    try {
+      await saveProjectToSupabase(project);
+    } catch (cloudError) {
+      setError(
+        cloudError instanceof Error
+          ? `Project saved locally. Cloud save failed: ${cloudError.message}`
+          : "Project saved locally. Cloud save failed."
+      );
+      return;
+    }
     router.push(`/projects/${project.id}`);
   }
 

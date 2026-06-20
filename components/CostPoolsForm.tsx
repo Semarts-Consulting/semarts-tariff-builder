@@ -6,6 +6,7 @@ import {
   getProjectCostPools,
   saveProjectCostPools
 } from "@/lib/project-storage";
+import { saveCostPoolsToSupabase } from "@/lib/supabase-sync";
 import type { CostPoolCategory, CostPoolRow, ProjectCostPools } from "@/types/project";
 
 type CostPoolsFormProps = {
@@ -100,10 +101,21 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
     setSaveState("");
   }
 
-  function saveInputs() {
+  async function saveInputs() {
     saveProjectCostPools(costPools);
-    setCostPools(getProjectCostPools(projectId));
-    setSaveState("Saved");
+    const savedCostPools = getProjectCostPools(projectId);
+    setCostPools(savedCostPools);
+
+    try {
+      const cloudSaved = await saveCostPoolsToSupabase(savedCostPools);
+      setSaveState(cloudSaved ? "Saved locally and to cloud" : "Saved locally");
+    } catch (error) {
+      setSaveState(
+        error instanceof Error
+          ? `Saved locally. Cloud save failed: ${error.message}`
+          : "Saved locally. Cloud save failed."
+      );
+    }
   }
 
   return (
