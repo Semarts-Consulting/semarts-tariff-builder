@@ -2,6 +2,7 @@ import { importLocalProjectBackup } from "@/lib/project-storage";
 import { supabase } from "@/lib/supabase";
 import type {
   AssetInput,
+  DirectCostInput,
   LocalProjectBackup,
   HalfHourlyImportRow,
   Project,
@@ -189,6 +190,78 @@ function fromAssetDataRow(row: {
     networkLevel: row.network_level,
     lifeYears: row.life_years,
     priorYearAssetValue: row.prior_year_asset_value,
+    sourceFileName: row.source_file_name,
+    uploadedAt: row.uploaded_at,
+    importBatchId: row.import_batch_id,
+    rowFingerprint: row.row_fingerprint
+  };
+}
+
+function hasDirectCostIssues(row: DirectCostInput) {
+  return !row.description.trim() || !row.costByType.trim() || row.annualValue < 0;
+}
+
+function getDirectCostBatchRows(projectId: string, rows: DirectCostInput[], userId: string) {
+  const batches = new Map<string, DirectCostInput[]>();
+
+  rows.forEach((row) => {
+    const batchId = row.importBatchId || `manual-${row.id}`;
+    const existingRows = batches.get(batchId) ?? [];
+    existingRows.push(row);
+    batches.set(batchId, existingRows);
+  });
+
+  return Array.from(batches.entries()).map(([importBatchId, batchRows]) => {
+    const latestRow = [...batchRows].sort((a, b) =>
+      (b.uploadedAt || "").localeCompare(a.uploadedAt || "")
+    )[0];
+
+    return {
+      user_id: userId,
+      import_batch_id: importBatchId,
+      project_local_id: projectId,
+      source_file_name: latestRow?.sourceFileName || "Manual entry",
+      uploaded_at: latestRow?.uploadedAt || new Date().toISOString(),
+      row_count: batchRows.length,
+      total_annual_value: batchRows.reduce((total, row) => total + row.annualValue, 0),
+      has_issues: batchRows.some(hasDirectCostIssues)
+    };
+  });
+}
+
+function toDirectCostDataRow(projectId: string, row: DirectCostInput, userId: string) {
+  const uploadedAt = row.uploadedAt || new Date().toISOString();
+  const importBatchId = row.importBatchId || `manual-${row.id}`;
+
+  return {
+    user_id: userId,
+    project_local_id: projectId,
+    import_batch_id: importBatchId,
+    description: row.description,
+    cost_by_type: row.costByType,
+    annual_value: row.annualValue,
+    source_file_name: row.sourceFileName || "Manual entry",
+    uploaded_at: uploadedAt,
+    row_fingerprint: row.rowFingerprint || row.id
+  };
+}
+
+function fromDirectCostDataRow(row: {
+  id: string;
+  description: string;
+  cost_by_type: string;
+  annual_value: number;
+  source_file_name: string;
+  uploaded_at: string;
+  import_batch_id: string;
+  row_fingerprint: string;
+}): DirectCostInput {
+  return {
+    id: row.id,
+    description: row.description,
+    costByType: row.cost_by_type,
+    annualValue: row.annual_value,
+    comment: "",
     sourceFileName: row.source_file_name,
     uploadedAt: row.uploaded_at,
     importBatchId: row.import_batch_id,
@@ -622,6 +695,119 @@ export async function clearAssetDataFromSupabase(projectId: string) {
 
   const { error } = await supabase
     .from("asset_import_batches")
+    .delete()
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function saveDirectCostDataToSupabase(projectId: string, rows: DirectCostInput[]) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const batchRows = getDirectCostBatchRows(projectId, rows, userId);
+  const dataRows = rows.map((row) => toDirectCostDataRow(projectId, row, userId));
+
+  if (batchRows.length > 0) {
+    const { error } = await supabase
+      .from("direct_cost_import_batches")
+      .upsert(batchRows, { onConflict: "import_batch_id" });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  if (dataRows.length > 0) {
+    const { error } = await supabase
+      .from("direct_cost_data")
+      .upsert(dataRows, { onConflict: "project_local_id,description,cost_by_type" });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  return true;
+}
+
+export async function loadDirectCostDataFromSupabase(projectId: string) {
+  if (!supabase) {
+    return [];
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("direct_cost_data")
+    .select(
+      "id, description, cost_by_type, annual_value, source_file_name, uploaded_at, import_batch_id, row_fingerprint"
+    )
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId)
+    .order("description", { ascending: true })
+    .order("cost_by_type", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map(fromDirectCostDataRow);
+}
+
+export async function deleteDirectCostBatchFromSupabase(batchId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("direct_cost_import_batches")
+    .delete()
+    .eq("import_batch_id", batchId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function clearDirectCostDataFromSupabase(projectId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("direct_cost_import_batches")
     .delete()
     .eq("project_local_id", projectId)
     .eq("user_id", userId);

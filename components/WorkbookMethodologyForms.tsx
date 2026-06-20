@@ -21,11 +21,15 @@ import {
 import {
   clearAssetDataFromSupabase,
   clearBoundaryMeterDataFromSupabase,
+  clearDirectCostDataFromSupabase,
   deleteAssetBatchFromSupabase,
   deleteBoundaryMeterBatchFromSupabase,
+  deleteDirectCostBatchFromSupabase,
   loadAssetDataFromSupabase,
   loadBoundaryMeterDataFromSupabase,
+  loadDirectCostDataFromSupabase,
   saveAssetDataToSupabase,
+  saveDirectCostDataToSupabase,
   saveProjectToSupabase,
   saveBoundaryMeterDataToSupabase
 } from "@/lib/supabase-sync";
@@ -950,8 +954,37 @@ function getDirectCostSummary(rows: DirectCostInput[]) {
     rowCount: rows.length,
     totalAnnualValue,
     invalidRows,
-    costTypeCount: costTypes.size
+    costTypeCount: costTypes.size,
+    uploadBatches: getDirectCostUploadBatches(rows)
   };
+}
+
+function getDirectCostUploadBatches(rows: DirectCostInput[]) {
+  const batches = new Map<string, DirectCostInput[]>();
+
+  rows
+    .filter((row) => row.importBatchId)
+    .forEach((row) => {
+      const currentRows = batches.get(row.importBatchId) ?? [];
+      currentRows.push(row);
+      batches.set(row.importBatchId, currentRows);
+    });
+
+  return Array.from(batches.entries())
+    .map(([batchId, batchRows]) => {
+      const latestRow = [...batchRows].sort((a, b) =>
+        (b.uploadedAt || "").localeCompare(a.uploadedAt || "")
+      )[0];
+
+      return {
+        batchId,
+        rowCount: batchRows.length,
+        fileName: latestRow?.sourceFileName || "Unknown file",
+        uploadedAt: latestRow?.uploadedAt || "",
+        totalAnnualValue: batchRows.reduce((total, row) => total + row.annualValue, 0)
+      };
+    })
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
 }
 
 function validateAssumptions(assumptions: TariffAssumptions) {
@@ -2001,6 +2034,9 @@ export function WorkbookCostInputsForm({
   const [confirmClearAssets, setConfirmClearAssets] = useState(false);
   const [directCostImportStatus, setDirectCostImportStatus] = useState("");
   const [directCostImportErrors, setDirectCostImportErrors] = useState<string[]>([]);
+  const [directCostCloudStatus, setDirectCostCloudStatus] = useState("");
+  const [directCostBatchToRemove, setDirectCostBatchToRemove] = useState("");
+  const [confirmClearDirectCosts, setConfirmClearDirectCosts] = useState(false);
   const assetSummary = useMemo(
     () => getAssetSummary(methodologyInputs.assets),
     [methodologyInputs.assets]
@@ -2009,6 +2045,41 @@ export function WorkbookCostInputsForm({
     () => getDirectCostSummary(methodologyInputs.directCosts),
     [methodologyInputs.directCosts]
   );
+
+  useEffect(() => {
+    if (!showAllSections && section !== "direct-non-employee") {
+      return;
+    }
+
+    let isMounted = true;
+
+    loadDirectCostDataFromSupabase(projectId)
+      .then((cloudRows) => {
+        if (!isMounted || cloudRows.length === 0) {
+          return;
+        }
+
+        const nextInputs = {
+          ...getProjectMethodologyInputs(projectId),
+          directCosts: cloudRows
+        };
+
+        saveProjectMethodologyInputs(nextInputs);
+        setMethodologyInputs(nextInputs);
+        setDirectCostCloudStatus("Loaded direct non-employee costs from cloud.");
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setDirectCostCloudStatus(`Cloud load failed: ${getErrorMessage(error)}`);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, section, showAllSections, setMethodologyInputs]);
 
   useEffect(() => {
     if (!showAllSections && section !== "asset-data") {
@@ -2134,6 +2205,18 @@ export function WorkbookCostInputsForm({
     setDirectCostImportStatus(
       `Imported ${result.parsedRows.length} rows. Added ${merged.added}, replaced ${merged.replaced}, skipped ${merged.skippedDuplicates} duplicate rows.`
     );
+
+    try {
+      await saveProjectToSupabase(getProjectById(projectId));
+      const cloudSaved = await saveDirectCostDataToSupabase(projectId, merged.rows);
+      setDirectCostCloudStatus(
+        cloudSaved ? "Direct non-employee costs saved to cloud." : "Saved locally only."
+      );
+    } catch (error) {
+      setDirectCostCloudStatus(
+        `Saved locally. Cloud save failed: ${getErrorMessage(error)}`
+      );
+    }
   }
 
   function handleDirectCostFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -2148,6 +2231,96 @@ export function WorkbookCostInputsForm({
       setDirectCostImportStatus("");
     });
     event.target.value = "";
+  }
+
+  async function saveDirectCostsToCloud() {
+    try {
+      await saveProjectToSupabase(getProjectById(projectId));
+      const cloudSaved = await saveDirectCostDataToSupabase(
+        projectId,
+        methodologyInputs.directCosts
+      );
+      setDirectCostCloudStatus(
+        cloudSaved ? "Direct non-employee costs saved to cloud." : "Saved locally only."
+      );
+    } catch (error) {
+      setDirectCostCloudStatus(`Cloud save failed: ${getErrorMessage(error)}`);
+    }
+  }
+
+  async function restoreDirectCostsFromCloud() {
+    try {
+      const cloudRows = await loadDirectCostDataFromSupabase(projectId);
+      const nextInputs = {
+        ...methodologyInputs,
+        directCosts: cloudRows
+      };
+
+      setMethodologyInputs(nextInputs);
+      save(nextInputs, "Direct non-employee costs restored from cloud.");
+      setDirectCostCloudStatus(
+        cloudRows.length > 0
+          ? "Direct non-employee costs restored from cloud."
+          : "No cloud direct non-employee costs found."
+      );
+    } catch (error) {
+      setDirectCostCloudStatus(`Cloud restore failed: ${getErrorMessage(error)}`);
+    }
+  }
+
+  async function removeDirectCostUploadBatch(batchId: string) {
+    if (isArchived) return;
+    const nextInputs = {
+      ...methodologyInputs,
+      directCosts: methodologyInputs.directCosts.filter((row) => row.importBatchId !== batchId)
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Direct non-employee cost import batch removed.");
+    setDirectCostBatchToRemove("");
+    setDirectCostImportStatus("");
+    setDirectCostImportErrors([]);
+
+    try {
+      const cloudDeleted = await deleteDirectCostBatchFromSupabase(batchId);
+      setDirectCostCloudStatus(
+        cloudDeleted
+          ? "Direct non-employee cost batch removed from cloud."
+          : "Batch removed locally only."
+      );
+    } catch (error) {
+      setDirectCostCloudStatus(
+        `Batch removed locally. Cloud delete failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async function clearDirectCostData() {
+    if (isArchived) return;
+    const nextInputs = {
+      ...methodologyInputs,
+      directCosts: []
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Direct non-employee costs cleared locally.");
+    setDirectCostBatchToRemove("");
+    setConfirmClearDirectCosts(false);
+    setDirectCostImportStatus("");
+    setDirectCostImportErrors([]);
+
+    try {
+      const cloudCleared = await clearDirectCostDataFromSupabase(projectId);
+      setDirectCostCloudStatus(
+        cloudCleared
+          ? "Direct non-employee costs cleared from cloud."
+          : "Direct non-employee costs cleared locally only."
+      );
+    } catch (error) {
+      setDirectCostCloudStatus(
+        `Direct non-employee costs cleared locally. Cloud clear failed: ${getErrorMessage(error)}`
+      );
+    }
   }
 
   async function downloadAssetTemplate() {
@@ -2325,6 +2498,55 @@ export function WorkbookCostInputsForm({
             >
               Download direct cost template
             </button>
+            <button
+              type="button"
+              disabled={isArchived}
+              onClick={() => {
+                saveDirectCostsToCloud().catch((error: unknown) => {
+                  setDirectCostCloudStatus(`Cloud save failed: ${getErrorMessage(error)}`);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Save to cloud
+            </button>
+            <button
+              type="button"
+              disabled={isArchived}
+              onClick={() => {
+                restoreDirectCostsFromCloud().catch((error: unknown) => {
+                  setDirectCostCloudStatus(`Cloud restore failed: ${getErrorMessage(error)}`);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Restore from cloud
+            </button>
+            {confirmClearDirectCosts ? (
+              <button
+                type="button"
+                disabled={isArchived}
+                onClick={() => {
+                  clearDirectCostData().catch((error: unknown) => {
+                    setDirectCostCloudStatus(
+                      `Direct non-employee cost clear failed: ${getErrorMessage(error)}`
+                    );
+                  });
+                }}
+                className="rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:border-red-400 disabled:cursor-not-allowed disabled:text-ink/40"
+              >
+                Confirm clear all
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isArchived || methodologyInputs.directCosts.length === 0}
+                onClick={() => setConfirmClearDirectCosts(true)}
+                className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+              >
+                Clear all
+              </button>
+            )}
             <label className="block rounded-md border border-dashed border-line bg-field px-4 py-3">
               <span className="text-sm font-semibold">Upload direct cost template</span>
               <input
@@ -2358,8 +2580,81 @@ export function WorkbookCostInputsForm({
             <p className="mt-2 break-words">{directCostHeaders.join(", ")}</p>
           </div>
 
+          <div className="rounded-md border border-line bg-white p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="font-semibold text-ink">Recent direct cost uploads</p>
+              <p className="text-xs font-medium uppercase text-ink/50">
+                {formatNumber(directCostSummary.uploadBatches.length)} batches
+              </p>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[720px] border-collapse text-sm">
+                <thead className="bg-field text-left text-xs uppercase text-ink/60">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">File</th>
+                    <th className="px-3 py-2 font-semibold">Uploaded</th>
+                    <th className="px-3 py-2 font-semibold">Rows</th>
+                    <th className="px-3 py-2 font-semibold">Annual value</th>
+                    <th className="px-3 py-2 font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {directCostSummary.uploadBatches.map((batch) => (
+                    <tr key={batch.batchId} className="border-t border-line">
+                      <td className="px-3 py-2">{batch.fileName}</td>
+                      <td className="px-3 py-2">
+                        {batch.uploadedAt ? new Date(batch.uploadedAt).toLocaleString("en-GB") : ""}
+                      </td>
+                      <td className="px-3 py-2">{formatNumber(batch.rowCount)}</td>
+                      <td className="px-3 py-2">{formatNumber(batch.totalAnnualValue)}</td>
+                      <td className="px-3 py-2">
+                        {directCostBatchToRemove === batch.batchId ? (
+                          <button
+                            type="button"
+                            disabled={isArchived}
+                            onClick={() => {
+                              removeDirectCostUploadBatch(batch.batchId).catch(
+                                (error: unknown) => {
+                                  setDirectCostCloudStatus(
+                                    `Batch removal failed: ${getErrorMessage(error)}`
+                                  );
+                                }
+                              );
+                            }}
+                            className="rounded-md border border-red-200 px-3 py-1 text-xs font-semibold text-red-700 hover:border-red-400 disabled:cursor-not-allowed disabled:text-ink/40"
+                          >
+                            Confirm remove
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={isArchived}
+                            onClick={() => setDirectCostBatchToRemove(batch.batchId)}
+                            className="rounded-md border border-line px-3 py-1 text-xs font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+                          >
+                            Remove batch
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {directCostSummary.uploadBatches.length === 0 ? (
+                    <tr className="border-t border-line">
+                      <td colSpan={5} className="px-3 py-4 text-center text-ink/60">
+                        No direct cost upload batches yet.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           {directCostImportStatus ? (
             <p className="text-sm font-medium text-semarts-dark">{directCostImportStatus}</p>
+          ) : null}
+          {directCostCloudStatus ? (
+            <p className="text-sm font-medium text-semarts-dark">{directCostCloudStatus}</p>
           ) : null}
           {directCostImportErrors.length > 0 ? (
             <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
