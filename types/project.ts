@@ -106,11 +106,13 @@ export type TariffAssumptions = {
 export type DirectCostInput = {
   id: string;
   description: string;
-  costCentre: string;
-  expenseHead: string;
-  costType: string;
+  costByType: string;
   annualValue: number;
   comment: string;
+  sourceFileName: string;
+  uploadedAt: string;
+  importBatchId: string;
+  rowFingerprint: string;
 };
 
 export type EmployeeRoleType =

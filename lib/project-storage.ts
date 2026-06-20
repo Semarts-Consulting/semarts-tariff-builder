@@ -245,11 +245,13 @@ export function createDirectCostInput(): DirectCostInput {
   return {
     id: createWorkbookRowId("direct-cost"),
     description: "",
-    costCentre: "",
-    expenseHead: "",
-    costType: "",
+    costByType: "",
     annualValue: 0,
-    comment: ""
+    comment: "",
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: ""
   };
 }
 

@@ -110,6 +110,11 @@ const assetDataHeaders = [
   "Life Years",
   "Asset Value"
 ];
+const directCostHeaders = [
+  "Description",
+  "Cost by Type",
+  "Annual Value"
+];
 
 function toNumber(value: string) {
   return Number(value) || 0;
@@ -793,6 +798,160 @@ function getAssetUploadBatches(rows: AssetInput[]) {
       };
     })
     .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+}
+
+function createDirectCostImportBatchId() {
+  return `direct-cost-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function validateDirectCostHeaders(headerRow: unknown[]) {
+  return directCostHeaders.every(
+    (header, index) => normaliseHeader(headerRow[index]) === normaliseHeader(header)
+  );
+}
+
+function createDirectCostKey(
+  row: Pick<DirectCostInput, "description" | "costByType">
+) {
+  return [row.description, row.costByType]
+    .map((value) => String(value).trim().toLowerCase())
+    .join("::");
+}
+
+function createDirectCostFingerprint(
+  row: Pick<
+    DirectCostInput,
+    "description" | "costByType" | "annualValue"
+  >
+) {
+  return [row.description, row.costByType, row.annualValue]
+    .map((value) => String(value).trim().toLowerCase())
+    .join("|");
+}
+
+function parseDirectCostRows(
+  rows: unknown[][],
+  sourceFileName: string,
+  uploadedAt: string,
+  importBatchId: string
+) {
+  const parsedRows: DirectCostInput[] = [];
+  const errors: string[] = [];
+
+  if (rows.length === 0 || !validateDirectCostHeaders(rows[0] ?? [])) {
+    return {
+      parsedRows,
+      errors: ["The selected workbook does not match the direct cost template headers."]
+    };
+  }
+
+  rows.slice(1).forEach((row, index) => {
+    const excelRowNumber = index + 2;
+    const hasValues = row.some((value) => String(value ?? "").trim() !== "");
+
+    if (!hasValues) {
+      return;
+    }
+
+    const description = String(row[0] ?? "").trim();
+    const costByType = String(row[1] ?? "").trim();
+    const annualValue = parseRequiredNumber(row[2]);
+
+    if (!description) errors.push(`Row ${excelRowNumber}: Description is required.`);
+    if (!costByType) errors.push(`Row ${excelRowNumber}: Cost by Type is required.`);
+    if (annualValue === null || annualValue < 0) {
+      errors.push(`Row ${excelRowNumber}: Annual Value must be zero or greater.`);
+    }
+
+    if (!description || !costByType || annualValue === null || annualValue < 0) {
+      return;
+    }
+
+    const baseRow = {
+      description,
+      costByType,
+      annualValue
+    };
+
+    parsedRows.push({
+      id: createImportedRowId("direct-cost-import", parsedRows.length + 1),
+      ...baseRow,
+      comment: "",
+      sourceFileName,
+      uploadedAt,
+      importBatchId,
+      rowFingerprint: createDirectCostFingerprint(baseRow)
+    });
+  });
+
+  return { parsedRows, errors };
+}
+
+function mergeDirectCostRows(existingRows: DirectCostInput[], incomingRows: DirectCostInput[]) {
+  const byKey = new Map(existingRows.map((row) => [createDirectCostKey(row), row]));
+  const seenIncomingFingerprints = new Set<string>();
+  let added = 0;
+  let replaced = 0;
+  let skippedDuplicates = 0;
+
+  incomingRows.forEach((row) => {
+    const key = createDirectCostKey(row);
+    const fingerprint = row.rowFingerprint || createDirectCostFingerprint(row);
+    const existing = byKey.get(key);
+
+    if (seenIncomingFingerprints.has(fingerprint)) {
+      skippedDuplicates += 1;
+      return;
+    }
+
+    seenIncomingFingerprints.add(fingerprint);
+
+    if (existing && (existing.rowFingerprint || createDirectCostFingerprint(existing)) === fingerprint) {
+      skippedDuplicates += 1;
+      return;
+    }
+
+    if (existing) {
+      replaced += 1;
+    } else {
+      added += 1;
+    }
+
+    byKey.set(key, row);
+  });
+
+  return {
+    rows: Array.from(byKey.values()).sort((a, b) => a.description.localeCompare(b.description)),
+    added,
+    replaced,
+    skippedDuplicates
+  };
+}
+
+function getDirectCostRowReview(row: DirectCostInput) {
+  const issues: string[] = [];
+
+  if (!row.description.trim()) issues.push("Missing description");
+  if (!row.costByType.trim()) issues.push("Missing cost by type");
+  if (row.annualValue < 0) issues.push("Invalid annual value");
+
+  return {
+    issues,
+    status: issues.length > 0 ? "Needs review" : "Healthy"
+  };
+}
+
+function getDirectCostSummary(rows: DirectCostInput[]) {
+  const totalAnnualValue = rows.reduce((total, row) => total + row.annualValue, 0);
+  const invalidRows = rows.filter((row) => getDirectCostRowReview(row).issues.length > 0).length;
+  const costTypes = new Set(rows.map((row) => row.costByType).filter(Boolean));
+
+  return {
+    rowCount: rows.length,
+    totalAnnualValue,
+    invalidRows,
+    costTypeCount: costTypes.size
+  };
 }
 
 function validateAssumptions(assumptions: TariffAssumptions) {
@@ -1840,9 +1999,15 @@ export function WorkbookCostInputsForm({
   const [assetCloudStatus, setAssetCloudStatus] = useState("");
   const [assetBatchToRemove, setAssetBatchToRemove] = useState("");
   const [confirmClearAssets, setConfirmClearAssets] = useState(false);
+  const [directCostImportStatus, setDirectCostImportStatus] = useState("");
+  const [directCostImportErrors, setDirectCostImportErrors] = useState<string[]>([]);
   const assetSummary = useMemo(
     () => getAssetSummary(methodologyInputs.assets),
     [methodologyInputs.assets]
+  );
+  const directCostSummary = useMemo(
+    () => getDirectCostSummary(methodologyInputs.directCosts),
+    [methodologyInputs.directCosts]
   );
 
   useEffect(() => {
@@ -1931,6 +2096,58 @@ export function WorkbookCostInputsForm({
         row.id === rowId ? { ...row, ...updates } : row
       )
     });
+  }
+
+  async function downloadDirectCostTemplate() {
+    const sheetData: SheetData = [
+      directCostHeaders.map((header) => ({
+        value: header,
+        type: String,
+        fontWeight: "bold"
+      }))
+    ];
+    const file = await writeXlsxFile(sheetData, { sheet: "Direct Non-Employee Costs" });
+    await file.toFile("direct-non-employee-costs-template.xlsx");
+  }
+
+  async function importDirectCostWorkbook(file: File) {
+    const rows = await readSheet(file);
+    const uploadedAt = new Date().toISOString();
+    const importBatchId = createDirectCostImportBatchId();
+    const result = parseDirectCostRows(rows, file.name, uploadedAt, importBatchId);
+
+    if (result.errors.length > 0) {
+      setDirectCostImportErrors(result.errors.slice(0, 12));
+      setDirectCostImportStatus("");
+      return;
+    }
+
+    const merged = mergeDirectCostRows(methodologyInputs.directCosts, result.parsedRows);
+    const nextInputs = {
+      ...methodologyInputs,
+      directCosts: merged.rows
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Direct non-employee costs saved locally.");
+    setDirectCostImportErrors([]);
+    setDirectCostImportStatus(
+      `Imported ${result.parsedRows.length} rows. Added ${merged.added}, replaced ${merged.replaced}, skipped ${merged.skippedDuplicates} duplicate rows.`
+    );
+  }
+
+  function handleDirectCostFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file || isArchived) {
+      return;
+    }
+
+    importDirectCostWorkbook(file).catch((error: unknown) => {
+      setDirectCostImportErrors([`Import failed: ${getErrorMessage(error)}`]);
+      setDirectCostImportStatus("");
+    });
+    event.target.value = "";
   }
 
   async function downloadAssetTemplate() {
@@ -2093,19 +2310,83 @@ export function WorkbookCostInputsForm({
           }
           disabled={isArchived}
         >
-        <table className="w-full min-w-[980px] border-collapse text-sm">
+        <div className="mb-5 space-y-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                downloadDirectCostTemplate().catch((error: unknown) => {
+                  setDirectCostImportErrors([
+                    `Template download failed: ${getErrorMessage(error)}`
+                  ]);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+            >
+              Download direct cost template
+            </button>
+            <label className="block rounded-md border border-dashed border-line bg-field px-4 py-3">
+              <span className="text-sm font-semibold">Upload direct cost template</span>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                disabled={isArchived}
+                onChange={handleDirectCostFileChange}
+                className="mt-2 block w-full text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-4">
+            <SummaryMetric label="Rows" value={formatNumber(directCostSummary.rowCount)} />
+            <SummaryMetric
+              label="Annual value"
+              value={formatNumber(directCostSummary.totalAnnualValue)}
+            />
+            <SummaryMetric
+              label="Cost types"
+              value={formatNumber(directCostSummary.costTypeCount)}
+            />
+            <SummaryMetric
+              label="Rows needing review"
+              value={formatNumber(directCostSummary.invalidRows)}
+            />
+          </div>
+
+          <div className="rounded-md border border-line bg-white p-4 text-sm text-ink/70">
+            <p className="font-semibold text-ink">Required headers</p>
+            <p className="mt-2 break-words">{directCostHeaders.join(", ")}</p>
+          </div>
+
+          {directCostImportStatus ? (
+            <p className="text-sm font-medium text-semarts-dark">{directCostImportStatus}</p>
+          ) : null}
+          {directCostImportErrors.length > 0 ? (
+            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <p className="font-semibold">Import needs review</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {directCostImportErrors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+        <table className="w-full min-w-[760px] border-collapse text-sm">
           <thead className="bg-field text-left text-xs uppercase text-ink/60">
             <tr>
               <th className="px-4 py-3 font-semibold">Description</th>
-              <th className="px-4 py-3 font-semibold">Cost centre</th>
-              <th className="px-4 py-3 font-semibold">Expense head</th>
-              <th className="px-4 py-3 font-semibold">Cost type</th>
+              <th className="px-4 py-3 font-semibold">Cost by type</th>
               <th className="px-4 py-3 font-semibold">Annual value</th>
+              <th className="px-4 py-3 font-semibold">Status</th>
               <th className="px-4 py-3 font-semibold">Action</th>
             </tr>
           </thead>
           <tbody>
-            {methodologyInputs.directCosts.map((row) => (
+            {methodologyInputs.directCosts.map((row) => {
+              const review = getDirectCostRowReview(row);
+
+              return (
               <tr key={row.id} className="border-t border-line">
                 <td className="px-4 py-3">
                   <TextInput
@@ -2116,23 +2397,9 @@ export function WorkbookCostInputsForm({
                 </td>
                 <td className="px-4 py-3">
                   <TextInput
-                    value={row.costCentre}
+                    value={row.costByType}
                     disabled={isArchived}
-                    onChange={(value) => updateDirectCost(row.id, { costCentre: value })}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <TextInput
-                    value={row.expenseHead}
-                    disabled={isArchived}
-                    onChange={(value) => updateDirectCost(row.id, { expenseHead: value })}
-                  />
-                </td>
-                <td className="px-4 py-3">
-                  <TextInput
-                    value={row.costType}
-                    disabled={isArchived}
-                    onChange={(value) => updateDirectCost(row.id, { costType: value })}
+                    onChange={(value) => updateDirectCost(row.id, { costByType: value })}
                   />
                 </td>
                 <td className="px-4 py-3">
@@ -2141,6 +2408,20 @@ export function WorkbookCostInputsForm({
                     disabled={isArchived}
                     onChange={(value) => updateDirectCost(row.id, { annualValue: toNumber(value) })}
                   />
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      review.status === "Healthy"
+                        ? "bg-field text-semarts-dark"
+                        : "bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {review.status}
+                  </span>
+                  {review.issues.length > 0 ? (
+                    <p className="mt-2 text-xs text-red-700">{review.issues.join(", ")}</p>
+                  ) : null}
                 </td>
                 <td className="px-4 py-3">
                   <RemoveButton
@@ -2156,7 +2437,8 @@ export function WorkbookCostInputsForm({
                   />
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         </WorkbookTableSection>
