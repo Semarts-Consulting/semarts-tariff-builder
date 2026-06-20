@@ -113,3 +113,12 @@ export type ProjectSection = {
   description: string;
   href: string;
 };
+
+export type LocalProjectBackup = {
+  version: 1;
+  exportedAt: string;
+  projects: Project[];
+  dataInputs: ProjectDataInputs[];
+  costPools: ProjectCostPools[];
+  allocationMethods: ProjectAllocationMethods[];
+};

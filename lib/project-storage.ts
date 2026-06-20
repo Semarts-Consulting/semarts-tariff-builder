@@ -5,6 +5,7 @@ import type {
   AllocationMethodRow,
   CostPoolRow,
   DataInputRow,
+  LocalProjectBackup,
   Project,
   ProjectAllocationMethods,
   ProjectCostPools,
@@ -364,5 +365,40 @@ export function saveProjectAllocationMethods(allocationMethods: ProjectAllocatio
   window.localStorage.setItem(
     allocationMethodsStorageKey,
     JSON.stringify(nextAllocationMethods)
+  );
+}
+
+export function exportLocalProjectBackup(): LocalProjectBackup {
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    projects: getStoredProjects(),
+    dataInputs: getStoredDataInputs(),
+    costPools: getStoredCostPools(),
+    allocationMethods: getStoredAllocationMethods()
+  };
+}
+
+export function importLocalProjectBackup(backup: LocalProjectBackup) {
+  if (!hasBrowserStorage()) {
+    return;
+  }
+
+  if (
+    backup.version !== 1 ||
+    !Array.isArray(backup.projects) ||
+    !Array.isArray(backup.dataInputs) ||
+    !Array.isArray(backup.costPools) ||
+    !Array.isArray(backup.allocationMethods)
+  ) {
+    throw new Error("The selected file is not a valid Semarts project backup.");
+  }
+
+  window.localStorage.setItem(storageKey, JSON.stringify(backup.projects));
+  window.localStorage.setItem(dataInputsStorageKey, JSON.stringify(backup.dataInputs));
+  window.localStorage.setItem(costPoolsStorageKey, JSON.stringify(backup.costPools));
+  window.localStorage.setItem(
+    allocationMethodsStorageKey,
+    JSON.stringify(backup.allocationMethods)
   );
 }

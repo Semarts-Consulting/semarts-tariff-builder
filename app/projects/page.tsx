@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ProjectBackupPanel } from "@/components/ProjectBackupPanel";
 import { ProjectsList } from "@/components/ProjectsList";
 
 export default function ProjectsPage() {
@@ -19,6 +20,7 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
+      <ProjectBackupPanel />
       <ProjectsList />
     </section>
   );
