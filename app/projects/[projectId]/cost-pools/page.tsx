@@ -1,23 +1,20 @@
-import { PlaceholderPanel } from "@/components/PlaceholderPanel";
+import { CostPoolsForm } from "@/components/CostPoolsForm";
 import { SectionHeader } from "@/components/SectionHeader";
 
-export default function CostPoolsPage() {
+export default async function CostPoolsPage({
+  params
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+
   return (
     <div>
       <SectionHeader
         title="Cost pools"
-        description="Placeholder for recoverable cost categories used to determine the private network revenue requirement."
+        description="Capture recoverable cost categories used to determine the private network revenue requirement."
       />
-      <PlaceholderPanel
-        title="Planned MVP cost pools"
-        items={[
-          "Operations and maintenance costs",
-          "Network service and pass-through costs",
-          "Administration costs",
-          "Depreciation and asset-related allowances",
-          "Taxes, levies, and other statutory charges"
-        ]}
-      />
+      <CostPoolsForm projectId={projectId} />
     </div>
   );
 }

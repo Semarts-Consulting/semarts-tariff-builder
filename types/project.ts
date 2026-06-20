@@ -28,6 +28,31 @@ export type ProjectDataInputs = {
   lastUpdated: string;
 };
 
+export type CostPoolCategory =
+  | "Operations"
+  | "Maintenance"
+  | "Administration"
+  | "Network services"
+  | "Asset recovery"
+  | "Taxes and levies"
+  | "Other";
+
+export type CostPoolRow = {
+  id: string;
+  name: string;
+  category: CostPoolCategory;
+  annualAmount: number;
+  recoverablePercent: number;
+  notes: string;
+};
+
+export type ProjectCostPools = {
+  projectId: string;
+  rows: CostPoolRow[];
+  assumptions: string;
+  lastUpdated: string;
+};
+
 export type ProjectSection = {
   title: string;
   description: string;

@@ -1,8 +1,15 @@
 import { sampleProjects } from "@/lib/sample-data";
-import type { DataInputRow, Project, ProjectDataInputs } from "@/types/project";
+import type {
+  CostPoolRow,
+  DataInputRow,
+  Project,
+  ProjectCostPools,
+  ProjectDataInputs
+} from "@/types/project";
 
 const storageKey = "semarts.projects";
 const dataInputsStorageKey = "semarts.project-data-inputs";
+const costPoolsStorageKey = "semarts.project-cost-pools";
 
 function hasBrowserStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -22,6 +29,19 @@ function parseProjects(value: string | null): Project[] {
 }
 
 function parseProjectDataInputs(value: string | null): ProjectDataInputs[] {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function parseProjectCostPools(value: string | null): ProjectCostPools[] {
   if (!value) {
     return [];
   }
@@ -139,4 +159,65 @@ export function saveProjectDataInputs(dataInputs: ProjectDataInputs) {
   ];
 
   window.localStorage.setItem(dataInputsStorageKey, JSON.stringify(nextDataInputs));
+}
+
+export function createCostPoolRow(
+  name = "",
+  category: CostPoolRow["category"] = "Operations"
+): CostPoolRow {
+  return {
+    id: `cost-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    name,
+    category,
+    annualAmount: 0,
+    recoverablePercent: 100,
+    notes: ""
+  };
+}
+
+export function createDefaultCostPools(projectId: string): ProjectCostPools {
+  return {
+    projectId,
+    rows: [
+      createCostPoolRow("Operations and maintenance", "Operations"),
+      createCostPoolRow("Network service charges", "Network services"),
+      createCostPoolRow("Administration costs", "Administration"),
+      createCostPoolRow("Depreciation and asset allowance", "Asset recovery"),
+      createCostPoolRow("Taxes and statutory levies", "Taxes and levies")
+    ],
+    assumptions: "",
+    lastUpdated: todayLabel()
+  };
+}
+
+export function getStoredCostPools() {
+  if (!hasBrowserStorage()) {
+    return [];
+  }
+
+  return parseProjectCostPools(window.localStorage.getItem(costPoolsStorageKey));
+}
+
+export function getProjectCostPools(projectId: string) {
+  return (
+    getStoredCostPools().find((costPools) => costPools.projectId === projectId) ??
+    createDefaultCostPools(projectId)
+  );
+}
+
+export function saveProjectCostPools(costPools: ProjectCostPools) {
+  if (!hasBrowserStorage()) {
+    return;
+  }
+
+  const storedCostPools = getStoredCostPools();
+  const nextCostPools = [
+    {
+      ...costPools,
+      lastUpdated: todayLabel()
+    },
+    ...storedCostPools.filter((storedCostPoolsItem) => storedCostPoolsItem.projectId !== costPools.projectId)
+  ];
+
+  window.localStorage.setItem(costPoolsStorageKey, JSON.stringify(nextCostPools));
 }
