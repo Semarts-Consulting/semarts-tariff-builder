@@ -32,7 +32,7 @@ export const projectSections: ProjectSection[] = [
   },
   {
     title: "Tariff calculations",
-    description: "Placeholder for future formula execution and revenue reconciliation.",
+    description: "Formula execution, indicative rates, and revenue reconciliation.",
     href: "tariff-calculations"
   },
   {
