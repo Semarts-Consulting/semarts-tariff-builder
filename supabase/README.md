@@ -16,6 +16,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 ## Current Persistence Status
 
-The app still uses local browser storage. The schema is ready, but row-level security policies are intentionally not opened for anonymous users.
+The app still uses local browser storage as the working copy. Signed-in users can push the local browser copy to Supabase or restore the cloud copy back into local storage.
 
-The next implementation step is authentication, then Supabase-backed project loading and saving.
+After running `schema.sql`, also run `002_auth_policies.sql` to add authenticated ownership and RLS policies.

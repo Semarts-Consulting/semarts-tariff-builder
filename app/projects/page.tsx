@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CloudSyncPanel } from "@/components/CloudSyncPanel";
 import { ProjectBackupPanel } from "@/components/ProjectBackupPanel";
 import { ProjectsList } from "@/components/ProjectsList";
 
@@ -21,6 +22,7 @@ export default function ProjectsPage() {
       </div>
 
       <ProjectBackupPanel />
+      <CloudSyncPanel />
       <ProjectsList />
     </section>
   );

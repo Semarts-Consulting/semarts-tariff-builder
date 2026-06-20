@@ -11,6 +11,7 @@ export type Database = {
       projects: {
         Row: {
           id: string;
+          user_id: string | null;
           local_id: string;
           name: string;
           network_name: string;
@@ -25,6 +26,7 @@ export type Database = {
         };
         Insert: {
           id?: string;
+          user_id?: string | null;
           local_id: string;
           name: string;
           network_name: string;
@@ -38,10 +40,12 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["projects"]["Insert"]>;
+        Relationships: [];
       };
       project_data_inputs: {
         Row: {
           project_local_id: string;
+          user_id: string | null;
           rows: DataInputRow[];
           assumptions: string;
           last_updated: string;
@@ -49,16 +53,19 @@ export type Database = {
         };
         Insert: {
           project_local_id: string;
+          user_id?: string | null;
           rows?: DataInputRow[];
           assumptions?: string;
           last_updated: string;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["project_data_inputs"]["Insert"]>;
+        Relationships: [];
       };
       project_cost_pools: {
         Row: {
           project_local_id: string;
+          user_id: string | null;
           rows: CostPoolRow[];
           assumptions: string;
           last_updated: string;
@@ -66,16 +73,19 @@ export type Database = {
         };
         Insert: {
           project_local_id: string;
+          user_id?: string | null;
           rows?: CostPoolRow[];
           assumptions?: string;
           last_updated: string;
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["project_cost_pools"]["Insert"]>;
+        Relationships: [];
       };
       project_allocation_methods: {
         Row: {
           project_local_id: string;
+          user_id: string | null;
           rows: AllocationMethodRow[];
           assumptions: string;
           last_updated: string;
@@ -83,6 +93,7 @@ export type Database = {
         };
         Insert: {
           project_local_id: string;
+          user_id?: string | null;
           rows?: AllocationMethodRow[];
           assumptions?: string;
           last_updated: string;
@@ -91,7 +102,12 @@ export type Database = {
         Update: Partial<
           Database["public"]["Tables"]["project_allocation_methods"]["Insert"]
         >;
+        Relationships: [];
       };
     };
+    Views: {};
+    Functions: {};
+    Enums: {};
+    CompositeTypes: {};
   };
 };
