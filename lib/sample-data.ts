@@ -16,6 +16,11 @@ export const sampleProjects: Project[] = [
 
 export const projectSections: ProjectSection[] = [
   {
+    title: "Settings",
+    description: "Project details, status, and lifecycle controls.",
+    href: "settings"
+  },
+  {
     title: "Data inputs",
     description: "Customer counts, forecast kWh, demand values, and billing periods.",
     href: "data-inputs"

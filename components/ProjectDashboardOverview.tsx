@@ -100,6 +100,7 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
   }, [dashboardState]);
 
   const sectionStatusByHref = {
+    settings: "Ready",
     "data-inputs": isComplete(totals.customers > 0 || totals.annualKwh > 0),
     "cost-pools": isComplete(totals.grossCosts > 0),
     "allocation-methods": isComplete(totals.unbalancedRows === 0),

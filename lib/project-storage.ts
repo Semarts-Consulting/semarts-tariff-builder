@@ -127,6 +127,33 @@ export function saveProject(project: Project) {
   window.localStorage.setItem(storageKey, JSON.stringify(nextProjects));
 }
 
+export function deleteProject(projectId: string) {
+  if (!hasBrowserStorage()) {
+    return;
+  }
+
+  window.localStorage.setItem(
+    storageKey,
+    JSON.stringify(getStoredProjects().filter((project) => project.id !== projectId))
+  );
+  window.localStorage.setItem(
+    dataInputsStorageKey,
+    JSON.stringify(getStoredDataInputs().filter((dataInputs) => dataInputs.projectId !== projectId))
+  );
+  window.localStorage.setItem(
+    costPoolsStorageKey,
+    JSON.stringify(getStoredCostPools().filter((costPools) => costPools.projectId !== projectId))
+  );
+  window.localStorage.setItem(
+    allocationMethodsStorageKey,
+    JSON.stringify(
+      getStoredAllocationMethods().filter(
+        (allocationMethods) => allocationMethods.projectId !== projectId
+      )
+    )
+  );
+}
+
 export function createDataInputRow(customerClass = ""): DataInputRow {
   return {
     id: `input-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,

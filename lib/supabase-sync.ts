@@ -101,6 +101,30 @@ export async function saveProjectToSupabase(project: Project) {
   return true;
 }
 
+export async function deleteProjectFromSupabase(projectId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("projects")
+    .delete()
+    .eq("local_id", projectId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
 export async function saveDataInputsToSupabase(dataInputs: ProjectDataInputs) {
   if (!supabase) {
     return false;

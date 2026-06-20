@@ -1,4 +1,4 @@
-export type ProjectStatus = "Draft" | "Ready for review" | "Locked";
+export type ProjectStatus = "Draft" | "Ready for review" | "Locked" | "Archived";
 
 export type Project = {
   id: string;
