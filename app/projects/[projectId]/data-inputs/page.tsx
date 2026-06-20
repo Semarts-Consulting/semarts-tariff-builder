@@ -1,23 +1,20 @@
-import { PlaceholderPanel } from "@/components/PlaceholderPanel";
+import { DataInputsForm } from "@/components/DataInputsForm";
 import { SectionHeader } from "@/components/SectionHeader";
 
-export default function DataInputsPage() {
+export default async function DataInputsPage({
+  params
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+
   return (
     <div>
       <SectionHeader
         title="Data inputs"
-        description="Placeholder for the source data currently entered into the Excel tariff model."
+        description="Capture the customer class demand and consumption assumptions used by the tariff model."
       />
-      <PlaceholderPanel
-        title="Planned MVP inputs"
-        items={[
-          "Customer classes and customer counts",
-          "Forecast annual consumption in kWh",
-          "Forecast demand in kW or kVA",
-          "Billing periods and effective dates",
-          "Manual entry first, dataset upload later"
-        ]}
-      />
+      <DataInputsForm projectId={projectId} />
     </div>
   );
 }

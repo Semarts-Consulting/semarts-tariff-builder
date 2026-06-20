@@ -12,6 +12,22 @@ export type Project = {
   lastUpdated: string;
 };
 
+export type DataInputRow = {
+  id: string;
+  customerClass: string;
+  customerCount: number;
+  annualKwh: number;
+  peakDemandKw: number;
+  notes: string;
+};
+
+export type ProjectDataInputs = {
+  projectId: string;
+  rows: DataInputRow[];
+  assumptions: string;
+  lastUpdated: string;
+};
+
 export type ProjectSection = {
   title: string;
   description: string;
