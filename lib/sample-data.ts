@@ -6,6 +6,9 @@ export const sampleProjects: Project[] = [
     name: "Demo Private Network Tariff Review",
     networkName: "Semarts Embedded Electricity Network",
     tariffYear: 2026,
+    effectiveDate: "2026-07-01",
+    billingPeriod: "Monthly",
+    customerClasses: ["Residential", "Small business", "Common area"],
     status: "Draft",
     lastUpdated: "20 June 2026"
   }

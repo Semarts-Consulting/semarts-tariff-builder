@@ -5,6 +5,9 @@ export type Project = {
   name: string;
   networkName: string;
   tariffYear: number;
+  effectiveDate: string;
+  billingPeriod: string;
+  customerClasses: string[];
   status: ProjectStatus;
   lastUpdated: string;
 };
