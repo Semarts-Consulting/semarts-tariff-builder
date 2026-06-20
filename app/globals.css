@@ -27,3 +27,46 @@ select,
 textarea {
   font: inherit;
 }
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 16mm;
+  }
+
+  body {
+    background: white;
+    color: #18201b;
+  }
+
+  header,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  main,
+  section,
+  div {
+    box-shadow: none !important;
+  }
+
+  section {
+    break-inside: avoid;
+  }
+
+  table {
+    break-inside: auto;
+  }
+
+  tr {
+    break-inside: avoid;
+  }
+}

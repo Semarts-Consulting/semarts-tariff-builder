@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { calculateTariffs } from "@/lib/calculation-engine";
 import {
   getProjectAllocationMethods,
@@ -54,6 +54,8 @@ function emptyCalculation(projectId: string): TariffCalculationResult {
 }
 
 export function ReportsSummary({ projectId }: ReportsSummaryProps) {
+  const reportRef = useRef<HTMLDivElement>(null);
+  const [printStatus, setPrintStatus] = useState("");
   const [reportState, setReportState] = useState<ReportState>({
     project: null,
     dataInputs: null,
@@ -111,9 +113,87 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
     return null;
   }
 
+  function handlePrint() {
+    setPrintStatus("Opening print dialog. If it does not appear, press Ctrl+P.");
+    window.focus();
+    window.print();
+  }
+
+  function downloadHtmlReport() {
+    if (!reportRef.current || !project) {
+      return;
+    }
+
+    const styles = Array.from(document.querySelectorAll("style, link[rel='stylesheet']"))
+      .map((element) => element.outerHTML)
+      .join("\n");
+    const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${project.name} tariff report</title>
+    ${styles}
+  </head>
+  <body>
+    <main style="max-width: 1100px; margin: 32px auto; padding: 0 24px;">
+      ${reportRef.current.innerHTML}
+    </main>
+  </body>
+</html>`;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${project.id}-tariff-report.html`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setPrintStatus("Downloaded HTML report. Open it in a browser to print or save as PDF.");
+  }
+
   return (
     <div className="mt-8 space-y-6">
-      <section className="rounded-md border border-line bg-white p-6 shadow-sm">
+      <div className="no-print flex flex-wrap items-center justify-between gap-3 rounded-md border border-line bg-white p-4 shadow-sm">
+        <div>
+          <h2 className="font-semibold">Export report</h2>
+          <p className="mt-1 text-sm text-ink/70">
+            Print this report or save it as a PDF from the browser print dialog.
+          </p>
+          {printStatus ? (
+            <p className="mt-2 text-sm font-medium text-semarts-dark">{printStatus}</p>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark"
+          >
+            Print / save PDF
+          </button>
+          <button
+            type="button"
+            onClick={downloadHtmlReport}
+            className="rounded-md border border-line px-4 py-2 text-sm font-semibold hover:border-semarts"
+          >
+            Download HTML
+          </button>
+        </div>
+      </div>
+
+      <div ref={reportRef} className="space-y-6">
+        <section className="print-only">
+          <p className="text-sm font-semibold uppercase text-ink/50">
+            Semarts Tariff Methodology Builder
+          </p>
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+            Tariff methodology report
+          </h1>
+        </section>
+
+        <section className="rounded-md border border-line bg-white p-6 shadow-sm">
         <div className="grid gap-5 md:grid-cols-2">
           <div>
             <p className="text-xs font-semibold uppercase text-ink/50">Project</p>
@@ -137,11 +217,15 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
               <dt className="font-medium text-ink/60">Status</dt>
               <dd className="mt-1">{project.status}</dd>
             </div>
+            <div>
+              <dt className="font-medium text-ink/60">Report date</dt>
+              <dd className="mt-1">{new Date().toLocaleDateString("en-GB")}</dd>
+            </div>
           </dl>
         </div>
-      </section>
+        </section>
 
-      <section className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-4">
         <div className="rounded-md border border-line bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-ink/50">Revenue requirement</p>
           <p className="mt-2 text-2xl font-semibold">
@@ -160,9 +244,9 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           <p className="text-xs font-semibold uppercase text-ink/50">Annual kWh</p>
           <p className="mt-2 text-2xl font-semibold">{formatNumber(dataTotals.annualKwh)}</p>
         </div>
-      </section>
+        </section>
 
-      <section className="overflow-hidden rounded-md border border-line bg-white shadow-sm">
+        <section className="overflow-hidden rounded-md border border-line bg-white shadow-sm">
         <div className="border-b border-line p-4">
           <h2 className="font-semibold">Tariff schedule</h2>
         </div>
@@ -196,9 +280,65 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
             </tbody>
           </table>
         </div>
-      </section>
+        </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+        <section className="overflow-hidden rounded-md border border-line bg-white shadow-sm">
+        <div className="border-b border-line p-4">
+          <h2 className="font-semibold">Recoverable cost pools</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] border-collapse text-sm">
+            <thead className="bg-field text-left text-xs uppercase text-ink/60">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Cost pool</th>
+                <th className="px-4 py-3 font-semibold">Category</th>
+                <th className="px-4 py-3 font-semibold">Annual amount</th>
+                <th className="px-4 py-3 font-semibold">Recoverable %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {costPools.rows.map((row) => (
+                <tr key={row.id} className="border-t border-line">
+                  <td className="px-4 py-3 font-medium">{row.name}</td>
+                  <td className="px-4 py-3">{row.category}</td>
+                  <td className="px-4 py-3">{formatCurrency(row.annualAmount)}</td>
+                  <td className="px-4 py-3">{formatNumber(row.recoverablePercent)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        </section>
+
+        <section className="overflow-hidden rounded-md border border-line bg-white shadow-sm">
+        <div className="border-b border-line p-4">
+          <h2 className="font-semibold">Allocation methodology</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] border-collapse text-sm">
+            <thead className="bg-field text-left text-xs uppercase text-ink/60">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Cost pool</th>
+                <th className="px-4 py-3 font-semibold">Basis</th>
+                <th className="px-4 py-3 font-semibold">Tariff component</th>
+                <th className="px-4 py-3 font-semibold">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allocationMethods.rows.map((row) => (
+                <tr key={row.id} className="border-t border-line">
+                  <td className="px-4 py-3 font-medium">{row.costPoolName}</td>
+                  <td className="px-4 py-3">{row.basis}</td>
+                  <td className="px-4 py-3">{row.tariffComponent}</td>
+                  <td className="px-4 py-3">{row.notes || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-md border border-line bg-white p-5 shadow-sm">
           <h2 className="font-semibold">Data assumptions</h2>
           <p className="mt-3 text-sm leading-6 text-ink/70">
@@ -217,9 +357,9 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
             {allocationMethods.assumptions || "No allocation assumptions recorded yet."}
           </p>
         </div>
-      </section>
+        </section>
 
-      <section className="rounded-md border border-line bg-white p-5 shadow-sm">
+        <section className="rounded-md border border-line bg-white p-5 shadow-sm">
         <h2 className="font-semibold">Report checks</h2>
         <ul className="mt-3 grid gap-2 text-sm leading-6 text-ink/70 md:grid-cols-2">
           <li>Revenue variance: {formatCurrency(calculation.unallocatedCost)}</li>
@@ -227,7 +367,8 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           <li>Cost pools included: {costPools.rows.length}</li>
           <li>Customer classes included: {calculation.classResults.length}</li>
         </ul>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
