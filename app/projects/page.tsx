@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CloudSyncPanel } from "@/components/CloudSyncPanel";
+import { CloudRestoreOnProjects } from "@/components/CloudRestoreOnProjects";
 import { ProjectBackupPanel } from "@/components/ProjectBackupPanel";
 import { ProjectsList } from "@/components/ProjectsList";
 
@@ -21,6 +22,7 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
+      <CloudRestoreOnProjects />
       <ProjectBackupPanel />
       <CloudSyncPanel />
       <ProjectsList />

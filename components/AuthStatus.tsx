@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
+import { clearCloudRestoreFlag } from "@/lib/cloud-bootstrap";
 import { supabase } from "@/lib/supabase";
 
 export function AuthStatus() {
@@ -34,6 +35,7 @@ export function AuthStatus() {
     }
 
     await supabase.auth.signOut();
+    clearCloudRestoreFlag();
     setSession(null);
   }
 

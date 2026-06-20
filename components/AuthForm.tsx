@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { clearCloudRestoreFlag, restoreCloudOncePerSession } from "@/lib/cloud-bootstrap";
 import { supabase } from "@/lib/supabase";
 
 type AuthMode = "sign-in" | "create-account";
@@ -39,6 +40,18 @@ export function AuthForm() {
 
     if (mode === "create-account" && !result.data.session) {
       setMessage("Account created. Check your email if confirmation is required.");
+      return;
+    }
+
+    try {
+      clearCloudRestoreFlag();
+      await restoreCloudOncePerSession();
+    } catch (restoreError) {
+      setMessage(
+        restoreError instanceof Error
+          ? `Signed in. Cloud restore failed: ${restoreError.message}`
+          : "Signed in. Cloud restore failed."
+      );
       return;
     }
 
