@@ -84,6 +84,30 @@ export type ProjectAllocationMethods = {
   lastUpdated: string;
 };
 
+export type TariffCalculationClassResult = {
+  customerClass: string;
+  customerCount: number;
+  annualKwh: number;
+  peakDemandKw: number;
+  fixedCost: number;
+  energyCost: number;
+  demandCost: number;
+  passThroughCost: number;
+  totalAllocatedCost: number;
+  fixedChargePerCustomer: number;
+  energyChargePerKwh: number;
+  demandChargePerKw: number;
+};
+
+export type TariffCalculationResult = {
+  projectId: string;
+  revenueRequirement: number;
+  allocatedCost: number;
+  unallocatedCost: number;
+  unbalancedAllocationCount: number;
+  classResults: TariffCalculationClassResult[];
+};
+
 export type ProjectSection = {
   title: string;
   description: string;

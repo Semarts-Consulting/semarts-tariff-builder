@@ -1,23 +1,20 @@
-import { PlaceholderPanel } from "@/components/PlaceholderPanel";
 import { SectionHeader } from "@/components/SectionHeader";
+import { TariffCalculationsSummary } from "@/components/TariffCalculationsSummary";
 
-export default function TariffCalculationsPage() {
+export default async function TariffCalculationsPage({
+  params
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+
   return (
     <div>
       <SectionHeader
         title="Tariff calculations"
-        description="Placeholder for the future calculation engine. No calculation logic is implemented yet."
+        description="Calculate indicative tariff outputs from recoverable costs, allocation methods, and customer demand data."
       />
-      <PlaceholderPanel
-        title="Future calculation areas"
-        items={[
-          "Revenue requirement calculation",
-          "Cost allocation by customer class",
-          "Fixed, energy, and demand charge calculation",
-          "Pass-through charge calculation",
-          "Revenue reconciliation and variance checks"
-        ]}
-      />
+      <TariffCalculationsSummary projectId={projectId} />
     </div>
   );
 }
