@@ -1,22 +1,55 @@
-import { DataInputsForm } from "@/components/DataInputsForm";
 import { SectionHeader } from "@/components/SectionHeader";
-import { WorkbookCustomerInputsForm } from "@/components/WorkbookMethodologyForms";
+import {
+  WorkbookAssumptionsForm,
+  WorkbookBoundaryMeterDataForm,
+  WorkbookCostInputsForm
+} from "@/components/WorkbookMethodologyForms";
+
+type DataInputSection = "selections" | "boundary-meter-data" | "asset-data";
+
+const sectionCopy: Record<DataInputSection, { title: string; description: string }> = {
+  selections: {
+    title: "Selections",
+    description: "Capture the workbook methodology assumptions from Inputs and Selections."
+  },
+  "boundary-meter-data": {
+    title: "Boundary meter data",
+    description: "Prepare the half-hourly boundary meter import structure used by the workbook."
+  },
+  "asset-data": {
+    title: "Asset data",
+    description: "Capture the asset register that feeds annuity, depreciation and asset cost calculations."
+  }
+};
+
+function getSection(value: string | string[] | undefined): DataInputSection {
+  return value === "boundary-meter-data" || value === "asset-data" ? value : "selections";
+}
 
 export default async function DataInputsPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ projectId: string }>;
+  searchParams: Promise<{ section?: string | string[] }>;
 }) {
   const { projectId } = await params;
+  const { section: rawSection } = await searchParams;
+  const section = getSection(rawSection);
 
   return (
     <div>
       <SectionHeader
-        title="Data inputs"
-        description="Capture the customer class demand and consumption assumptions used by the tariff model."
+        title={sectionCopy[section].title}
+        description={sectionCopy[section].description}
       />
-      <DataInputsForm projectId={projectId} />
-      <WorkbookCustomerInputsForm projectId={projectId} />
+      {section === "selections" ? <WorkbookAssumptionsForm projectId={projectId} /> : null}
+      {section === "boundary-meter-data" ? (
+        <WorkbookBoundaryMeterDataForm projectId={projectId} />
+      ) : null}
+      {section === "asset-data" ? (
+        <WorkbookCostInputsForm projectId={projectId} section="asset-data" />
+      ) : null}
     </div>
   );
 }

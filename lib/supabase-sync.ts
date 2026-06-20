@@ -2,11 +2,101 @@ import { importLocalProjectBackup } from "@/lib/project-storage";
 import { supabase } from "@/lib/supabase";
 import type {
   LocalProjectBackup,
+  HalfHourlyImportRow,
   Project,
   ProjectAllocationMethods,
   ProjectCostPools,
   ProjectDataInputs
 } from "@/types/project";
+
+function sumHalfHourlyValues(row: HalfHourlyImportRow) {
+  return row.settlementPeriodKwh.reduce((total, value) => total + value, 0);
+}
+
+function getBoundaryMeterBatchRows(
+  projectId: string,
+  rows: HalfHourlyImportRow[],
+  userId: string
+) {
+  const batches = new Map<string, HalfHourlyImportRow[]>();
+
+  rows.forEach((row) => {
+    const existingRows = batches.get(row.importBatchId) ?? [];
+    existingRows.push(row);
+    batches.set(row.importBatchId, existingRows);
+  });
+
+  return Array.from(batches.entries()).map(([importBatchId, batchRows]) => {
+    const dates = batchRows.map((row) => row.date).sort();
+    const mpans = new Set(batchRows.map((row) => row.mpan));
+    const latestRow = [...batchRows].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))[0];
+    const hasIssues = batchRows.some(
+      (row) =>
+        row.settlementPeriodKwh.length !== 48 ||
+        Math.abs(row.totalKwh - sumHalfHourlyValues(row)) > 0.01
+    );
+
+    return {
+      user_id: userId,
+      import_batch_id: importBatchId,
+      project_local_id: projectId,
+      source_file_name: latestRow?.sourceFileName ?? "Unknown file",
+      uploaded_at: latestRow?.uploadedAt ?? new Date().toISOString(),
+      row_count: batchRows.length,
+      mpan_count: mpans.size,
+      first_reading_date: dates[0] ?? null,
+      last_reading_date: dates[dates.length - 1] ?? null,
+      total_half_hour_kwh: batchRows.reduce(
+        (total, row) => total + sumHalfHourlyValues(row),
+        0
+      ),
+      has_issues: hasIssues
+    };
+  });
+}
+
+function toBoundaryMeterDataRow(
+  projectId: string,
+  row: HalfHourlyImportRow,
+  userId: string
+) {
+  return {
+    user_id: userId,
+    project_local_id: projectId,
+    import_batch_id: row.importBatchId,
+    mpan: row.mpan,
+    reading_date: row.date,
+    total_kwh: row.totalKwh,
+    settlement_period_kwh: row.settlementPeriodKwh,
+    source_file_name: row.sourceFileName,
+    uploaded_at: row.uploadedAt,
+    row_fingerprint: row.rowFingerprint
+  };
+}
+
+function fromBoundaryMeterDataRow(row: {
+  id: string;
+  mpan: string;
+  reading_date: string;
+  total_kwh: number;
+  settlement_period_kwh: number[];
+  source_file_name: string;
+  uploaded_at: string;
+  import_batch_id: string;
+  row_fingerprint: string;
+}): HalfHourlyImportRow {
+  return {
+    id: row.id,
+    mpan: row.mpan,
+    date: row.reading_date,
+    totalKwh: row.total_kwh,
+    settlementPeriodKwh: row.settlement_period_kwh,
+    sourceFileName: row.source_file_name,
+    uploadedAt: row.uploaded_at,
+    importBatchId: row.import_batch_id,
+    rowFingerprint: row.row_fingerprint
+  };
+}
 
 function toProjectRow(project: Project, userId: string) {
   return {
@@ -206,6 +296,122 @@ export async function saveAllocationMethodsToSupabase(
     },
     { onConflict: "project_local_id" }
   );
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function saveBoundaryMeterDataToSupabase(
+  projectId: string,
+  rows: HalfHourlyImportRow[]
+) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const batchRows = getBoundaryMeterBatchRows(projectId, rows, userId);
+  const dataRows = rows.map((row) => toBoundaryMeterDataRow(projectId, row, userId));
+
+  if (batchRows.length > 0) {
+    const { error } = await supabase
+      .from("boundary_meter_import_batches")
+      .upsert(batchRows, { onConflict: "import_batch_id" });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  if (dataRows.length > 0) {
+    const { error } = await supabase
+      .from("boundary_meter_data")
+      .upsert(dataRows, { onConflict: "project_local_id,mpan,reading_date" });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  return true;
+}
+
+export async function loadBoundaryMeterDataFromSupabase(projectId: string) {
+  if (!supabase) {
+    return [];
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("boundary_meter_data")
+    .select(
+      "id, mpan, reading_date, total_kwh, settlement_period_kwh, source_file_name, uploaded_at, import_batch_id, row_fingerprint"
+    )
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId)
+    .order("reading_date", { ascending: true })
+    .order("mpan", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map(fromBoundaryMeterDataRow);
+}
+
+export async function deleteBoundaryMeterBatchFromSupabase(batchId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("boundary_meter_import_batches")
+    .delete()
+    .eq("import_batch_id", batchId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function clearBoundaryMeterDataFromSupabase(projectId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("boundary_meter_import_batches")
+    .delete()
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId);
 
   if (error) {
     throw error;

@@ -104,6 +104,76 @@ export type Database = {
         >;
         Relationships: [];
       };
+      boundary_meter_import_batches: {
+        Row: {
+          import_batch_id: string;
+          project_local_id: string;
+          user_id: string | null;
+          source_file_name: string;
+          uploaded_at: string;
+          row_count: number;
+          mpan_count: number;
+          first_reading_date: string | null;
+          last_reading_date: string | null;
+          total_half_hour_kwh: number;
+          has_issues: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          import_batch_id: string;
+          project_local_id: string;
+          user_id?: string | null;
+          source_file_name: string;
+          uploaded_at: string;
+          row_count?: number;
+          mpan_count?: number;
+          first_reading_date?: string | null;
+          last_reading_date?: string | null;
+          total_half_hour_kwh?: number;
+          has_issues?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["boundary_meter_import_batches"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      boundary_meter_data: {
+        Row: {
+          id: string;
+          project_local_id: string;
+          user_id: string | null;
+          import_batch_id: string;
+          mpan: string;
+          reading_date: string;
+          total_kwh: number;
+          settlement_period_kwh: number[];
+          source_file_name: string;
+          uploaded_at: string;
+          row_fingerprint: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_local_id: string;
+          user_id?: string | null;
+          import_batch_id: string;
+          mpan: string;
+          reading_date: string;
+          total_kwh: number;
+          settlement_period_kwh: number[];
+          source_file_name: string;
+          uploaded_at: string;
+          row_fingerprint: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["boundary_meter_data"]["Insert"]>;
+        Relationships: [];
+      };
     };
     Views: {};
     Functions: {};

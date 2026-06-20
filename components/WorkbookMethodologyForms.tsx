@@ -2,6 +2,9 @@
 
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { readSheet } from "read-excel-file/browser";
+import writeXlsxFile from "write-excel-file/browser";
+import type { SheetData } from "write-excel-file/browser";
 import { isProjectArchived } from "@/lib/project-state";
 import {
   createAssetInput,
@@ -14,11 +17,18 @@ import {
   getProjectMethodologyInputs,
   saveProjectMethodologyInputs
 } from "@/lib/project-storage";
+import {
+  clearBoundaryMeterDataFromSupabase,
+  deleteBoundaryMeterBatchFromSupabase,
+  loadBoundaryMeterDataFromSupabase,
+  saveBoundaryMeterDataToSupabase
+} from "@/lib/supabase-sync";
 import type {
   AssetInput,
   DirectCostInput,
   EmployeeCostInput,
   EmployeeRoleType,
+  HalfHourlyImportRow,
   IndirectOverheadInput,
   PotllSupplyInput,
   ProjectMethodologyInputs,
@@ -31,6 +41,13 @@ import type {
 type WorkbookFormProps = {
   projectId: string;
 };
+
+export type CostInputSection =
+  | "asset-data"
+  | "direct-non-employee"
+  | "direct-employee"
+  | "indirect-overheads"
+  | "supply";
 
 type AssumptionNumberField = keyof Pick<
   TariffAssumptions,
@@ -63,6 +80,12 @@ const roleTypes: EmployeeRoleType[] = [
   "Manager",
   "Colleague"
 ];
+const boundaryMeterHeaders = [
+  "MPAN",
+  "Date",
+  "Total kWh",
+  ...Array.from({ length: 48 }, (_, index) => String(index + 1))
+];
 
 function toNumber(value: string) {
   return Number(value) || 0;
@@ -82,6 +105,302 @@ function getQuarterTotal(row: PotllSupplyInput) {
 
 function getEmployeeAnnualCost(row: EmployeeCostInput) {
   return row.fte * (row.timePercent / 100) * row.hourlyRate * 8 * 5 * 52;
+}
+
+function normaliseHeader(value: unknown) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function normaliseMpan(value: unknown) {
+  return String(value ?? "").trim();
+}
+
+function excelSerialDateToIso(value: number) {
+  const excelEpoch = Date.UTC(1899, 11, 30);
+  const parsed = new Date(excelEpoch + value * 24 * 60 * 60 * 1000);
+
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+}
+
+function normaliseDate(value: unknown) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value === "number") {
+    return excelSerialDateToIso(value);
+  }
+
+  const text = String(value ?? "").trim();
+
+  if (!text) {
+    return "";
+  }
+
+  const parsed = new Date(text);
+
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  return text;
+}
+
+function parseRequiredNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const parsed = Number(String(value).replace(/,/g, ""));
+
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function createBoundaryMeterFingerprint(row: Pick<
+  HalfHourlyImportRow,
+  "mpan" | "date" | "totalKwh" | "settlementPeriodKwh"
+>) {
+  return [
+    row.mpan,
+    row.date,
+    row.totalKwh,
+    ...row.settlementPeriodKwh
+  ].join("|");
+}
+
+function createBoundaryMeterKey(row: Pick<HalfHourlyImportRow, "mpan" | "date">) {
+  return `${row.mpan}::${row.date}`;
+}
+
+function createImportBatchId() {
+  return `hh-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function validateBoundaryHeaders(headerRow: unknown[]) {
+  return boundaryMeterHeaders.every(
+    (header, index) => normaliseHeader(headerRow[index]) === normaliseHeader(header)
+  );
+}
+
+function parseBoundaryMeterRows(
+  rows: unknown[][],
+  sourceFileName: string,
+  uploadedAt: string,
+  importBatchId: string
+) {
+  const parsedRows: HalfHourlyImportRow[] = [];
+  const errors: string[] = [];
+
+  if (rows.length === 0 || !validateBoundaryHeaders(rows[0] ?? [])) {
+    return {
+      parsedRows,
+      errors: [
+        "The selected workbook does not match the template headers: MPAN, Date, Total kWh, 1 to 48."
+      ]
+    };
+  }
+
+  rows.slice(1).forEach((row, index) => {
+    const excelRowNumber = index + 2;
+    const hasValues = row.some((value) => String(value ?? "").trim() !== "");
+
+    if (!hasValues) {
+      return;
+    }
+
+    const mpan = normaliseMpan(row[0]);
+    const date = normaliseDate(row[1]);
+    const totalKwh = parseRequiredNumber(row[2]);
+    const settlementPeriodKwh = row.slice(3, 51).map(parseRequiredNumber);
+
+    if (!mpan) {
+      errors.push(`Row ${excelRowNumber}: MPAN is required.`);
+    }
+
+    if (!date) {
+      errors.push(`Row ${excelRowNumber}: Date is required.`);
+    }
+
+    if (totalKwh === null) {
+      errors.push(`Row ${excelRowNumber}: Total kWh must be numeric.`);
+    }
+
+    if (settlementPeriodKwh.length !== 48 || settlementPeriodKwh.some((value) => value === null)) {
+      errors.push(`Row ${excelRowNumber}: settlement periods 1 to 48 must all be numeric.`);
+    }
+
+    if (!mpan || !date || totalKwh === null || settlementPeriodKwh.some((value) => value === null)) {
+      return;
+    }
+
+    const numericSettlementPeriods = settlementPeriodKwh.map((value) => value ?? 0);
+    const baseRow = {
+      mpan,
+      date,
+      totalKwh,
+      settlementPeriodKwh: numericSettlementPeriods
+    };
+
+    parsedRows.push({
+      id: `${importBatchId}-${parsedRows.length + 1}`,
+      ...baseRow,
+      sourceFileName,
+      uploadedAt,
+      importBatchId,
+      rowFingerprint: createBoundaryMeterFingerprint(baseRow)
+    });
+  });
+
+  return { parsedRows, errors };
+}
+
+function mergeBoundaryMeterRows(existingRows: HalfHourlyImportRow[], incomingRows: HalfHourlyImportRow[]) {
+  const byKey = new Map(existingRows.map((row) => [createBoundaryMeterKey(row), row]));
+  const seenIncomingFingerprints = new Set<string>();
+  let added = 0;
+  let replaced = 0;
+  let skippedDuplicates = 0;
+
+  incomingRows.forEach((row) => {
+    const key = createBoundaryMeterKey(row);
+    const existing = byKey.get(key);
+
+    if (seenIncomingFingerprints.has(row.rowFingerprint)) {
+      skippedDuplicates += 1;
+      return;
+    }
+
+    seenIncomingFingerprints.add(row.rowFingerprint);
+
+    if (existing?.rowFingerprint === row.rowFingerprint) {
+      skippedDuplicates += 1;
+      return;
+    }
+
+    if (existing) {
+      replaced += 1;
+    } else {
+      added += 1;
+    }
+
+    byKey.set(key, row);
+  });
+
+  return {
+    rows: Array.from(byKey.values()).sort((a, b) =>
+      `${a.mpan}${a.date}`.localeCompare(`${b.mpan}${b.date}`)
+    ),
+    added,
+    replaced,
+    skippedDuplicates
+  };
+}
+
+function getBoundaryMeterSummary(rows: HalfHourlyImportRow[]) {
+  const dates = rows.map((row) => row.date).filter(Boolean).sort();
+  const mpans = new Set(rows.map((row) => row.mpan).filter(Boolean));
+  const rowKeys = new Set<string>();
+  let duplicateKeys = 0;
+  let actualPeriodCount = 0;
+  let invalidPeriodValues = 0;
+  let totalFromRows = 0;
+  let totalFromHalfHours = 0;
+
+  rows.forEach((row) => {
+    const key = createBoundaryMeterKey(row);
+
+    if (rowKeys.has(key)) {
+      duplicateKeys += 1;
+    }
+
+    rowKeys.add(key);
+    totalFromRows += row.totalKwh;
+
+    row.settlementPeriodKwh.forEach((periodValue) => {
+      if (Number.isFinite(periodValue)) {
+        actualPeriodCount += 1;
+        totalFromHalfHours += periodValue;
+      } else {
+        invalidPeriodValues += 1;
+      }
+    });
+
+    if (row.settlementPeriodKwh.length < 48) {
+      invalidPeriodValues += 48 - row.settlementPeriodKwh.length;
+    }
+  });
+
+  const expectedPeriodCount = rows.length * 48;
+  const variance = totalFromRows - totalFromHalfHours;
+
+  return {
+    rowCount: rows.length,
+    mpanCount: mpans.size,
+    firstDate: dates[0] ?? "",
+    lastDate: dates[dates.length - 1] ?? "",
+    expectedPeriodCount,
+    actualPeriodCount,
+    invalidPeriodValues,
+    duplicateKeys,
+    totalFromRows,
+    totalFromHalfHours,
+    variance,
+    hasIssues:
+      invalidPeriodValues > 0 ||
+      duplicateKeys > 0 ||
+      actualPeriodCount !== expectedPeriodCount ||
+      Math.abs(variance) > 0.01
+  };
+}
+
+function getBoundaryMeterRowReview(row: HalfHourlyImportRow) {
+  const periodSum = row.settlementPeriodKwh.reduce(
+    (total, periodValue) => total + (Number.isFinite(periodValue) ? periodValue : 0),
+    0
+  );
+  const invalidPeriods =
+    row.settlementPeriodKwh.filter((periodValue) => !Number.isFinite(periodValue)).length +
+    Math.max(48 - row.settlementPeriodKwh.length, 0);
+  const variance = row.totalKwh - periodSum;
+  const status =
+    invalidPeriods > 0
+      ? "Invalid periods"
+      : Math.abs(variance) > 0.01
+        ? "Variance"
+        : "Healthy";
+
+  return {
+    periodSum,
+    invalidPeriods,
+    variance,
+    status
+  };
+}
+
+function getBoundaryMeterUploadBatches(rows: HalfHourlyImportRow[]) {
+  const batches = new Map<string, HalfHourlyImportRow[]>();
+
+  rows.forEach((row) => {
+    const key = row.importBatchId || "unknown";
+    const currentRows = batches.get(key) ?? [];
+    currentRows.push(row);
+    batches.set(key, currentRows);
+  });
+
+  return Array.from(batches.entries())
+    .map(([batchId, batchRows]) => {
+      const summary = getBoundaryMeterSummary(batchRows);
+      const latestRow = [...batchRows].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))[0];
+
+      return {
+        batchId,
+        rows: batchRows,
+        fileName: latestRow?.sourceFileName || "Unknown file",
+        uploadedAt: latestRow?.uploadedAt || "",
+        ...summary
+      };
+    })
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
 }
 
 function validateAssumptions(assumptions: TariffAssumptions) {
@@ -589,9 +908,541 @@ export function WorkbookCustomerInputsForm({ projectId }: WorkbookFormProps) {
   );
 }
 
-export function WorkbookCostInputsForm({ projectId }: WorkbookFormProps) {
+export function WorkbookBoundaryMeterDataForm({ projectId }: WorkbookFormProps) {
   const { methodologyInputs, setMethodologyInputs, saveState, isArchived, save } =
     useWorkbookMethodology(projectId);
+  const [importStatus, setImportStatus] = useState("");
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [cloudStatus, setCloudStatus] = useState("");
+  const [showProblemRowsOnly, setShowProblemRowsOnly] = useState(false);
+  const [batchToRemove, setBatchToRemove] = useState("");
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
+  const latestUpload = methodologyInputs.halfHourlyImports
+    .filter((row) => row.uploadedAt)
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))[0];
+  const boundaryMeterSummary = useMemo(
+    () => getBoundaryMeterSummary(methodologyInputs.halfHourlyImports),
+    [methodologyInputs.halfHourlyImports]
+  );
+  const reviewRows = useMemo(
+    () =>
+      methodologyInputs.halfHourlyImports
+        .map((row) => ({
+          row,
+          review: getBoundaryMeterRowReview(row)
+        }))
+        .filter((item) => !showProblemRowsOnly || item.review.status !== "Healthy")
+        .slice(0, 250),
+    [methodologyInputs.halfHourlyImports, showProblemRowsOnly]
+  );
+  const uploadBatches = useMemo(
+    () => getBoundaryMeterUploadBatches(methodologyInputs.halfHourlyImports),
+    [methodologyInputs.halfHourlyImports]
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadBoundaryMeterDataFromSupabase(projectId)
+      .then((cloudRows) => {
+        if (!isMounted || cloudRows.length === 0) {
+          return;
+        }
+
+        const nextInputs = {
+          ...getProjectMethodologyInputs(projectId),
+          halfHourlyImports: cloudRows
+        };
+
+        saveProjectMethodologyInputs(nextInputs);
+        setMethodologyInputs(nextInputs);
+        setCloudStatus("Loaded boundary meter data from cloud.");
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setCloudStatus(
+          error instanceof Error
+            ? `Cloud load failed: ${error.message}`
+            : "Cloud load failed."
+        );
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, setMethodologyInputs]);
+
+  async function downloadTemplate() {
+    const sheetData: SheetData = [
+      boundaryMeterHeaders.map((header) => ({
+        value: header,
+        type: String,
+        fontWeight: "bold"
+      }))
+    ];
+
+    const file = await writeXlsxFile(sheetData, { sheet: "HH Import Data" });
+    await file.toFile("boundary-meter-data-template.xlsx");
+  }
+
+  async function importWorkbook(file: File) {
+    const uploadedAt = new Date().toISOString();
+    const importBatchId = createImportBatchId();
+    const rows = await readSheet(file);
+    const result = parseBoundaryMeterRows(rows, file.name, uploadedAt, importBatchId);
+
+    if (result.errors.length > 0) {
+      setImportErrors(result.errors.slice(0, 12));
+      setImportStatus("");
+      return;
+    }
+
+    const merged = mergeBoundaryMeterRows(
+      methodologyInputs.halfHourlyImports,
+      result.parsedRows
+    );
+    const nextInputs = {
+      ...methodologyInputs,
+      halfHourlyImports: merged.rows
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Boundary meter data saved locally.");
+    setImportErrors([]);
+    setImportStatus(
+      `Imported ${result.parsedRows.length} rows. Added ${merged.added}, replaced ${merged.replaced}, skipped ${merged.skippedDuplicates} duplicate rows.`
+    );
+
+    try {
+      const cloudSaved = await saveBoundaryMeterDataToSupabase(projectId, merged.rows);
+      setCloudStatus(cloudSaved ? "Boundary meter data saved to cloud." : "Saved locally only.");
+    } catch (error) {
+      setCloudStatus(
+        error instanceof Error
+          ? `Saved locally. Cloud save failed: ${error.message}`
+          : "Saved locally. Cloud save failed."
+      );
+    }
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file || isArchived) {
+      return;
+    }
+
+    importWorkbook(file).catch((error: unknown) => {
+      setImportErrors([
+        error instanceof Error
+          ? `Import failed: ${error.message}`
+          : "Import failed. Check the file format and try again."
+      ]);
+      setImportStatus("");
+    });
+    event.target.value = "";
+  }
+
+  async function removeBatch(batchId: string) {
+    if (isArchived) return;
+
+    const nextInputs = {
+      ...methodologyInputs,
+      halfHourlyImports: methodologyInputs.halfHourlyImports.filter(
+        (row) => row.importBatchId !== batchId
+      )
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Boundary meter upload batch removed locally.");
+    setBatchToRemove("");
+    setImportStatus("");
+    setImportErrors([]);
+
+    try {
+      const cloudDeleted = await deleteBoundaryMeterBatchFromSupabase(batchId);
+      setCloudStatus(cloudDeleted ? "Upload batch removed from cloud." : "Batch removed locally only.");
+    } catch (error) {
+      setCloudStatus(
+        error instanceof Error
+          ? `Batch removed locally. Cloud delete failed: ${error.message}`
+          : "Batch removed locally. Cloud delete failed."
+      );
+    }
+  }
+
+  async function clearBoundaryMeterData() {
+    if (isArchived) return;
+
+    const nextInputs = {
+      ...methodologyInputs,
+      halfHourlyImports: []
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Boundary meter data cleared locally.");
+    setConfirmClearAll(false);
+    setBatchToRemove("");
+    setImportStatus("");
+    setImportErrors([]);
+
+    try {
+      const cloudCleared = await clearBoundaryMeterDataFromSupabase(projectId);
+      setCloudStatus(cloudCleared ? "Boundary meter data cleared from cloud." : "Data cleared locally only.");
+    } catch (error) {
+      setCloudStatus(
+        error instanceof Error
+          ? `Data cleared locally. Cloud clear failed: ${error.message}`
+          : "Data cleared locally. Cloud clear failed."
+      );
+    }
+  }
+
+  return (
+    <section className="mt-8 rounded-md border border-line bg-white p-6 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="font-semibold">Boundary meter data</h2>
+          <p className="mt-1 text-sm text-ink/70">Source: HH Import Data A12:BA1107.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            downloadTemplate().catch((error: unknown) => {
+              setImportErrors([
+                error instanceof Error
+                  ? `Template download failed: ${error.message}`
+                  : "Template download failed."
+              ]);
+            });
+          }}
+          className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+        >
+          Download template
+        </button>
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <div className="rounded-md border border-line bg-field p-4">
+          <p className="text-xs font-semibold uppercase text-ink/50">Stored rows</p>
+          <p className="mt-2 text-2xl font-semibold">
+            {formatNumber(methodologyInputs.halfHourlyImports.length)}
+          </p>
+        </div>
+        <div className="rounded-md border border-line bg-field p-4">
+          <p className="text-xs font-semibold uppercase text-ink/50">Latest upload</p>
+          <p className="mt-2 text-sm font-medium">
+            {latestUpload ? new Date(latestUpload.uploadedAt).toLocaleString("en-GB") : "No uploads"}
+          </p>
+        </div>
+        <div className="rounded-md border border-line bg-field p-4">
+          <p className="text-xs font-semibold uppercase text-ink/50">Latest file</p>
+          <p className="mt-2 break-words text-sm font-medium">
+            {latestUpload?.sourceFileName || "No file uploaded"}
+          </p>
+        </div>
+      </div>
+
+      <label className="mt-5 block rounded-md border border-dashed border-line bg-field p-5">
+        <span className="text-sm font-semibold">Upload completed template</span>
+        <input
+          type="file"
+          accept=".xlsx,.xls"
+          disabled={isArchived}
+          onChange={handleFileChange}
+          className="mt-3 block w-full text-sm"
+        />
+      </label>
+
+      <div className="mt-5 rounded-md border border-line bg-white p-4 text-sm text-ink/70">
+        <p className="font-semibold text-ink">Required headers</p>
+        <p className="mt-2 break-words">
+          {boundaryMeterHeaders.join(", ")}
+        </p>
+      </div>
+
+      <section className="mt-5 rounded-md border border-line bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-semibold">Uploaded data summary</h3>
+            <p className="mt-1 text-sm text-ink/70">
+              Coverage, completeness and total half-hourly volume currently stored.
+            </p>
+          </div>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              boundaryMeterSummary.hasIssues
+                ? "bg-red-50 text-red-700"
+                : "bg-field text-semarts-dark"
+            }`}
+          >
+            {boundaryMeterSummary.hasIssues ? "Needs review" : "Healthy"}
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-4">
+          <SummaryMetric
+            label="Period covered"
+            value={
+              boundaryMeterSummary.firstDate
+                ? `${boundaryMeterSummary.firstDate} to ${boundaryMeterSummary.lastDate}`
+                : "No data"
+            }
+          />
+          <SummaryMetric label="MPANs" value={formatNumber(boundaryMeterSummary.mpanCount)} />
+          <SummaryMetric label="Rows" value={formatNumber(boundaryMeterSummary.rowCount)} />
+          <SummaryMetric
+            label="HH periods"
+            value={`${formatNumber(boundaryMeterSummary.actualPeriodCount)} / ${formatNumber(
+              boundaryMeterSummary.expectedPeriodCount
+            )}`}
+          />
+          <SummaryMetric
+            label="Total kWh from row totals"
+            value={formatNumber(boundaryMeterSummary.totalFromRows)}
+          />
+          <SummaryMetric
+            label="Total kWh from HH periods"
+            value={formatNumber(boundaryMeterSummary.totalFromHalfHours)}
+          />
+          <SummaryMetric
+            label="Total variance"
+            value={formatNumber(boundaryMeterSummary.variance)}
+          />
+          <SummaryMetric
+            label="Data issues"
+            value={`${formatNumber(boundaryMeterSummary.invalidPeriodValues)} invalid periods, ${formatNumber(
+              boundaryMeterSummary.duplicateKeys
+            )} duplicate keys`}
+          />
+        </div>
+      </section>
+
+      {importStatus ? (
+        <p className="mt-4 text-sm font-medium text-semarts-dark">{importStatus}</p>
+      ) : null}
+      {cloudStatus ? (
+        <p className="mt-2 text-sm font-medium text-semarts-dark">{cloudStatus}</p>
+      ) : null}
+      {saveState ? <p className="mt-2 text-sm font-medium text-semarts-dark">{saveState}</p> : null}
+      {importErrors.length > 0 ? (
+        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <p className="font-semibold">Import needs review</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {importErrors.map((error) => (
+              <li key={error}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <section className="mt-5 rounded-md border border-line bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-semibold">Upload batches</h3>
+            <p className="mt-1 text-sm text-ink/70">
+              Remove a specific upload if a file was selected in error.
+            </p>
+          </div>
+          {methodologyInputs.halfHourlyImports.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {confirmClearAll ? (
+                <>
+                  <button
+                    type="button"
+                    disabled={isArchived}
+                    onClick={clearBoundaryMeterData}
+                    className="rounded-md bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800"
+                  >
+                    Confirm clear all
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmClearAll(false)}
+                    className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isArchived}
+                  onClick={() => setConfirmClearAll(true)}
+                  className="rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:border-red-700"
+                >
+                  Clear all boundary data
+                </button>
+              )}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[980px] border-collapse text-sm">
+            <thead className="bg-field text-left text-xs uppercase text-ink/60">
+              <tr>
+                <th className="px-4 py-3 font-semibold">File</th>
+                <th className="px-4 py-3 font-semibold">Uploaded</th>
+                <th className="px-4 py-3 font-semibold">Rows</th>
+                <th className="px-4 py-3 font-semibold">MPANs</th>
+                <th className="px-4 py-3 font-semibold">Period</th>
+                <th className="px-4 py-3 font-semibold">HH kWh</th>
+                <th className="px-4 py-3 font-semibold">Health</th>
+                <th className="px-4 py-3 font-semibold">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {uploadBatches.map((batch) => (
+                <tr key={batch.batchId} className="border-t border-line">
+                  <td className="px-4 py-3 font-medium">{batch.fileName}</td>
+                  <td className="px-4 py-3">
+                    {batch.uploadedAt ? new Date(batch.uploadedAt).toLocaleString("en-GB") : ""}
+                  </td>
+                  <td className="px-4 py-3">{formatNumber(batch.rowCount)}</td>
+                  <td className="px-4 py-3">{formatNumber(batch.mpanCount)}</td>
+                  <td className="px-4 py-3">
+                    {batch.firstDate ? `${batch.firstDate} to ${batch.lastDate}` : "No dates"}
+                  </td>
+                  <td className="px-4 py-3">{formatNumber(batch.totalFromHalfHours)}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        batch.hasIssues ? "bg-red-50 text-red-700" : "bg-field text-semarts-dark"
+                      }`}
+                    >
+                      {batch.hasIssues ? "Needs review" : "Healthy"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {batchToRemove === batch.batchId ? (
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          disabled={isArchived}
+                          onClick={() => removeBatch(batch.batchId)}
+                          className="rounded-md bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setBatchToRemove("")}
+                          className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={isArchived}
+                        onClick={() => setBatchToRemove(batch.batchId)}
+                        className="rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:border-red-700"
+                      >
+                        Remove batch
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {uploadBatches.length === 0 ? (
+                <tr className="border-t border-line">
+                  <td colSpan={8} className="px-4 py-6 text-center text-ink/60">
+                    No upload batches found.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="mt-5 rounded-md border border-line bg-white p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-semibold">Import review</h3>
+            <p className="mt-1 text-sm text-ink/70">
+              First 250 rows currently stored for this project.
+            </p>
+          </div>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={showProblemRowsOnly}
+              onChange={(event) => setShowProblemRowsOnly(event.target.checked)}
+              className="h-4 w-4"
+            />
+            Show problem rows only
+          </label>
+        </div>
+
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[1100px] border-collapse text-sm">
+            <thead className="bg-field text-left text-xs uppercase text-ink/60">
+              <tr>
+                <th className="px-4 py-3 font-semibold">MPAN</th>
+                <th className="px-4 py-3 font-semibold">Date</th>
+                <th className="px-4 py-3 font-semibold">Total kWh</th>
+                <th className="px-4 py-3 font-semibold">HH sum</th>
+                <th className="px-4 py-3 font-semibold">Variance</th>
+                <th className="px-4 py-3 font-semibold">Invalid periods</th>
+                <th className="px-4 py-3 font-semibold">Source file</th>
+                <th className="px-4 py-3 font-semibold">Uploaded</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reviewRows.map(({ row, review }) => (
+                <tr key={row.id} className="border-t border-line">
+                  <td className="px-4 py-3 font-medium">{row.mpan}</td>
+                  <td className="px-4 py-3">{row.date}</td>
+                  <td className="px-4 py-3">{formatNumber(row.totalKwh)}</td>
+                  <td className="px-4 py-3">{formatNumber(review.periodSum)}</td>
+                  <td className="px-4 py-3">{formatNumber(review.variance)}</td>
+                  <td className="px-4 py-3">{formatNumber(review.invalidPeriods)}</td>
+                  <td className="px-4 py-3">{row.sourceFileName}</td>
+                  <td className="px-4 py-3">
+                    {row.uploadedAt ? new Date(row.uploadedAt).toLocaleString("en-GB") : ""}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        review.status === "Healthy"
+                          ? "bg-field text-semarts-dark"
+                          : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      {review.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {reviewRows.length === 0 ? (
+                <tr className="border-t border-line">
+                  <td colSpan={9} className="px-4 py-6 text-center text-ink/60">
+                    No boundary meter rows to review.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  );
+}
+
+export function WorkbookCostInputsForm({
+  projectId,
+  section
+}: WorkbookFormProps & { section?: CostInputSection }) {
+  const { methodologyInputs, setMethodologyInputs, saveState, isArchived, save } =
+    useWorkbookMethodology(projectId);
+  const showAllSections = section === undefined;
 
   function updateSupplyCharge(field: SupplyChargeField, value: string) {
     if (isArchived) return;
@@ -646,18 +1497,19 @@ export function WorkbookCostInputsForm({ projectId }: WorkbookFormProps) {
 
   return (
     <div className="mt-8 space-y-6">
-      <WorkbookTableSection
-        title="Direct non-employee costs"
-        source="Inputs and Selections A34:E72"
-        addLabel="Add direct cost"
-        onAdd={() =>
-          setMethodologyInputs({
-            ...methodologyInputs,
-            directCosts: [...methodologyInputs.directCosts, createDirectCostInput()]
-          })
-        }
-        disabled={isArchived}
-      >
+      {showAllSections || section === "direct-non-employee" ? (
+        <WorkbookTableSection
+          title="Direct non-employee costs"
+          source="Inputs and Selections A34:E72"
+          addLabel="Add direct cost"
+          onAdd={() =>
+            setMethodologyInputs({
+              ...methodologyInputs,
+              directCosts: [...methodologyInputs.directCosts, createDirectCostInput()]
+            })
+          }
+          disabled={isArchived}
+        >
         <table className="w-full min-w-[980px] border-collapse text-sm">
           <thead className="bg-field text-left text-xs uppercase text-ink/60">
             <tr>
@@ -724,20 +1576,22 @@ export function WorkbookCostInputsForm({ projectId }: WorkbookFormProps) {
             ))}
           </tbody>
         </table>
-      </WorkbookTableSection>
+        </WorkbookTableSection>
+      ) : null}
 
-      <WorkbookTableSection
-        title="Employee costs"
-        source="Inputs and Selections A75:G85"
-        addLabel="Add employee cost"
-        onAdd={() =>
-          setMethodologyInputs({
-            ...methodologyInputs,
-            employeeCosts: [...methodologyInputs.employeeCosts, createEmployeeCostInput()]
-          })
-        }
-        disabled={isArchived}
-      >
+      {showAllSections || section === "direct-employee" ? (
+        <WorkbookTableSection
+          title="Employee costs"
+          source="Inputs and Selections A75:G85"
+          addLabel="Add employee cost"
+          onAdd={() =>
+            setMethodologyInputs({
+              ...methodologyInputs,
+              employeeCosts: [...methodologyInputs.employeeCosts, createEmployeeCostInput()]
+            })
+          }
+          disabled={isArchived}
+        >
         <table className="w-full min-w-[920px] border-collapse text-sm">
           <thead className="bg-field text-left text-xs uppercase text-ink/60">
             <tr>
@@ -821,23 +1675,25 @@ export function WorkbookCostInputsForm({ projectId }: WorkbookFormProps) {
             ))}
           </tbody>
         </table>
-      </WorkbookTableSection>
+        </WorkbookTableSection>
+      ) : null}
 
-      <WorkbookTableSection
-        title="Indirect overheads"
-        source="Inputs and Selections A88:E97"
-        addLabel="Add overhead"
-        onAdd={() =>
-          setMethodologyInputs({
-            ...methodologyInputs,
-            indirectOverheads: [
-              ...methodologyInputs.indirectOverheads,
-              createIndirectOverheadInput()
-            ]
-          })
-        }
-        disabled={isArchived}
-      >
+      {showAllSections || section === "indirect-overheads" ? (
+        <WorkbookTableSection
+          title="Indirect overheads"
+          source="Inputs and Selections A88:E97"
+          addLabel="Add overhead"
+          onAdd={() =>
+            setMethodologyInputs({
+              ...methodologyInputs,
+              indirectOverheads: [
+                ...methodologyInputs.indirectOverheads,
+                createIndirectOverheadInput()
+              ]
+            })
+          }
+          disabled={isArchived}
+        >
         <table className="w-full min-w-[680px] border-collapse text-sm">
           <thead className="bg-field text-left text-xs uppercase text-ink/60">
             <tr>
@@ -880,20 +1736,22 @@ export function WorkbookCostInputsForm({ projectId }: WorkbookFormProps) {
             ))}
           </tbody>
         </table>
-      </WorkbookTableSection>
+        </WorkbookTableSection>
+      ) : null}
 
-      <WorkbookTableSection
-        title="Asset register"
-        source="Asset Data A12:N60"
-        addLabel="Add asset"
-        onAdd={() =>
-          setMethodologyInputs({
-            ...methodologyInputs,
-            assets: [...methodologyInputs.assets, createAssetInput()]
-          })
-        }
-        disabled={isArchived}
-      >
+      {showAllSections || section === "asset-data" ? (
+        <WorkbookTableSection
+          title="Asset register"
+          source="Asset Data A12:N60"
+          addLabel="Add asset"
+          onAdd={() =>
+            setMethodologyInputs({
+              ...methodologyInputs,
+              assets: [...methodologyInputs.assets, createAssetInput()]
+            })
+          }
+          disabled={isArchived}
+        >
         <table className="w-full min-w-[1080px] border-collapse text-sm">
           <thead className="bg-field text-left text-xs uppercase text-ink/60">
             <tr>
@@ -989,9 +1847,11 @@ export function WorkbookCostInputsForm({ projectId }: WorkbookFormProps) {
             ))}
           </tbody>
         </table>
-      </WorkbookTableSection>
+        </WorkbookTableSection>
+      ) : null}
 
-      <section className="rounded-md border border-line bg-white p-6 shadow-sm">
+      {showAllSections || section === "supply" ? (
+        <section className="rounded-md border border-line bg-white p-6 shadow-sm">
         <h2 className="font-semibold">Supply, DUoS, TNUoS and margin inputs</h2>
         <p className="mt-1 text-sm text-ink/70">
           Source: Inputs and Selections A112:B146.
@@ -1007,7 +1867,8 @@ export function WorkbookCostInputsForm({ projectId }: WorkbookFormProps) {
             />
           ))}
         </div>
-      </section>
+        </section>
+      ) : null}
 
       <SaveFooter
         disabled={isArchived}
@@ -1077,6 +1938,15 @@ function NumberInput({
         className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
       />
     </label>
+  );
+}
+
+function SummaryMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-line bg-field p-4">
+      <p className="text-xs font-semibold uppercase text-ink/50">{label}</p>
+      <p className="mt-2 break-words text-sm font-semibold">{value}</p>
+    </div>
   );
 }
 

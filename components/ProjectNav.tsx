@@ -1,28 +1,118 @@
+"use client";
+
 import Link from "next/link";
-import { projectSections } from "@/lib/sample-data";
+import { usePathname, useSearchParams } from "next/navigation";
 
 type ProjectNavProps = {
   projectId: string;
 };
 
+const outputSections = [
+  { title: "Dashboard", href: "" },
+  { title: "Settings", href: "settings" },
+  { title: "Reports", href: "reports" }
+];
+
+const modelSections = [
+  {
+    title: "Data Inputs",
+    href: "data-inputs",
+    items: [
+      { title: "Selections", section: "selections" },
+      { title: "Boundary Meter Data", section: "boundary-meter-data" },
+      { title: "Asset Data", section: "asset-data" }
+    ]
+  },
+  {
+    title: "Cost Inputs",
+    href: "cost-pools",
+    items: [
+      { title: "Direct - Non-Employee", section: "direct-non-employee" },
+      { title: "Direct - Employee", section: "direct-employee" },
+      { title: "Indirect Overheads", section: "indirect-overheads" },
+      { title: "Supply", section: "supply" }
+    ]
+  },
+  { title: "Allocation Methods", href: "allocation-methods", items: [] },
+  { title: "Tariff Calculations", href: "tariff-calculations", items: [] }
+];
+
+function navClass(isActive: boolean) {
+  return `rounded-md border px-3 py-2 text-sm font-medium ${
+    isActive
+      ? "border-semarts bg-semarts text-white"
+      : "border-line bg-white hover:border-semarts"
+  }`;
+}
+
+function subNavClass(isActive: boolean) {
+  return `rounded-md border px-3 py-2 text-sm font-medium ${
+    isActive
+      ? "border-semarts bg-field text-semarts-dark"
+      : "border-line bg-white hover:border-semarts"
+  }`;
+}
+
 export function ProjectNav({ projectId }: ProjectNavProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeModelSection = modelSections.find((section) =>
+    pathname.endsWith(`/${section.href}`)
+  );
+  const activeSubsection = searchParams.get("section");
+
   return (
-    <nav className="mt-8 flex flex-wrap gap-2">
-      <Link
-        href={`/projects/${projectId}`}
-        className="rounded-md border border-line bg-white px-3 py-2 text-sm font-medium hover:border-semarts"
-      >
-        Dashboard
-      </Link>
-      {projectSections.map((section) => (
-        <Link
-          key={section.href}
-          href={`/projects/${projectId}/${section.href}`}
-          className="rounded-md border border-line bg-white px-3 py-2 text-sm font-medium hover:border-semarts"
-        >
-          {section.title}
-        </Link>
-      ))}
+    <nav className="mt-8 space-y-4">
+      <div className="flex flex-wrap gap-2 border-b border-line pb-4">
+        {outputSections.map((section) => {
+          const href = section.href ? `/projects/${projectId}/${section.href}` : `/projects/${projectId}`;
+          const isActive = section.href
+            ? pathname.endsWith(`/${section.href}`)
+            : pathname === `/projects/${projectId}`;
+
+          return (
+            <Link key={section.title} href={href} className={navClass(isActive)}>
+              {section.title}
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {modelSections.map((section) => {
+          const href =
+            section.items.length > 0
+              ? `/projects/${projectId}/${section.href}?section=${section.items[0].section}`
+              : `/projects/${projectId}/${section.href}`;
+          const isActive = pathname.endsWith(`/${section.href}`);
+
+          return (
+            <Link key={section.href} href={href} className={navClass(isActive)}>
+              {section.title}
+            </Link>
+          );
+        })}
+      </div>
+
+      {activeModelSection && activeModelSection.items.length > 0 ? (
+        <div className="flex flex-wrap gap-2 rounded-md border border-line bg-white p-3">
+          {activeModelSection.items.map((item) => {
+            const isActive =
+              activeSubsection === item.section ||
+              (!activeSubsection && item.section === activeModelSection.items[0].section);
+
+            return (
+              <Link
+                key={item.section}
+                href={`/projects/${projectId}/${activeModelSection.href}?section=${item.section}`}
+                className={subNavClass(isActive)}
+              >
+                {item.title}
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
     </nav>
   );
 }

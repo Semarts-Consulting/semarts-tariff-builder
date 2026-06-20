@@ -190,6 +190,10 @@ export type HalfHourlyImportRow = {
   date: string;
   totalKwh: number;
   settlementPeriodKwh: number[];
+  sourceFileName: string;
+  uploadedAt: string;
+  importBatchId: string;
+  rowFingerprint: string;
 };
 
 export type ProjectMethodologyInputs = {

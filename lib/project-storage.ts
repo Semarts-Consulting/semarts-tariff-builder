@@ -318,7 +318,11 @@ export function createHalfHourlyImportRow(): HalfHourlyImportRow {
     mpan: "",
     date: "",
     totalKwh: 0,
-    settlementPeriodKwh: Array.from({ length: 48 }, () => 0)
+    settlementPeriodKwh: Array.from({ length: 48 }, () => 0),
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: ""
   };
 }
 

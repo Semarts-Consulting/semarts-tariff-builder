@@ -10,10 +10,21 @@ add column if not exists user_id uuid references auth.users(id) on delete cascad
 alter table public.project_allocation_methods
 add column if not exists user_id uuid references auth.users(id) on delete cascade;
 
+alter table public.boundary_meter_import_batches
+add column if not exists user_id uuid references auth.users(id) on delete cascade;
+
+alter table public.boundary_meter_data
+add column if not exists user_id uuid references auth.users(id) on delete cascade;
+
 create index if not exists projects_user_id_idx on public.projects(user_id);
 create index if not exists project_data_inputs_user_id_idx on public.project_data_inputs(user_id);
 create index if not exists project_cost_pools_user_id_idx on public.project_cost_pools(user_id);
 create index if not exists project_allocation_methods_user_id_idx on public.project_allocation_methods(user_id);
+create index if not exists boundary_meter_import_batches_user_id_idx on public.boundary_meter_import_batches(user_id);
+create index if not exists boundary_meter_import_batches_project_idx on public.boundary_meter_import_batches(project_local_id);
+create index if not exists boundary_meter_data_user_id_idx on public.boundary_meter_data(user_id);
+create index if not exists boundary_meter_data_project_idx on public.boundary_meter_data(project_local_id);
+create index if not exists boundary_meter_data_batch_idx on public.boundary_meter_data(import_batch_id);
 
 drop policy if exists "Users can read their projects" on public.projects;
 create policy "Users can read their projects"
@@ -75,6 +86,32 @@ using (user_id = auth.uid());
 drop policy if exists "Users can upsert their allocation methods" on public.project_allocation_methods;
 create policy "Users can upsert their allocation methods"
 on public.project_allocation_methods for all
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+drop policy if exists "Users can read their boundary meter import batches" on public.boundary_meter_import_batches;
+create policy "Users can read their boundary meter import batches"
+on public.boundary_meter_import_batches for select
+to authenticated
+using (user_id = auth.uid());
+
+drop policy if exists "Users can manage their boundary meter import batches" on public.boundary_meter_import_batches;
+create policy "Users can manage their boundary meter import batches"
+on public.boundary_meter_import_batches for all
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+drop policy if exists "Users can read their boundary meter data" on public.boundary_meter_data;
+create policy "Users can read their boundary meter data"
+on public.boundary_meter_data for select
+to authenticated
+using (user_id = auth.uid());
+
+drop policy if exists "Users can manage their boundary meter data" on public.boundary_meter_data;
+create policy "Users can manage their boundary meter data"
+on public.boundary_meter_data for all
 to authenticated
 using (user_id = auth.uid())
 with check (user_id = auth.uid());

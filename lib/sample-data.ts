@@ -26,7 +26,7 @@ export const projectSections: ProjectSection[] = [
     href: "data-inputs"
   },
   {
-    title: "Cost pools",
+    title: "Cost inputs",
     description: "Recoverable operating, maintenance, asset, pass-through, and admin costs.",
     href: "cost-pools"
   },
