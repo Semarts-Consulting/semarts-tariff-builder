@@ -5,17 +5,26 @@ import type {
   AllocationMethodRow,
   CostPoolRow,
   DataInputRow,
+  DirectCostInput,
+  EmployeeCostInput,
+  HalfHourlyImportRow,
+  IndirectOverheadInput,
   LocalProjectBackup,
+  ProjectMethodologyInputs,
+  PotllSupplyInput,
   Project,
   ProjectAllocationMethods,
   ProjectCostPools,
-  ProjectDataInputs
+  ProjectDataInputs,
+  TenantInput,
+  AssetInput
 } from "@/types/project";
 
 const storageKey = "semarts.projects";
 const dataInputsStorageKey = "semarts.project-data-inputs";
 const costPoolsStorageKey = "semarts.project-cost-pools";
 const allocationMethodsStorageKey = "semarts.project-allocation-methods";
+const methodologyInputsStorageKey = "semarts.project-methodology-inputs";
 
 function hasBrowserStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -61,6 +70,19 @@ function parseProjectCostPools(value: string | null): ProjectCostPools[] {
 }
 
 function parseProjectAllocationMethods(value: string | null): ProjectAllocationMethods[] {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function parseProjectMethodologyInputs(value: string | null): ProjectMethodologyInputs[] {
   if (!value) {
     return [];
   }
@@ -204,6 +226,182 @@ export function deleteProject(projectId: string) {
         (allocationMethods) => allocationMethods.projectId !== projectId
       )
     )
+  );
+  window.localStorage.setItem(
+    methodologyInputsStorageKey,
+    JSON.stringify(
+      getStoredMethodologyInputs().filter(
+        (methodologyInputs) => methodologyInputs.projectId !== projectId
+      )
+    )
+  );
+}
+
+function createWorkbookRowId(prefix: string) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function createDirectCostInput(): DirectCostInput {
+  return {
+    id: createWorkbookRowId("direct-cost"),
+    description: "",
+    costCentre: "",
+    expenseHead: "",
+    costType: "",
+    annualValue: 0,
+    comment: ""
+  };
+}
+
+export function createEmployeeCostInput(): EmployeeCostInput {
+  return {
+    id: createWorkbookRowId("employee-cost"),
+    role: "",
+    roleType: "Manager",
+    fte: 0,
+    timePercent: 0,
+    hourlyRate: 0,
+    comment: ""
+  };
+}
+
+export function createIndirectOverheadInput(): IndirectOverheadInput {
+  return {
+    id: createWorkbookRowId("overhead"),
+    description: "",
+    annualCost: 0,
+    comment: ""
+  };
+}
+
+export function createTenantInput(): TenantInput {
+  return {
+    id: createWorkbookRowId("tenant"),
+    customerName: "",
+    tariffModelRef: "",
+    saNumber: "",
+    customerReference: "",
+    voltage: "LV",
+    capacityKva: 0,
+    tariffType: "LV",
+    supplyIncluded: true,
+    monthlyKwh: Array.from({ length: 12 }, () => 0)
+  };
+}
+
+export function createAssetInput(): AssetInput {
+  return {
+    id: createWorkbookRowId("asset"),
+    description: "",
+    assetCategory: "",
+    isElectricalDistributionAsset: true,
+    isChargeableOnElectricityTariff: true,
+    voltage: "LV",
+    networkLevel: "",
+    lifeYears: 0,
+    priorYearAssetValue: 0
+  };
+}
+
+export function createPotllSupplyInput(): PotllSupplyInput {
+  return {
+    id: createWorkbookRowId("potll-supply"),
+    location: "",
+    voltage: "LV",
+    quarterKwh: Array.from({ length: 4 }, () => 0)
+  };
+}
+
+export function createHalfHourlyImportRow(): HalfHourlyImportRow {
+  return {
+    id: createWorkbookRowId("hh-import"),
+    mpan: "",
+    date: "",
+    totalKwh: 0,
+    settlementPeriodKwh: Array.from({ length: 48 }, () => 0)
+  };
+}
+
+export function createDefaultMethodologyInputs(projectId: string): ProjectMethodologyInputs {
+  return {
+    projectId,
+    assumptions: {
+      weightedAverageCostOfCapitalPercent: 0,
+      cpiPercent: 0,
+      annualRevenue: 0,
+      annualUtilityRecoveries: 0,
+      averageAssetAgeYears: 0,
+      averageMeteringAssetAgeYears: 0,
+      potllEhvLossPercent: 0,
+      potllHvLossPercent: 0,
+      potllLvLossPercent: 0,
+      referenceYearStart: "",
+      referenceYearEnd: "",
+      tariffYearStart: "",
+      tariffYearEnd: ""
+    },
+    directCosts: [],
+    employeeCosts: [],
+    indirectOverheads: [],
+    supplyCharges: {
+      dayUnitRatePencePerKwh: 0,
+      nightUnitRatePencePerKwh: 0,
+      climateChangeLevyPencePerKwh: 0,
+      duosFixedChargePerDay: 0,
+      duosImportCapacityPencePerKvaPerDay: 0,
+      duosSuperRedUnitPencePerKwh: 0,
+      tnuosNonLocationalChargePerDay: 0,
+      tnuosTriadChargePerKw: 0,
+      procurementCost: 0,
+      consultancyCost: 0,
+      validationCost: 0,
+      profitPercent: 0
+    },
+    tenants: [],
+    assets: [],
+    potllSupplies: [],
+    halfHourlyImports: [],
+    notes: "",
+    lastUpdated: todayLabel()
+  };
+}
+
+export function getStoredMethodologyInputs() {
+  if (!hasBrowserStorage()) {
+    return [];
+  }
+
+  return parseProjectMethodologyInputs(
+    window.localStorage.getItem(methodologyInputsStorageKey)
+  );
+}
+
+export function getProjectMethodologyInputs(projectId: string) {
+  return (
+    getStoredMethodologyInputs().find((inputs) => inputs.projectId === projectId) ??
+    createDefaultMethodologyInputs(projectId)
+  );
+}
+
+export function saveProjectMethodologyInputs(methodologyInputs: ProjectMethodologyInputs) {
+  if (!hasBrowserStorage()) {
+    return;
+  }
+
+  const storedMethodologyInputs = getStoredMethodologyInputs();
+  const nextMethodologyInputs = [
+    {
+      ...methodologyInputs,
+      lastUpdated: todayLabel()
+    },
+    ...storedMethodologyInputs.filter(
+      (storedInputs) => storedInputs.projectId !== methodologyInputs.projectId
+    )
+  ];
+
+  window.localStorage.setItem(
+    methodologyInputsStorageKey,
+    JSON.stringify(nextMethodologyInputs)
   );
 }
 
@@ -455,7 +653,8 @@ export function exportLocalProjectBackup(): LocalProjectBackup {
     projects: getStoredProjects(),
     dataInputs: getStoredDataInputs(),
     costPools: getStoredCostPools(),
-    allocationMethods: getStoredAllocationMethods()
+    allocationMethods: getStoredAllocationMethods(),
+    methodologyInputs: getStoredMethodologyInputs()
   };
 }
 
@@ -480,5 +679,9 @@ export function importLocalProjectBackup(backup: LocalProjectBackup) {
   window.localStorage.setItem(
     allocationMethodsStorageKey,
     JSON.stringify(backup.allocationMethods)
+  );
+  window.localStorage.setItem(
+    methodologyInputsStorageKey,
+    JSON.stringify(backup.methodologyInputs ?? [])
   );
 }

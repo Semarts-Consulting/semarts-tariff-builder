@@ -317,7 +317,8 @@ export async function pullBackupFromSupabase() {
       rows: item.rows,
       assumptions: item.assumptions,
       lastUpdated: item.last_updated
-    }))
+    })),
+    methodologyInputs: []
   };
 
   importLocalProjectBackup(backup);

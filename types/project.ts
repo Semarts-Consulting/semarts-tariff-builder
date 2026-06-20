@@ -84,6 +84,129 @@ export type ProjectAllocationMethods = {
   lastUpdated: string;
 };
 
+export type WorkbookVoltage = "EHV" | "HV" | "LV MD" | "LV";
+
+export type TariffAssumptions = {
+  weightedAverageCostOfCapitalPercent: number;
+  cpiPercent: number;
+  annualRevenue: number;
+  annualUtilityRecoveries: number;
+  averageAssetAgeYears: number;
+  averageMeteringAssetAgeYears: number;
+  potllEhvLossPercent: number;
+  potllHvLossPercent: number;
+  potllLvLossPercent: number;
+  referenceYearStart: string;
+  referenceYearEnd: string;
+  tariffYearStart: string;
+  tariffYearEnd: string;
+};
+
+export type DirectCostInput = {
+  id: string;
+  description: string;
+  costCentre: string;
+  expenseHead: string;
+  costType: string;
+  annualValue: number;
+  comment: string;
+};
+
+export type EmployeeRoleType =
+  | "Exco"
+  | "Director"
+  | "Head"
+  | "Senior Manager"
+  | "Manager"
+  | "Colleague";
+
+export type EmployeeCostInput = {
+  id: string;
+  role: string;
+  roleType: EmployeeRoleType;
+  fte: number;
+  timePercent: number;
+  hourlyRate: number;
+  comment: string;
+};
+
+export type IndirectOverheadInput = {
+  id: string;
+  description: string;
+  annualCost: number;
+  comment: string;
+};
+
+export type SupplyChargeInput = {
+  dayUnitRatePencePerKwh: number;
+  nightUnitRatePencePerKwh: number;
+  climateChangeLevyPencePerKwh: number;
+  duosFixedChargePerDay: number;
+  duosImportCapacityPencePerKvaPerDay: number;
+  duosSuperRedUnitPencePerKwh: number;
+  tnuosNonLocationalChargePerDay: number;
+  tnuosTriadChargePerKw: number;
+  procurementCost: number;
+  consultancyCost: number;
+  validationCost: number;
+  profitPercent: number;
+};
+
+export type TenantInput = {
+  id: string;
+  customerName: string;
+  tariffModelRef: string;
+  saNumber: string;
+  customerReference: string;
+  voltage: WorkbookVoltage;
+  capacityKva: number;
+  tariffType: WorkbookVoltage;
+  supplyIncluded: boolean;
+  monthlyKwh: number[];
+};
+
+export type AssetInput = {
+  id: string;
+  description: string;
+  assetCategory: string;
+  isElectricalDistributionAsset: boolean;
+  isChargeableOnElectricityTariff: boolean;
+  voltage: WorkbookVoltage | "Metering";
+  networkLevel: string;
+  lifeYears: number;
+  priorYearAssetValue: number;
+};
+
+export type PotllSupplyInput = {
+  id: string;
+  location: string;
+  voltage: WorkbookVoltage | "Losses";
+  quarterKwh: number[];
+};
+
+export type HalfHourlyImportRow = {
+  id: string;
+  mpan: string;
+  date: string;
+  totalKwh: number;
+  settlementPeriodKwh: number[];
+};
+
+export type ProjectMethodologyInputs = {
+  projectId: string;
+  assumptions: TariffAssumptions;
+  directCosts: DirectCostInput[];
+  employeeCosts: EmployeeCostInput[];
+  indirectOverheads: IndirectOverheadInput[];
+  supplyCharges: SupplyChargeInput;
+  tenants: TenantInput[];
+  assets: AssetInput[];
+  potllSupplies: PotllSupplyInput[];
+  halfHourlyImports: HalfHourlyImportRow[];
+  notes: string;
+  lastUpdated: string;
+};
+
 export type TariffCalculationClassResult = {
   customerClass: string;
   customerCount: number;
@@ -121,4 +244,5 @@ export type LocalProjectBackup = {
   dataInputs: ProjectDataInputs[];
   costPools: ProjectCostPools[];
   allocationMethods: ProjectAllocationMethods[];
+  methodologyInputs: ProjectMethodologyInputs[];
 };
