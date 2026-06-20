@@ -1,23 +1,20 @@
-import { PlaceholderPanel } from "@/components/PlaceholderPanel";
+import { ReportsSummary } from "@/components/ReportsSummary";
 import { SectionHeader } from "@/components/SectionHeader";
 
-export default function ReportsPage() {
+export default async function ReportsPage({
+  params
+}: {
+  params: Promise<{ projectId: string }>;
+}) {
+  const { projectId } = await params;
+
   return (
     <div>
       <SectionHeader
         title="Reports"
-        description="Placeholder for outputs that replace manually formatted Excel schedules and methodology notes."
+        description="Review the tariff schedule, methodology assumptions, and calculation checks for this project."
       />
-      <PlaceholderPanel
-        title="Planned MVP reports"
-        items={[
-          "Tariff schedule",
-          "Methodology summary",
-          "Revenue reconciliation summary",
-          "Scenario summary",
-          "Calculation warnings and assumptions"
-        ]}
-      />
+      <ReportsSummary projectId={projectId} />
     </div>
   );
 }
