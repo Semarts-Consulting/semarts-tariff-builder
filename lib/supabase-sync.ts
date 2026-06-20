@@ -1,6 +1,7 @@
 import { importLocalProjectBackup } from "@/lib/project-storage";
 import { supabase } from "@/lib/supabase";
 import type {
+  AssetInput,
   LocalProjectBackup,
   HalfHourlyImportRow,
   Project,
@@ -41,7 +42,7 @@ function getBoundaryMeterBatchRows(
       import_batch_id: importBatchId,
       project_local_id: projectId,
       source_file_name: latestRow?.sourceFileName ?? "Unknown file",
-      uploaded_at: latestRow?.uploadedAt ?? new Date().toISOString(),
+      uploaded_at: latestRow?.uploadedAt || new Date().toISOString(),
       row_count: batchRows.length,
       mpan_count: mpans.size,
       first_reading_date: dates[0] ?? null,
@@ -91,6 +92,103 @@ function fromBoundaryMeterDataRow(row: {
     date: row.reading_date,
     totalKwh: row.total_kwh,
     settlementPeriodKwh: row.settlement_period_kwh,
+    sourceFileName: row.source_file_name,
+    uploadedAt: row.uploaded_at,
+    importBatchId: row.import_batch_id,
+    rowFingerprint: row.row_fingerprint
+  };
+}
+
+function hasAssetIssues(row: AssetInput) {
+  if (!row.description.trim() || !row.assetCategory.trim()) return true;
+  if (row.lifeYears <= 0 || row.priorYearAssetValue < 0) return true;
+
+  if (row.voltage === "EHV") return !["EHV", "EHV Local"].includes(row.networkLevel);
+  if (row.voltage === "HV") return !["HV", "HV Local"].includes(row.networkLevel);
+  if (row.voltage === "LV") return row.networkLevel !== "LV";
+  if (row.voltage === "Metering") return row.networkLevel !== "Metering";
+
+  return true;
+}
+
+function getAssetBatchRows(projectId: string, rows: AssetInput[], userId: string) {
+  const batches = new Map<string, AssetInput[]>();
+
+  rows.forEach((row) => {
+    const batchId = row.importBatchId || `manual-${row.id}`;
+    const existingRows = batches.get(batchId) ?? [];
+    existingRows.push(row);
+    batches.set(batchId, existingRows);
+  });
+
+  return Array.from(batches.entries()).map(([importBatchId, batchRows]) => {
+    const latestRow = [...batchRows].sort((a, b) =>
+      (b.uploadedAt || "").localeCompare(a.uploadedAt || "")
+    )[0];
+
+    return {
+      user_id: userId,
+      import_batch_id: importBatchId,
+      project_local_id: projectId,
+      source_file_name: latestRow?.sourceFileName || "Manual entry",
+      uploaded_at: latestRow?.uploadedAt || new Date().toISOString(),
+      row_count: batchRows.length,
+      total_asset_value: batchRows.reduce((total, row) => total + row.priorYearAssetValue, 0),
+      chargeable_asset_value: batchRows
+        .filter((row) => row.isChargeableOnElectricityTariff)
+        .reduce((total, row) => total + row.priorYearAssetValue, 0),
+      has_issues: batchRows.some(hasAssetIssues)
+    };
+  });
+}
+
+function toAssetDataRow(projectId: string, row: AssetInput, userId: string) {
+  const uploadedAt = row.uploadedAt || new Date().toISOString();
+  const importBatchId = row.importBatchId || `manual-${row.id}`;
+
+  return {
+    user_id: userId,
+    project_local_id: projectId,
+    import_batch_id: importBatchId,
+    description: row.description,
+    asset_category: row.assetCategory,
+    is_electrical_distribution_asset: row.isElectricalDistributionAsset,
+    is_chargeable_on_electricity_tariff: row.isChargeableOnElectricityTariff,
+    voltage: row.voltage,
+    network_level: row.networkLevel,
+    life_years: row.lifeYears,
+    prior_year_asset_value: row.priorYearAssetValue,
+    source_file_name: row.sourceFileName || "Manual entry",
+    uploaded_at: uploadedAt,
+    row_fingerprint: row.rowFingerprint || row.id
+  };
+}
+
+function fromAssetDataRow(row: {
+  id: string;
+  description: string;
+  asset_category: string;
+  is_electrical_distribution_asset: boolean;
+  is_chargeable_on_electricity_tariff: boolean;
+  voltage: AssetInput["voltage"];
+  network_level: string;
+  life_years: number;
+  prior_year_asset_value: number;
+  source_file_name: string;
+  uploaded_at: string;
+  import_batch_id: string;
+  row_fingerprint: string;
+}): AssetInput {
+  return {
+    id: row.id,
+    description: row.description,
+    assetCategory: row.asset_category,
+    isElectricalDistributionAsset: row.is_electrical_distribution_asset,
+    isChargeableOnElectricityTariff: row.is_chargeable_on_electricity_tariff,
+    voltage: row.voltage,
+    networkLevel: row.network_level,
+    lifeYears: row.life_years,
+    priorYearAssetValue: row.prior_year_asset_value,
     sourceFileName: row.source_file_name,
     uploadedAt: row.uploaded_at,
     importBatchId: row.import_batch_id,
@@ -409,6 +507,121 @@ export async function clearBoundaryMeterDataFromSupabase(projectId: string) {
 
   const { error } = await supabase
     .from("boundary_meter_import_batches")
+    .delete()
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function saveAssetDataToSupabase(projectId: string, rows: AssetInput[]) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const batchRows = getAssetBatchRows(projectId, rows, userId);
+  const dataRows = rows.map((row) => toAssetDataRow(projectId, row, userId));
+
+  if (batchRows.length > 0) {
+    const { error } = await supabase
+      .from("asset_import_batches")
+      .upsert(batchRows, { onConflict: "import_batch_id" });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  if (dataRows.length > 0) {
+    const { error } = await supabase
+      .from("asset_data")
+      .upsert(dataRows, {
+        onConflict: "project_local_id,description,asset_category,voltage,network_level"
+      });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  return true;
+}
+
+export async function loadAssetDataFromSupabase(projectId: string) {
+  if (!supabase) {
+    return [];
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("asset_data")
+    .select(
+      "id, description, asset_category, is_electrical_distribution_asset, is_chargeable_on_electricity_tariff, voltage, network_level, life_years, prior_year_asset_value, source_file_name, uploaded_at, import_batch_id, row_fingerprint"
+    )
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId)
+    .order("description", { ascending: true })
+    .order("asset_category", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.map(fromAssetDataRow);
+}
+
+export async function deleteAssetBatchFromSupabase(batchId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("asset_import_batches")
+    .delete()
+    .eq("import_batch_id", batchId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function clearAssetDataFromSupabase(projectId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("asset_import_batches")
     .delete()
     .eq("project_local_id", projectId)
     .eq("user_id", userId);

@@ -85,6 +85,7 @@ export type ProjectAllocationMethods = {
 };
 
 export type WorkbookVoltage = "EHV" | "HV" | "LV MD" | "LV";
+export type AssetVoltage = "EHV" | "HV" | "LV" | "Metering";
 
 export type TariffAssumptions = {
   weightedAverageCostOfCapitalPercent: number;
@@ -171,10 +172,14 @@ export type AssetInput = {
   assetCategory: string;
   isElectricalDistributionAsset: boolean;
   isChargeableOnElectricityTariff: boolean;
-  voltage: WorkbookVoltage | "Metering";
+  voltage: AssetVoltage;
   networkLevel: string;
   lifeYears: number;
   priorYearAssetValue: number;
+  sourceFileName: string;
+  uploadedAt: string;
+  importBatchId: string;
+  rowFingerprint: string;
 };
 
 export type PotllSupplyInput = {

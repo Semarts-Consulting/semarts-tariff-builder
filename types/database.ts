@@ -1,5 +1,6 @@
 import type {
   AllocationMethodRow,
+  AssetInput,
   CostPoolRow,
   DataInputRow,
   ProjectStatus
@@ -172,6 +173,78 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["boundary_meter_data"]["Insert"]>;
+        Relationships: [];
+      };
+      asset_import_batches: {
+        Row: {
+          import_batch_id: string;
+          project_local_id: string;
+          user_id: string | null;
+          source_file_name: string;
+          uploaded_at: string;
+          row_count: number;
+          total_asset_value: number;
+          chargeable_asset_value: number;
+          has_issues: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          import_batch_id: string;
+          project_local_id: string;
+          user_id?: string | null;
+          source_file_name: string;
+          uploaded_at: string;
+          row_count?: number;
+          total_asset_value?: number;
+          chargeable_asset_value?: number;
+          has_issues?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["asset_import_batches"]["Insert"]>;
+        Relationships: [];
+      };
+      asset_data: {
+        Row: {
+          id: string;
+          project_local_id: string;
+          user_id: string | null;
+          import_batch_id: string;
+          description: string;
+          asset_category: string;
+          is_electrical_distribution_asset: boolean;
+          is_chargeable_on_electricity_tariff: boolean;
+          voltage: AssetInput["voltage"];
+          network_level: string;
+          life_years: number;
+          prior_year_asset_value: number;
+          source_file_name: string;
+          uploaded_at: string;
+          row_fingerprint: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_local_id: string;
+          user_id?: string | null;
+          import_batch_id: string;
+          description: string;
+          asset_category: string;
+          is_electrical_distribution_asset: boolean;
+          is_chargeable_on_electricity_tariff: boolean;
+          voltage: AssetInput["voltage"];
+          network_level: string;
+          life_years: number;
+          prior_year_asset_value: number;
+          source_file_name: string;
+          uploaded_at: string;
+          row_fingerprint: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["asset_data"]["Insert"]>;
         Relationships: [];
       };
     };

@@ -43,7 +43,7 @@ export function CloudSyncPanel() {
         <div>
           <h2 className="font-semibold">Cloud sync</h2>
           <p className="mt-1 text-sm text-ink/70">
-            Push this browser's projects to Supabase or restore your cloud copy.
+            Push local browser projects to Supabase or restore your cloud copy.
           </p>
           {status ? <p className="mt-2 text-sm font-medium text-semarts-dark">{status}</p> : null}
         </div>

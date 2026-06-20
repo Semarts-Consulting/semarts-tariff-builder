@@ -299,7 +299,11 @@ export function createAssetInput(): AssetInput {
     voltage: "LV",
     networkLevel: "",
     lifeYears: 0,
-    priorYearAssetValue: 0
+    priorYearAssetValue: 0,
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: ""
   };
 }
 

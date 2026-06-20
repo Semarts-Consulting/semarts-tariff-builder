@@ -14,13 +14,19 @@ import {
   createIndirectOverheadInput,
   createPotllSupplyInput,
   createTenantInput,
+  getProjectById,
   getProjectMethodologyInputs,
   saveProjectMethodologyInputs
 } from "@/lib/project-storage";
 import {
+  clearAssetDataFromSupabase,
   clearBoundaryMeterDataFromSupabase,
+  deleteAssetBatchFromSupabase,
   deleteBoundaryMeterBatchFromSupabase,
+  loadAssetDataFromSupabase,
   loadBoundaryMeterDataFromSupabase,
+  saveAssetDataToSupabase,
+  saveProjectToSupabase,
   saveBoundaryMeterDataToSupabase
 } from "@/lib/supabase-sync";
 import type {
@@ -70,7 +76,15 @@ type AssumptionDateField = keyof Pick<
 type SupplyChargeField = keyof SupplyChargeInput;
 
 const voltages: WorkbookVoltage[] = ["EHV", "HV", "LV MD", "LV"];
-const assetVoltages: AssetInput["voltage"][] = ["EHV", "HV", "LV MD", "LV", "Metering"];
+const assetVoltages: AssetInput["voltage"][] = ["EHV", "HV", "LV", "Metering"];
+const assetNetworkLevels = ["EHV", "EHV Local", "HV", "HV Local", "LV", "Metering"] as const;
+type AssetNetworkLevel = (typeof assetNetworkLevels)[number];
+const assetNetworkLevelsByVoltage: Record<AssetInput["voltage"], AssetNetworkLevel[]> = {
+  EHV: ["EHV", "EHV Local"],
+  HV: ["HV", "HV Local"],
+  LV: ["LV"],
+  Metering: ["Metering"]
+};
 const potllSupplyVoltages: PotllSupplyInput["voltage"][] = ["EHV", "HV", "LV MD", "LV", "Losses"];
 const roleTypes: EmployeeRoleType[] = [
   "Exco",
@@ -86,6 +100,16 @@ const boundaryMeterHeaders = [
   "Total kWh",
   ...Array.from({ length: 48 }, (_, index) => String(index + 1))
 ];
+const assetDataHeaders = [
+  "Description",
+  "Asset Category",
+  "Electrical Distribution Asset?",
+  "Chargeable on electricity tariff?",
+  "HV / LV",
+  "Network Level",
+  "Life Years",
+  "Asset Value"
+];
 
 function toNumber(value: string) {
   return Number(value) || 0;
@@ -93,6 +117,26 @@ function toNumber(value: string) {
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("en-GB", { maximumFractionDigits: 2 }).format(value);
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  if (typeof error === "string" && error.trim()) {
+    return error;
+  }
+
+  return "Unknown error";
 }
 
 function getAnnualTenantKwh(row: TenantInput) {
@@ -174,6 +218,14 @@ function createBoundaryMeterKey(row: Pick<HalfHourlyImportRow, "mpan" | "date">)
 
 function createImportBatchId() {
   return `hh-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createAssetImportBatchId() {
+  return `asset-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createImportedRowId(prefix: string, index: number) {
+  return `${prefix}-${Date.now().toString(36)}-${index}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function validateBoundaryHeaders(headerRow: unknown[]) {
@@ -398,6 +450,346 @@ function getBoundaryMeterUploadBatches(rows: HalfHourlyImportRow[]) {
         fileName: latestRow?.sourceFileName || "Unknown file",
         uploadedAt: latestRow?.uploadedAt || "",
         ...summary
+      };
+    })
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+}
+
+function validateAssetHeaders(headerRow: unknown[]) {
+  return assetDataHeaders.every(
+    (header, index) => normaliseHeader(headerRow[index]) === normaliseHeader(header)
+  );
+}
+
+function parseYesNo(value: unknown) {
+  const text = String(value ?? "").trim().toLowerCase();
+
+  if (["yes", "y", "true", "1"].includes(text)) {
+    return true;
+  }
+
+  if (["no", "n", "false", "0"].includes(text)) {
+    return false;
+  }
+
+  return null;
+}
+
+function parseAssetVoltage(value: unknown): AssetInput["voltage"] | null {
+  const text = String(value ?? "").trim();
+
+  if (text === "EHV" || text === "HV" || text === "LV" || text === "Metering") {
+    return text;
+  }
+
+  return null;
+}
+
+function parseAssetNetworkLevel(value: unknown) {
+  const text = String(value ?? "").trim();
+
+  return assetNetworkLevels.includes(text as AssetNetworkLevel)
+    ? text
+    : null;
+}
+
+function getAssetNetworkLevelsForVoltage(voltage: string) {
+  return assetNetworkLevelsByVoltage[voltage as AssetInput["voltage"]] ?? [];
+}
+
+function isValidAssetVoltageNetworkLevel(
+  voltage: AssetInput["voltage"] | string,
+  networkLevel: string
+) {
+  return getAssetNetworkLevelsForVoltage(voltage).includes(networkLevel as AssetNetworkLevel);
+}
+
+function createAssetKey(
+  row: Pick<AssetInput, "description" | "assetCategory" | "voltage" | "networkLevel">
+) {
+  return [
+    row.description,
+    row.assetCategory,
+    row.voltage,
+    row.networkLevel
+  ]
+    .map((value) => String(value).trim().toLowerCase())
+    .join("::");
+}
+
+function createAssetFingerprint(
+  row: Pick<
+    AssetInput,
+    | "description"
+    | "assetCategory"
+    | "isElectricalDistributionAsset"
+    | "isChargeableOnElectricityTariff"
+    | "voltage"
+    | "networkLevel"
+    | "lifeYears"
+    | "priorYearAssetValue"
+  >
+) {
+  return [
+    row.description,
+    row.assetCategory,
+    row.isElectricalDistributionAsset,
+    row.isChargeableOnElectricityTariff,
+    row.voltage,
+    row.networkLevel,
+    row.lifeYears,
+    row.priorYearAssetValue
+  ]
+    .map((value) => String(value).trim().toLowerCase())
+    .join("|");
+}
+
+function parseAssetRows(
+  rows: unknown[][],
+  sourceFileName: string,
+  uploadedAt: string,
+  importBatchId: string
+) {
+  const parsedRows: AssetInput[] = [];
+  const errors: string[] = [];
+
+  if (rows.length === 0 || !validateAssetHeaders(rows[0] ?? [])) {
+    return {
+      parsedRows,
+      errors: [
+        "The selected workbook does not match the asset template headers."
+      ]
+    };
+  }
+
+  rows.slice(1).forEach((row, index) => {
+    const excelRowNumber = index + 2;
+    const hasValues = row.some((value) => String(value ?? "").trim() !== "");
+
+    if (!hasValues) {
+      return;
+    }
+
+    const description = String(row[0] ?? "").trim();
+    const assetCategory = String(row[1] ?? "").trim();
+    const isElectricalDistributionAsset = parseYesNo(row[2]);
+    const isChargeableOnElectricityTariff = parseYesNo(row[3]);
+    const voltage = parseAssetVoltage(row[4]);
+    const networkLevel = parseAssetNetworkLevel(row[5]);
+    const lifeYears = parseRequiredNumber(row[6]);
+    const priorYearAssetValue = parseRequiredNumber(row[7]);
+
+    if (!description) {
+      errors.push(`Row ${excelRowNumber}: Description is required.`);
+    }
+
+    if (!assetCategory) {
+      errors.push(`Row ${excelRowNumber}: Asset Category is required.`);
+    }
+
+    if (isElectricalDistributionAsset === null) {
+      errors.push(`Row ${excelRowNumber}: Electrical Distribution Asset must be Yes or No.`);
+    }
+
+    if (isChargeableOnElectricityTariff === null) {
+      errors.push(`Row ${excelRowNumber}: Chargeable on electricity tariff must be Yes or No.`);
+    }
+
+    if (!voltage) {
+      errors.push(`Row ${excelRowNumber}: HV / LV must be EHV, HV, LV, or Metering.`);
+    }
+
+    if (!networkLevel) {
+      errors.push(
+        `Row ${excelRowNumber}: Network Level must be EHV, EHV Local, HV, HV Local, LV, or Metering.`
+      );
+    }
+
+    if (voltage && networkLevel && !isValidAssetVoltageNetworkLevel(voltage, networkLevel)) {
+      errors.push(
+        `Row ${excelRowNumber}: Network Level ${networkLevel} is not valid for Voltage ${voltage}.`
+      );
+    }
+
+    if (lifeYears === null || lifeYears <= 0) {
+      errors.push(`Row ${excelRowNumber}: Life Years must be greater than zero.`);
+    }
+
+    if (priorYearAssetValue === null || priorYearAssetValue < 0) {
+      errors.push(`Row ${excelRowNumber}: Asset Value must be zero or greater.`);
+    }
+
+    if (
+      !description ||
+      !assetCategory ||
+      isElectricalDistributionAsset === null ||
+      isChargeableOnElectricityTariff === null ||
+      !voltage ||
+      !networkLevel ||
+      !isValidAssetVoltageNetworkLevel(voltage, networkLevel) ||
+      lifeYears === null ||
+      lifeYears <= 0 ||
+      priorYearAssetValue === null ||
+      priorYearAssetValue < 0
+    ) {
+      return;
+    }
+
+    const baseRow = {
+      description,
+      assetCategory,
+      isElectricalDistributionAsset,
+      isChargeableOnElectricityTariff,
+      voltage,
+      networkLevel,
+      lifeYears,
+      priorYearAssetValue
+    };
+
+    parsedRows.push({
+      id: createImportedRowId("asset-import", parsedRows.length + 1),
+      ...baseRow,
+      sourceFileName,
+      uploadedAt,
+      importBatchId,
+      rowFingerprint: createAssetFingerprint(baseRow)
+    });
+  });
+
+  return { parsedRows, errors };
+}
+
+function mergeAssetRows(existingRows: AssetInput[], incomingRows: AssetInput[]) {
+  const byKey = new Map(existingRows.map((row) => [createAssetKey(row), row]));
+  const seenIncomingFingerprints = new Set<string>();
+  let added = 0;
+  let replaced = 0;
+  let skippedDuplicates = 0;
+
+  incomingRows.forEach((row) => {
+    const key = createAssetKey(row);
+    const fingerprint = row.rowFingerprint || createAssetFingerprint(row);
+    const existing = byKey.get(key);
+
+    if (seenIncomingFingerprints.has(fingerprint)) {
+      skippedDuplicates += 1;
+      return;
+    }
+
+    seenIncomingFingerprints.add(fingerprint);
+
+    if (existing && (existing.rowFingerprint || createAssetFingerprint(existing)) === fingerprint) {
+      skippedDuplicates += 1;
+      return;
+    }
+
+    if (existing) {
+      replaced += 1;
+    } else {
+      added += 1;
+    }
+
+    byKey.set(key, row);
+  });
+
+  return {
+    rows: Array.from(byKey.values()).sort((a, b) =>
+      a.description.localeCompare(b.description)
+    ),
+    added,
+    replaced,
+    skippedDuplicates
+  };
+}
+
+function getAssetRowReview(row: AssetInput) {
+  const issues: string[] = [];
+
+  if (!row.description.trim()) issues.push("Missing description");
+  if (!row.assetCategory.trim()) issues.push("Missing category");
+  if (row.lifeYears <= 0) issues.push("Invalid life");
+  if (row.priorYearAssetValue < 0) issues.push("Invalid value");
+  if (!assetNetworkLevels.includes(row.networkLevel as AssetNetworkLevel)) {
+    issues.push("Invalid network level");
+  } else if (!isValidAssetVoltageNetworkLevel(row.voltage, row.networkLevel)) {
+    issues.push("Network level does not match voltage");
+  }
+
+  return {
+    issues,
+    status: issues.length > 0 ? "Needs review" : "Healthy"
+  };
+}
+
+function getAssetSummary(rows: AssetInput[]) {
+  const totalAssetValue = rows.reduce((total, row) => total + row.priorYearAssetValue, 0);
+  const chargeableAssetValue = rows
+    .filter((row) => row.isChargeableOnElectricityTariff)
+    .reduce((total, row) => total + row.priorYearAssetValue, 0);
+  const invalidRows = rows.filter((row) => getAssetRowReview(row).issues.length > 0).length;
+
+  return {
+    rowCount: rows.length,
+    totalAssetValue,
+    chargeableAssetValue,
+    invalidRows,
+    byVoltage: getAssetValueGroups(rows, "voltage"),
+    byNetworkLevel: getAssetValueGroups(rows, "networkLevel"),
+    uploadBatches: getAssetUploadBatches(rows)
+  };
+}
+
+function getAssetValueGroups(rows: AssetInput[], groupField: "voltage" | "networkLevel") {
+  const groups = new Map<
+    string,
+    { label: string; rowCount: number; totalValue: number; chargeableValue: number }
+  >();
+
+  rows.forEach((row) => {
+    const label = String(row[groupField] || "Unassigned");
+    const current = groups.get(label) ?? {
+      label,
+      rowCount: 0,
+      totalValue: 0,
+      chargeableValue: 0
+    };
+
+    groups.set(label, {
+      ...current,
+      rowCount: current.rowCount + 1,
+      totalValue: current.totalValue + row.priorYearAssetValue,
+      chargeableValue:
+        current.chargeableValue +
+        (row.isChargeableOnElectricityTariff ? row.priorYearAssetValue : 0)
+    });
+  });
+
+  return Array.from(groups.values()).sort((a, b) => a.label.localeCompare(b.label));
+}
+
+function getAssetUploadBatches(rows: AssetInput[]) {
+  const batches = new Map<string, AssetInput[]>();
+
+  rows
+    .filter((row) => row.importBatchId)
+    .forEach((row) => {
+      const currentRows = batches.get(row.importBatchId) ?? [];
+      currentRows.push(row);
+      batches.set(row.importBatchId, currentRows);
+    });
+
+  return Array.from(batches.entries())
+    .map(([batchId, batchRows]) => {
+      const latestRow = [...batchRows].sort((a, b) =>
+        (b.uploadedAt || "").localeCompare(a.uploadedAt || "")
+      )[0];
+
+      return {
+        batchId,
+        rowCount: batchRows.length,
+        fileName: latestRow?.sourceFileName || "Unknown file",
+        uploadedAt: latestRow?.uploadedAt || "",
+        totalAssetValue: batchRows.reduce((total, row) => total + row.priorYearAssetValue, 0)
       };
     })
     .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
@@ -1443,6 +1835,52 @@ export function WorkbookCostInputsForm({
   const { methodologyInputs, setMethodologyInputs, saveState, isArchived, save } =
     useWorkbookMethodology(projectId);
   const showAllSections = section === undefined;
+  const [assetImportStatus, setAssetImportStatus] = useState("");
+  const [assetImportErrors, setAssetImportErrors] = useState<string[]>([]);
+  const [assetCloudStatus, setAssetCloudStatus] = useState("");
+  const [assetBatchToRemove, setAssetBatchToRemove] = useState("");
+  const [confirmClearAssets, setConfirmClearAssets] = useState(false);
+  const assetSummary = useMemo(
+    () => getAssetSummary(methodologyInputs.assets),
+    [methodologyInputs.assets]
+  );
+
+  useEffect(() => {
+    if (!showAllSections && section !== "asset-data") {
+      return;
+    }
+
+    let isMounted = true;
+
+    loadAssetDataFromSupabase(projectId)
+      .then((cloudRows) => {
+        if (!isMounted || cloudRows.length === 0) {
+          return;
+        }
+
+        const nextInputs = {
+          ...getProjectMethodologyInputs(projectId),
+          assets: cloudRows
+        };
+
+        saveProjectMethodologyInputs(nextInputs);
+        setMethodologyInputs(nextInputs);
+        setAssetCloudStatus("Loaded asset data from cloud.");
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setAssetCloudStatus(
+          `Cloud load failed: ${getErrorMessage(error)}`
+        );
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, section, showAllSections, setMethodologyInputs]);
 
   function updateSupplyCharge(field: SupplyChargeField, value: string) {
     if (isArchived) return;
@@ -1493,6 +1931,151 @@ export function WorkbookCostInputsForm({
         row.id === rowId ? { ...row, ...updates } : row
       )
     });
+  }
+
+  async function downloadAssetTemplate() {
+    const sheetData: SheetData = [
+      assetDataHeaders.map((header) => ({
+        value: header,
+        type: String,
+        fontWeight: "bold"
+      }))
+    ];
+    const file = await writeXlsxFile(sheetData, { sheet: "Asset Data" });
+    await file.toFile("asset-data-template.xlsx");
+  }
+
+  async function importAssetWorkbook(file: File) {
+    const rows = await readSheet(file);
+    const uploadedAt = new Date().toISOString();
+    const importBatchId = createAssetImportBatchId();
+    const result = parseAssetRows(rows, file.name, uploadedAt, importBatchId);
+
+    if (result.errors.length > 0) {
+      setAssetImportErrors(result.errors.slice(0, 12));
+      setAssetImportStatus("");
+      return;
+    }
+
+    const merged = mergeAssetRows(methodologyInputs.assets, result.parsedRows);
+    const nextInputs = {
+      ...methodologyInputs,
+      assets: merged.rows
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Asset data saved locally.");
+    setAssetImportErrors([]);
+    setAssetImportStatus(
+      `Imported ${result.parsedRows.length} rows. Added ${merged.added}, replaced ${merged.replaced}, skipped ${merged.skippedDuplicates} duplicate rows.`
+    );
+
+    try {
+      await saveProjectToSupabase(getProjectById(projectId));
+      const cloudSaved = await saveAssetDataToSupabase(projectId, merged.rows);
+      setAssetCloudStatus(cloudSaved ? "Asset data saved to cloud." : "Saved locally only.");
+    } catch (error) {
+      setAssetCloudStatus(
+        `Saved locally. Cloud save failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async function removeAssetUploadBatch(batchId: string) {
+    if (isArchived) return;
+    const nextInputs = {
+      ...methodologyInputs,
+      assets: methodologyInputs.assets.filter((row) => row.importBatchId !== batchId)
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Asset import batch removed.");
+    setAssetBatchToRemove("");
+    setAssetImportStatus("");
+    setAssetImportErrors([]);
+
+    try {
+      const cloudDeleted = await deleteAssetBatchFromSupabase(batchId);
+      setAssetCloudStatus(cloudDeleted ? "Asset batch removed from cloud." : "Batch removed locally only.");
+    } catch (error) {
+      setAssetCloudStatus(
+        `Batch removed locally. Cloud delete failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async function clearAssetData() {
+    if (isArchived) return;
+    const nextInputs = {
+      ...methodologyInputs,
+      assets: []
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Asset data cleared locally.");
+    setAssetBatchToRemove("");
+    setConfirmClearAssets(false);
+    setAssetImportStatus("");
+    setAssetImportErrors([]);
+
+    try {
+      const cloudCleared = await clearAssetDataFromSupabase(projectId);
+      setAssetCloudStatus(cloudCleared ? "Asset data cleared from cloud." : "Asset data cleared locally only.");
+    } catch (error) {
+      setAssetCloudStatus(
+        `Asset data cleared locally. Cloud clear failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async function saveAssetsToCloud() {
+    try {
+      await saveProjectToSupabase(getProjectById(projectId));
+      const cloudSaved = await saveAssetDataToSupabase(projectId, methodologyInputs.assets);
+      setAssetCloudStatus(cloudSaved ? "Asset data saved to cloud." : "Saved locally only.");
+    } catch (error) {
+      setAssetCloudStatus(
+        `Cloud save failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async function restoreAssetsFromCloud() {
+    try {
+      const cloudRows = await loadAssetDataFromSupabase(projectId);
+      const nextInputs = {
+        ...methodologyInputs,
+        assets: cloudRows
+      };
+
+      setMethodologyInputs(nextInputs);
+      save(nextInputs, "Asset data restored from cloud.");
+      setAssetCloudStatus(
+        cloudRows.length > 0 ? "Asset data restored from cloud." : "No cloud asset data found."
+      );
+    } catch (error) {
+      setAssetCloudStatus(
+        `Cloud restore failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  function handleAssetFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file || isArchived) {
+      return;
+    }
+
+    importAssetWorkbook(file).catch((error: unknown) => {
+      setAssetImportErrors([
+        error instanceof Error
+          ? `Import failed: ${error.message}`
+          : "Import failed. Check the file format and try again."
+      ]);
+      setAssetImportStatus("");
+    });
+    event.target.value = "";
   }
 
   return (
@@ -1752,6 +2335,199 @@ export function WorkbookCostInputsForm({
           }
           disabled={isArchived}
         >
+        <div className="mb-5 space-y-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                downloadAssetTemplate().catch((error: unknown) => {
+                  setAssetImportErrors([
+                    error instanceof Error
+                      ? `Template download failed: ${error.message}`
+                      : "Template download failed."
+                  ]);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+            >
+              Download asset template
+            </button>
+            <button
+              type="button"
+              disabled={isArchived}
+              onClick={() => {
+                saveAssetsToCloud().catch((error: unknown) => {
+                  setAssetCloudStatus(
+                    `Cloud save failed: ${getErrorMessage(error)}`
+                  );
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Save to cloud
+            </button>
+            <button
+              type="button"
+              disabled={isArchived}
+              onClick={() => {
+                restoreAssetsFromCloud().catch((error: unknown) => {
+                  setAssetCloudStatus(
+                    `Cloud restore failed: ${getErrorMessage(error)}`
+                  );
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Restore from cloud
+            </button>
+            {confirmClearAssets ? (
+              <button
+                type="button"
+                disabled={isArchived}
+                onClick={() => {
+                  clearAssetData().catch((error: unknown) => {
+                    setAssetCloudStatus(
+                      `Asset data clear failed: ${getErrorMessage(error)}`
+                    );
+                  });
+                }}
+                className="rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:border-red-400 disabled:cursor-not-allowed disabled:text-ink/40"
+              >
+                Confirm clear all
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isArchived || methodologyInputs.assets.length === 0}
+                onClick={() => setConfirmClearAssets(true)}
+                className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+              >
+                Clear all
+              </button>
+            )}
+            <label className="block rounded-md border border-dashed border-line bg-field px-4 py-3">
+              <span className="text-sm font-semibold">Upload asset template</span>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                disabled={isArchived}
+                onChange={handleAssetFileChange}
+                className="mt-2 block w-full text-sm"
+              />
+            </label>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-4">
+            <SummaryMetric label="Assets" value={formatNumber(assetSummary.rowCount)} />
+            <SummaryMetric
+              label="Total asset value"
+              value={formatNumber(assetSummary.totalAssetValue)}
+            />
+            <SummaryMetric
+              label="Chargeable value"
+              value={formatNumber(assetSummary.chargeableAssetValue)}
+            />
+            <SummaryMetric
+              label="Rows needing review"
+              value={formatNumber(assetSummary.invalidRows)}
+            />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <AssetSummaryTable title="Value by voltage" rows={assetSummary.byVoltage} />
+            <AssetSummaryTable title="Value by network level" rows={assetSummary.byNetworkLevel} />
+          </div>
+
+          <div className="rounded-md border border-line bg-white p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="font-semibold text-ink">Recent asset uploads</p>
+              <p className="text-xs font-medium uppercase text-ink/50">
+                {formatNumber(assetSummary.uploadBatches.length)} batches
+              </p>
+            </div>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[720px] border-collapse text-sm">
+                <thead className="bg-field text-left text-xs uppercase text-ink/60">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">File</th>
+                    <th className="px-3 py-2 font-semibold">Uploaded</th>
+                    <th className="px-3 py-2 font-semibold">Rows</th>
+                    <th className="px-3 py-2 font-semibold">Asset value</th>
+                    <th className="px-3 py-2 font-semibold">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assetSummary.uploadBatches.map((batch) => (
+                    <tr key={batch.batchId} className="border-t border-line">
+                      <td className="px-3 py-2">{batch.fileName}</td>
+                      <td className="px-3 py-2">
+                        {batch.uploadedAt ? new Date(batch.uploadedAt).toLocaleString("en-GB") : ""}
+                      </td>
+                      <td className="px-3 py-2">{formatNumber(batch.rowCount)}</td>
+                      <td className="px-3 py-2">{formatNumber(batch.totalAssetValue)}</td>
+                      <td className="px-3 py-2">
+                        {assetBatchToRemove === batch.batchId ? (
+                          <button
+                            type="button"
+                            disabled={isArchived}
+                            onClick={() => {
+                              removeAssetUploadBatch(batch.batchId).catch((error: unknown) => {
+                                setAssetCloudStatus(
+                                  `Batch removal failed: ${getErrorMessage(error)}`
+                                );
+                              });
+                            }}
+                            className="rounded-md border border-red-200 px-3 py-1 text-xs font-semibold text-red-700 hover:border-red-400 disabled:cursor-not-allowed disabled:text-ink/40"
+                          >
+                            Confirm remove
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={isArchived}
+                            onClick={() => setAssetBatchToRemove(batch.batchId)}
+                            className="rounded-md border border-line px-3 py-1 text-xs font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+                          >
+                            Remove batch
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {assetSummary.uploadBatches.length === 0 ? (
+                    <tr className="border-t border-line">
+                      <td colSpan={5} className="px-3 py-4 text-center text-ink/60">
+                        No asset upload batches yet.
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="rounded-md border border-line bg-white p-4 text-sm text-ink/70">
+            <p className="font-semibold text-ink">Required headers</p>
+            <p className="mt-2 break-words">{assetDataHeaders.join(", ")}</p>
+          </div>
+
+          {assetImportStatus ? (
+            <p className="text-sm font-medium text-semarts-dark">{assetImportStatus}</p>
+          ) : null}
+          {assetCloudStatus ? (
+            <p className="text-sm font-medium text-semarts-dark">{assetCloudStatus}</p>
+          ) : null}
+          {assetImportErrors.length > 0 ? (
+            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <p className="font-semibold">Import needs review</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                {assetImportErrors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
         <table className="w-full min-w-[1080px] border-collapse text-sm">
           <thead className="bg-field text-left text-xs uppercase text-ink/60">
             <tr>
@@ -1762,11 +2538,15 @@ export function WorkbookCostInputsForm({
               <th className="px-4 py-3 font-semibold">Life years</th>
               <th className="px-4 py-3 font-semibold">Asset value</th>
               <th className="px-4 py-3 font-semibold">Chargeable</th>
+              <th className="px-4 py-3 font-semibold">Status</th>
               <th className="px-4 py-3 font-semibold">Action</th>
             </tr>
           </thead>
           <tbody>
-            {methodologyInputs.assets.map((row) => (
+            {methodologyInputs.assets.map((row) => {
+              const review = getAssetRowReview(row);
+
+              return (
               <tr key={row.id} className="border-t border-line">
                 <td className="px-4 py-3">
                   <TextInput
@@ -1787,7 +2567,16 @@ export function WorkbookCostInputsForm({
                     value={row.voltage}
                     disabled={isArchived}
                     onChange={(event) =>
-                      updateAsset(row.id, { voltage: event.target.value as AssetInput["voltage"] })
+                      {
+                        const voltage = event.target.value as AssetInput["voltage"];
+                        const networkLevel = isValidAssetVoltageNetworkLevel(
+                          voltage,
+                          row.networkLevel
+                        )
+                          ? row.networkLevel
+                          : "";
+                        updateAsset(row.id, { voltage, networkLevel });
+                      }
                     }
                     className="w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
                   >
@@ -1797,11 +2586,17 @@ export function WorkbookCostInputsForm({
                   </select>
                 </td>
                 <td className="px-4 py-3">
-                  <TextInput
+                  <select
                     value={row.networkLevel}
                     disabled={isArchived}
-                    onChange={(value) => updateAsset(row.id, { networkLevel: value })}
-                  />
+                    onChange={(event) => updateAsset(row.id, { networkLevel: event.target.value })}
+                    className="w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                  >
+                    <option value="">Select</option>
+                    {getAssetNetworkLevelsForVoltage(row.voltage).map((networkLevel) => (
+                      <option key={networkLevel}>{networkLevel}</option>
+                    ))}
+                  </select>
                 </td>
                 <td className="px-4 py-3">
                   <NumberCell
@@ -1833,6 +2628,20 @@ export function WorkbookCostInputsForm({
                   />
                 </td>
                 <td className="px-4 py-3">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      review.status === "Healthy"
+                        ? "bg-field text-semarts-dark"
+                        : "bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {review.status}
+                  </span>
+                  {review.issues.length > 0 ? (
+                    <p className="mt-2 text-xs text-red-700">{review.issues.join(", ")}</p>
+                  ) : null}
+                </td>
+                <td className="px-4 py-3">
                   <RemoveButton
                     disabled={isArchived}
                     onClick={() =>
@@ -1844,7 +2653,8 @@ export function WorkbookCostInputsForm({
                   />
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         </WorkbookTableSection>
@@ -1946,6 +2756,49 @@ function SummaryMetric({ label, value }: { label: string; value: string }) {
     <div className="rounded-md border border-line bg-field p-4">
       <p className="text-xs font-semibold uppercase text-ink/50">{label}</p>
       <p className="mt-2 break-words text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function AssetSummaryTable({
+  title,
+  rows
+}: {
+  title: string;
+  rows: { label: string; rowCount: number; totalValue: number; chargeableValue: number }[];
+}) {
+  return (
+    <div className="rounded-md border border-line bg-white p-4">
+      <p className="font-semibold text-ink">{title}</p>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[420px] border-collapse text-sm">
+          <thead className="bg-field text-left text-xs uppercase text-ink/60">
+            <tr>
+              <th className="px-3 py-2 font-semibold">Group</th>
+              <th className="px-3 py-2 font-semibold">Rows</th>
+              <th className="px-3 py-2 font-semibold">Asset value</th>
+              <th className="px-3 py-2 font-semibold">Chargeable value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.label} className="border-t border-line">
+                <td className="px-3 py-2">{row.label}</td>
+                <td className="px-3 py-2">{formatNumber(row.rowCount)}</td>
+                <td className="px-3 py-2">{formatNumber(row.totalValue)}</td>
+                <td className="px-3 py-2">{formatNumber(row.chargeableValue)}</td>
+              </tr>
+            ))}
+            {rows.length === 0 ? (
+              <tr className="border-t border-line">
+                <td colSpan={4} className="px-3 py-4 text-center text-ink/60">
+                  No assets entered yet.
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
