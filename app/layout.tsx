@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AuthStatus } from "@/components/AuthStatus";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ export default function RootLayout({
                 >
                   New project
                 </Link>
+                <AuthStatus />
               </nav>
             </div>
           </header>
