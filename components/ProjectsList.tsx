@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { getProjects } from "@/lib/project-storage";
 import type { Project } from "@/types/project";
 
+type ProjectFilter = "active" | "archived" | "all";
+
 function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
@@ -31,16 +33,52 @@ function ProjectCard({ project }: { project: Project }) {
 
 export function ProjectsList() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [filter, setFilter] = useState<ProjectFilter>("active");
 
   useEffect(() => {
     setProjects(getProjects());
   }, []);
 
+  const activeProjects = projects.filter((project) => project.status !== "Archived");
+  const archivedProjects = projects.filter((project) => project.status === "Archived");
+  const visibleProjects =
+    filter === "active" ? activeProjects : filter === "archived" ? archivedProjects : projects;
+  const filters: Array<{ id: ProjectFilter; label: string; count: number }> = [
+    { id: "active", label: "Active", count: activeProjects.length },
+    { id: "archived", label: "Archived", count: archivedProjects.length },
+    { id: "all", label: "All", count: projects.length }
+  ];
+
   return (
-    <div className="mt-8 grid gap-4">
-      {projects.map((project) => (
-        <ProjectCard key={project.id} project={project} />
-      ))}
+    <div className="mt-8">
+      <div className="flex flex-wrap gap-2">
+        {filters.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => setFilter(item.id)}
+            className={`rounded-md border px-3 py-2 text-sm font-semibold ${
+              filter === item.id
+                ? "border-semarts bg-semarts text-white"
+                : "border-line bg-white text-ink hover:border-semarts"
+            }`}
+          >
+            {item.label} ({item.count})
+          </button>
+        ))}
+      </div>
+
+      {visibleProjects.length > 0 ? (
+        <div className="mt-4 grid gap-4">
+          {visibleProjects.map((project) => (
+            <ProjectCard key={project.id} project={project} />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-md border border-line bg-white p-5 text-sm text-ink/70 shadow-sm">
+          No {filter === "all" ? "" : filter} projects found.
+        </div>
+      )}
     </div>
   );
 }
