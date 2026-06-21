@@ -141,7 +141,91 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-line md:hidden">
+          {dataInputs.rows.map((row) => (
+            <section key={row.id} className="space-y-4 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="font-semibold text-ink">
+                  {row.customerClass || "Customer class"}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => removeRow(row.id)}
+                  disabled={isArchived}
+                  className="shrink-0 rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+                >
+                  Remove
+                </button>
+              </div>
+
+              <label className="block">
+                <span className="text-sm font-medium">Customer class</span>
+                <input
+                  type="text"
+                  value={row.customerClass}
+                  disabled={isArchived}
+                  onChange={(event) =>
+                    updateRow(row.id, { customerClass: event.target.value })
+                  }
+                  className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                />
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <label className="block">
+                  <span className="text-sm font-medium">Customers</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={row.customerCount}
+                    disabled={isArchived}
+                    onChange={(event) =>
+                      updateNumber(row.id, "customerCount", event.target.value)
+                    }
+                    className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium">Annual kWh</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={row.annualKwh}
+                    disabled={isArchived}
+                    onChange={(event) => updateNumber(row.id, "annualKwh", event.target.value)}
+                    className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium">Peak kW</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={row.peakDemandKw}
+                    disabled={isArchived}
+                    onChange={(event) =>
+                      updateNumber(row.id, "peakDemandKw", event.target.value)
+                    }
+                    className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                  />
+                </label>
+              </div>
+
+              <label className="block">
+                <span className="text-sm font-medium">Notes</span>
+                <input
+                  type="text"
+                  value={row.notes}
+                  disabled={isArchived}
+                  onChange={(event) => updateRow(row.id, { notes: event.target.value })}
+                  className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                />
+              </label>
+            </section>
+          ))}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[920px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
               <tr>
@@ -238,12 +322,12 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
         />
       </label>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t border-line bg-field/95 px-4 py-3 backdrop-blur sm:mx-0 sm:flex-row sm:items-center sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0">
         <button
           type="button"
           onClick={saveInputs}
           disabled={isArchived}
-          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30"
+          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30 sm:w-fit"
         >
           Save inputs
         </button>

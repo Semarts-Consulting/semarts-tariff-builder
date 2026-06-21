@@ -11,22 +11,31 @@ function ProjectCard({ project }: { project: Project }) {
   return (
     <Link
       href={`/projects/${project.id}`}
-      className="rounded-md border border-line bg-white p-5 shadow-sm hover:border-semarts"
+      className="block rounded-md border border-line bg-white p-4 shadow-sm outline-none hover:border-semarts focus:border-semarts sm:p-5"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h2 className="text-lg font-semibold">{project.name}</h2>
           <p className="mt-1 text-sm text-ink/70">{project.networkName}</p>
         </div>
-        <span className="rounded-full bg-field px-3 py-1 text-xs font-medium text-semarts-dark">
+        <span className="w-fit shrink-0 rounded-full bg-field px-3 py-1 text-xs font-medium text-semarts-dark">
           {project.status}
         </span>
       </div>
-      <div className="mt-4 grid gap-2 text-sm text-ink/60 md:grid-cols-3">
-        <p>Tariff year {project.tariffYear}</p>
-        <p>{project.billingPeriod} billing</p>
-        <p>Updated {project.lastUpdated}</p>
-      </div>
+      <dl className="mt-4 grid gap-3 text-sm text-ink/60 sm:grid-cols-3">
+        <div>
+          <dt className="font-medium text-ink/50">Tariff year</dt>
+          <dd className="mt-1 text-ink/70">{project.tariffYear}</dd>
+        </div>
+        <div>
+          <dt className="font-medium text-ink/50">Billing</dt>
+          <dd className="mt-1 text-ink/70">{project.billingPeriod}</dd>
+        </div>
+        <div>
+          <dt className="font-medium text-ink/50">Updated</dt>
+          <dd className="mt-1 text-ink/70">{project.lastUpdated}</dd>
+        </div>
+      </dl>
     </Link>
   );
 }
@@ -51,13 +60,15 @@ export function ProjectsList() {
 
   return (
     <div className="mt-8">
-      <div className="flex flex-wrap gap-2">
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div className="flex min-w-max gap-2">
         {filters.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => setFilter(item.id)}
-            className={`rounded-md border px-3 py-2 text-sm font-semibold ${
+            aria-pressed={filter === item.id}
+            className={`shrink-0 rounded-md border px-3 py-2 text-sm font-semibold ${
               filter === item.id
                 ? "border-semarts bg-semarts text-white"
                 : "border-line bg-white text-ink hover:border-semarts"
@@ -66,6 +77,7 @@ export function ProjectsList() {
             {item.label} ({item.count})
           </button>
         ))}
+        </div>
       </div>
 
       {visibleProjects.length > 0 ? (

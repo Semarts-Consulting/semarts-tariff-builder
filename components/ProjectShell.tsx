@@ -19,15 +19,17 @@ export function ProjectShell({ children, projectId }: ProjectShellProps) {
   }, [projectId]);
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-10">
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
       <div className="border-b border-line pb-6">
         <p className="text-sm font-medium text-semarts-dark">{project.networkName}</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">{project.name}</h1>
-        <div className="mt-3 flex flex-wrap gap-2 text-sm text-ink/60">
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+          {project.name}
+        </h1>
+        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm text-ink/60">
           <span>Tariff year {project.tariffYear}</span>
-          <span>-</span>
+          <span className="hidden sm:inline">-</span>
           <span>{project.billingPeriod} billing</span>
-          <span>-</span>
+          <span className="hidden sm:inline">-</span>
           <span>{project.status}</span>
         </div>
         {project.status === "Archived" ? (
@@ -38,7 +40,7 @@ export function ProjectShell({ children, projectId }: ProjectShellProps) {
         ) : null}
         <ProjectNav projectId={projectId} />
       </div>
-      <div className="py-8">{children}</div>
+      <div className="py-6 sm:py-8">{children}</div>
     </section>
   );
 }

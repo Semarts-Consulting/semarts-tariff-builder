@@ -172,19 +172,16 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
           const balanced = isBalanced(row);
 
           return (
-            <section
-              key={row.id}
-              className="rounded-md border border-line bg-white p-5 shadow-sm"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
+            <section key={row.id} className="rounded-md border border-line bg-white shadow-sm">
+              <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+                <div className="min-w-0">
                   <h2 className="font-semibold">{row.costPoolName}</h2>
                   <p className="mt-1 text-sm text-ink/60">
                     Recoverable cost {formatCurrency(recoverableCostByPool.get(row.costPoolId) ?? 0)}
                   </p>
                 </div>
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${
                     balanced ? "bg-field text-semarts-dark" : "bg-red-50 text-red-700"
                   }`}
                 >
@@ -192,7 +189,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
                 </span>
               </div>
 
-              <div className="mt-5 grid gap-4 md:grid-cols-3">
+              <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-3">
                 <label className="block">
                   <span className="text-sm font-medium">Allocation basis</span>
                   <select
@@ -237,7 +234,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
                 </label>
               </div>
 
-              <div className="mt-5 grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3 border-t border-line bg-field/40 p-4 sm:p-5 md:grid-cols-3">
                 {row.classShares.map((share) => (
                   <label key={share.customerClass} className="block">
                     <span className="text-sm font-medium">{share.customerClass}</span>
@@ -270,12 +267,12 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
         />
       </label>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t border-line bg-field/95 px-4 py-3 backdrop-blur sm:mx-0 sm:flex-row sm:items-center sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0">
         <button
           type="button"
           onClick={saveInputs}
           disabled={isArchived}
-          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30"
+          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30 sm:w-fit"
         >
           Save allocation methods
         </button>
