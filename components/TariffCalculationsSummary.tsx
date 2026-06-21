@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { calculateTariffs } from "@/lib/calculation-engine";
+import { TariffAuditTracePanel } from "@/components/TariffAuditTracePanel";
 import {
   getProjectAllocationMethods,
   getProjectCostPools,
@@ -237,6 +238,8 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
           <li>Rows needing review indicate allocation rules that do not total 100%.</li>
         </ul>
       </div>
+
+      <TariffAuditTracePanel entries={calculationResult.auditTrace} />
     </div>
   );
 }
