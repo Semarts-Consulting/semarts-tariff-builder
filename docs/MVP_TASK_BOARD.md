@@ -14,7 +14,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| MVP-004 Stakeholder-demo preparation | PM plus user sign-off owner | future demo notes, limitation summary | Accepted-with-limitations MVP decision | Medium | Prepare a focused commercial walkthrough without expanding MVP scope. |
+| MVP-004 Stakeholder-demo preparation | PM plus user sign-off owner | `docs/MVP_STAKEHOLDER_DEMO_PREP.md`, `docs/MVP_TIMELINE_TRACKER.md`, `docs/PM_CONTROL.md` | Accepted-with-limitations MVP decision | Medium | Prepare a focused commercial walkthrough without expanding MVP scope. |
 
 ## Review
 
