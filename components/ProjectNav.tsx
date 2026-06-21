@@ -39,7 +39,7 @@ const modelSections = [
 ];
 
 function navClass(isActive: boolean) {
-  return `rounded-md border px-3 py-2 text-sm font-medium ${
+  return `shrink-0 rounded-md border px-3 py-2 text-sm font-medium whitespace-nowrap ${
     isActive
       ? "border-semarts bg-semarts text-white"
       : "border-line bg-white hover:border-semarts"
@@ -47,7 +47,7 @@ function navClass(isActive: boolean) {
 }
 
 function subNavClass(isActive: boolean) {
-  return `rounded-md border px-3 py-2 text-sm font-medium ${
+  return `shrink-0 rounded-md border px-3 py-2 text-sm font-medium whitespace-nowrap ${
     isActive
       ? "border-semarts bg-field text-semarts-dark"
       : "border-line bg-white hover:border-semarts"
@@ -63,8 +63,9 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
   const activeSubsection = searchParams.get("section");
 
   return (
-    <nav className="mt-8 space-y-4">
-      <div className="flex flex-wrap gap-2 border-b border-line pb-4">
+    <nav className="mt-6 space-y-3 sm:mt-8 sm:space-y-4">
+      <div className="-mx-4 overflow-x-auto border-b border-line px-4 pb-4 sm:mx-0 sm:px-0">
+        <div className="flex min-w-max gap-2">
         {outputSections.map((section) => {
           const href = section.href ? `/projects/${projectId}/${section.href}` : `/projects/${projectId}`;
           const isActive = section.href
@@ -72,14 +73,21 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
             : pathname === `/projects/${projectId}`;
 
           return (
-            <Link key={section.title} href={href} className={navClass(isActive)}>
+            <Link
+              key={section.title}
+              href={href}
+              className={navClass(isActive)}
+              aria-current={isActive ? "page" : undefined}
+            >
               {section.title}
             </Link>
           );
         })}
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+        <div className="flex min-w-max gap-2">
         {modelSections.map((section) => {
           const href =
             section.items.length > 0
@@ -88,15 +96,22 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
           const isActive = pathname.endsWith(`/${section.href}`);
 
           return (
-            <Link key={section.href} href={href} className={navClass(isActive)}>
+            <Link
+              key={section.href}
+              href={href}
+              className={navClass(isActive)}
+              aria-current={isActive ? "page" : undefined}
+            >
               {section.title}
             </Link>
           );
         })}
+        </div>
       </div>
 
       {activeModelSection && activeModelSection.items.length > 0 ? (
-        <div className="flex flex-wrap gap-2 rounded-md border border-line bg-white p-3">
+        <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <div className="flex min-w-max gap-2 rounded-md border border-line bg-white p-3">
           {activeModelSection.items.map((item) => {
             const isActive =
               activeSubsection === item.section ||
@@ -107,11 +122,13 @@ export function ProjectNav({ projectId }: ProjectNavProps) {
                 key={item.section}
                 href={`/projects/${projectId}/${activeModelSection.href}?section=${item.section}`}
                 className={subNavClass(isActive)}
+                aria-current={isActive ? "page" : undefined}
               >
                 {item.title}
               </Link>
             );
           })}
+          </div>
         </div>
       ) : null}
     </nav>

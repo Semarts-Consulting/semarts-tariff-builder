@@ -18,7 +18,8 @@ import type {
   ProjectCostPools,
   ProjectDataInputs,
   SupplyReferenceData,
-  TariffCalculationResult
+  TariffCalculationResult,
+  TariffCalculationValidationIssue
 } from "@/types/project";
 
 type ReportsSummaryProps = {
@@ -54,8 +55,19 @@ function emptyCalculation(projectId: string): TariffCalculationResult {
     allocatedCost: 0,
     unallocatedCost: 0,
     unbalancedAllocationCount: 0,
+    isRevenueRecovered: true,
+    validationIssues: [],
     classResults: []
   };
+}
+
+function getIssueLabel(issue: TariffCalculationValidationIssue) {
+  const context = [
+    issue.customerClass ? `Class: ${issue.customerClass}` : "",
+    issue.costPoolId ? `Cost pool: ${issue.costPoolId}` : ""
+  ].filter(Boolean);
+
+  return context.length > 0 ? `${issue.message} ${context.join("; ")}.` : issue.message;
 }
 
 export function ReportsSummary({ projectId }: ReportsSummaryProps) {
@@ -247,6 +259,27 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           </section>
         ) : null}
 
+        {calculation.validationIssues.length > 0 || !calculation.isRevenueRecovered ? (
+          <section className="rounded-md border border-red-200 bg-red-50 p-5 text-sm text-red-900 shadow-sm">
+            <h2 className="font-semibold">Calculation inputs need review</h2>
+            <p className="mt-2">
+              This report remains available, but these readiness issues should be reviewed before approval.
+            </p>
+            <ul className="mt-3 space-y-1">
+              {!calculation.isRevenueRecovered ? (
+                <li>
+                  Revenue is not fully allocated. Variance {formatCurrency(calculation.unallocatedCost)}.
+                </li>
+              ) : null}
+              {calculation.validationIssues.map((issue, index) => (
+                <li key={`${issue.code}-${issue.rowId ?? issue.customerClass ?? index}`}>
+                  {getIssueLabel(issue)}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         <section className="rounded-md border border-line bg-white p-6 shadow-sm">
         <div className="grid gap-5 md:grid-cols-2">
           <div>
@@ -308,20 +341,24 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           <table className="w-full min-w-[920px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
               <tr>
-                <th className="px-4 py-3 font-semibold">Customer class</th>
-                <th className="px-4 py-3 font-semibold">Customers</th>
-                <th className="px-4 py-3 font-semibold">Annual kWh</th>
-                <th className="px-4 py-3 font-semibold">Peak kW</th>
-                <th className="px-4 py-3 font-semibold">Fixed / customer</th>
-                <th className="px-4 py-3 font-semibold">Energy / kWh</th>
-                <th className="px-4 py-3 font-semibold">Demand / kW</th>
-                <th className="px-4 py-3 font-semibold">Allocated cost</th>
+                <th className="sticky left-0 z-10 bg-field px-4 py-3 font-semibold shadow-[1px_0_0_#dce3d7]">
+                  Customer class
+                </th>
+                <th className="bg-field px-4 py-3 font-semibold">Customers</th>
+                <th className="bg-field px-4 py-3 font-semibold">Annual kWh</th>
+                <th className="bg-field px-4 py-3 font-semibold">Peak kW</th>
+                <th className="bg-field px-4 py-3 font-semibold">Fixed / customer</th>
+                <th className="bg-field px-4 py-3 font-semibold">Energy / kWh</th>
+                <th className="bg-field px-4 py-3 font-semibold">Demand / kW</th>
+                <th className="bg-field px-4 py-3 font-semibold">Allocated cost</th>
               </tr>
             </thead>
             <tbody>
               {calculation.classResults.map((row) => (
                 <tr key={row.customerClass} className="border-t border-line">
-                  <td className="px-4 py-3 font-medium">{row.customerClass}</td>
+                  <td className="sticky left-0 bg-white px-4 py-3 font-medium shadow-[1px_0_0_#dce3d7]">
+                    {row.customerClass}
+                  </td>
                   <td className="px-4 py-3">{formatNumber(row.customerCount)}</td>
                   <td className="px-4 py-3">{formatNumber(row.annualKwh)}</td>
                   <td className="px-4 py-3">{formatNumber(row.peakDemandKw)}</td>
@@ -344,16 +381,20 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           <table className="w-full min-w-[760px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
               <tr>
-                <th className="px-4 py-3 font-semibold">Cost pool</th>
-                <th className="px-4 py-3 font-semibold">Category</th>
-                <th className="px-4 py-3 font-semibold">Annual amount</th>
-                <th className="px-4 py-3 font-semibold">Recoverable %</th>
+                <th className="sticky left-0 z-10 bg-field px-4 py-3 font-semibold shadow-[1px_0_0_#dce3d7]">
+                  Cost pool
+                </th>
+                <th className="bg-field px-4 py-3 font-semibold">Category</th>
+                <th className="bg-field px-4 py-3 font-semibold">Annual amount</th>
+                <th className="bg-field px-4 py-3 font-semibold">Recoverable %</th>
               </tr>
             </thead>
             <tbody>
               {costPools.rows.map((row) => (
                 <tr key={row.id} className="border-t border-line">
-                  <td className="px-4 py-3 font-medium">{row.name}</td>
+                  <td className="sticky left-0 bg-white px-4 py-3 font-medium shadow-[1px_0_0_#dce3d7]">
+                    {row.name}
+                  </td>
                   <td className="px-4 py-3">{row.category}</td>
                   <td className="px-4 py-3">{formatCurrency(row.annualAmount)}</td>
                   <td className="px-4 py-3">{formatNumber(row.recoverablePercent)}%</td>
@@ -372,16 +413,20 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           <table className="w-full min-w-[760px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
               <tr>
-                <th className="px-4 py-3 font-semibold">Cost pool</th>
-                <th className="px-4 py-3 font-semibold">Basis</th>
-                <th className="px-4 py-3 font-semibold">Tariff component</th>
-                <th className="px-4 py-3 font-semibold">Notes</th>
+                <th className="sticky left-0 z-10 bg-field px-4 py-3 font-semibold shadow-[1px_0_0_#dce3d7]">
+                  Cost pool
+                </th>
+                <th className="bg-field px-4 py-3 font-semibold">Basis</th>
+                <th className="bg-field px-4 py-3 font-semibold">Tariff component</th>
+                <th className="bg-field px-4 py-3 font-semibold">Notes</th>
               </tr>
             </thead>
             <tbody>
               {allocationMethods.rows.map((row) => (
                 <tr key={row.id} className="border-t border-line">
-                  <td className="px-4 py-3 font-medium">{row.costPoolName}</td>
+                  <td className="sticky left-0 bg-white px-4 py-3 font-medium shadow-[1px_0_0_#dce3d7]">
+                    {row.costPoolName}
+                  </td>
                   <td className="px-4 py-3">{row.basis}</td>
                   <td className="px-4 py-3">{row.tariffComponent}</td>
                   <td className="px-4 py-3">{row.notes || "-"}</td>
@@ -417,7 +462,9 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
         <h2 className="font-semibold">Report checks</h2>
         <ul className="mt-3 grid gap-2 text-sm leading-6 text-ink/70 md:grid-cols-2">
           <li>Revenue variance: {formatCurrency(calculation.unallocatedCost)}</li>
+          <li>Revenue recovered: {calculation.isRevenueRecovered ? "Yes" : "No"}</li>
           <li>Allocation rows needing review: {calculation.unbalancedAllocationCount}</li>
+          <li>Calculation validation issues: {calculation.validationIssues.length}</li>
           <li>Cost pools included: {costPools.rows.length}</li>
           <li>Customer classes included: {calculation.classResults.length}</li>
         </ul>

@@ -62,7 +62,7 @@ export function AuthForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-8 space-y-5 rounded-md border border-line bg-white p-6 shadow-sm"
+      className="mt-8 space-y-5 rounded-md border border-line bg-white p-4 shadow-sm sm:p-6"
     >
       <div className="grid grid-cols-2 rounded-md border border-line bg-field p-1 text-sm font-semibold">
         <button
@@ -113,7 +113,7 @@ export function AuthForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30"
+        className="w-full rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30 sm:w-fit"
       >
         {isSubmitting
           ? "Working..."

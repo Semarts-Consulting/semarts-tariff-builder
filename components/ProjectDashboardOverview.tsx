@@ -110,7 +110,7 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
 
   return (
     <div className="mt-8 space-y-6">
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-md border border-line bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-ink/50">Progress</p>
           <p className="mt-2 text-2xl font-semibold">{totals.completedSteps}/4</p>
@@ -131,18 +131,18 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
         </div>
       </div>
 
-      <div className="rounded-md border border-line bg-white p-5 shadow-sm">
+      <div className="rounded-md border border-line bg-white p-4 shadow-sm sm:p-5">
         <h2 className="font-semibold">Readiness checks</h2>
-        <div className="mt-4 grid gap-3 text-sm md:grid-cols-3">
-          <div>
+        <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+          <div className="rounded-md border border-line bg-field p-3">
             <p className="font-medium text-ink/60">Allocated cost</p>
             <p className="mt-1">{formatCurrency(totals.allocatedCost)}</p>
           </div>
-          <div>
+          <div className="rounded-md border border-line bg-field p-3">
             <p className="font-medium text-ink/60">Revenue variance</p>
             <p className="mt-1">{formatCurrency(totals.variance)}</p>
           </div>
-          <div>
+          <div className="rounded-md border border-line bg-field p-3">
             <p className="font-medium text-ink/60">Allocation rows needing review</p>
             <p className="mt-1">{totals.unbalancedRows}</p>
           </div>
@@ -154,11 +154,11 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
           <Link
             key={section.href}
             href={`/projects/${projectId}/${section.href}`}
-            className="rounded-md border border-line bg-white p-5 shadow-sm hover:border-semarts"
+            className="rounded-md border border-line bg-white p-4 shadow-sm outline-none hover:border-semarts focus:border-semarts sm:p-5"
           >
-            <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <h3 className="font-semibold">{section.title}</h3>
-              <span className="rounded-full bg-field px-3 py-1 text-xs font-semibold text-semarts-dark">
+              <span className="w-fit shrink-0 rounded-full bg-field px-3 py-1 text-xs font-semibold text-semarts-dark">
                 {sectionStatusByHref[section.href as keyof typeof sectionStatusByHref]}
               </span>
             </div>

@@ -40,12 +40,15 @@ export function AuthStatus() {
   }
 
   if (!isReady) {
-    return <span className="text-sm text-ink/50">Checking session</span>;
+    return <span className="shrink-0 text-sm text-ink/50">Checking session</span>;
   }
 
   if (!supabase) {
     return (
-      <Link href="/auth" className="text-sm font-medium text-ink/70 hover:text-semarts-dark">
+      <Link
+        href="/auth"
+        className="shrink-0 rounded-md px-2 py-2 text-sm font-medium text-ink/70 hover:bg-field hover:text-semarts-dark md:px-0 md:hover:bg-transparent"
+      >
         Connect Supabase
       </Link>
     );
@@ -53,14 +56,17 @@ export function AuthStatus() {
 
   if (!session) {
     return (
-      <Link href="/auth" className="text-sm font-medium text-ink/70 hover:text-semarts-dark">
+      <Link
+        href="/auth"
+        className="shrink-0 rounded-md px-2 py-2 text-sm font-medium text-ink/70 hover:bg-field hover:text-semarts-dark md:px-0 md:hover:bg-transparent"
+      >
         Sign in
       </Link>
     );
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex shrink-0 items-center gap-3">
       <span className="hidden max-w-[180px] truncate text-sm text-ink/60 md:inline">
         {session.user.email}
       </span>

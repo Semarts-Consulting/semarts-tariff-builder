@@ -81,7 +81,7 @@ export function NewProjectForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-8 space-y-6 rounded-md border border-line bg-white p-6 shadow-sm"
+      className="mt-8 space-y-6 rounded-md border border-line bg-white p-4 shadow-sm sm:p-6"
     >
       <label className="block">
         <span className="text-sm font-medium">Project name</span>
@@ -156,13 +156,15 @@ export function NewProjectForm() {
 
       {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
 
-      <button
-        type="submit"
-        disabled={!canSubmit}
-        className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30"
-      >
-        Save draft
-      </button>
+      <div className="sticky bottom-0 z-10 -mx-4 border-t border-line bg-white/95 px-4 py-3 backdrop-blur sm:mx-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0">
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className="w-full rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30 sm:w-fit"
+        >
+          Save draft
+        </button>
+      </div>
     </form>
   );
 }

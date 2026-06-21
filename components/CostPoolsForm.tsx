@@ -163,7 +163,98 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-line md:hidden">
+          {costPools.rows.map((row) => (
+            <section key={row.id} className="space-y-4 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-semibold text-ink">{row.name || "Cost pool"}</h3>
+                  <p className="mt-1 text-sm text-ink/60">
+                    Recoverable {formatCurrency(getRecoverableAmount(row))}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeRow(row.id)}
+                  disabled={isArchived}
+                  className="shrink-0 rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+                >
+                  Remove
+                </button>
+              </div>
+
+              <label className="block">
+                <span className="text-sm font-medium">Cost pool</span>
+                <input
+                  type="text"
+                  value={row.name}
+                  disabled={isArchived}
+                  onChange={(event) => updateRow(row.id, { name: event.target.value })}
+                  className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-medium">Category</span>
+                <select
+                  value={row.category}
+                  disabled={isArchived}
+                  onChange={(event) =>
+                    updateRow(row.id, { category: event.target.value as CostPoolCategory })
+                  }
+                  className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                >
+                  {categories.map((category) => (
+                    <option key={category}>{category}</option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-sm font-medium">Annual amount</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={row.annualAmount}
+                    disabled={isArchived}
+                    onChange={(event) =>
+                      updateNumber(row.id, "annualAmount", event.target.value)
+                    }
+                    className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium">Recoverable %</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={row.recoverablePercent}
+                    disabled={isArchived}
+                    onChange={(event) =>
+                      updateNumber(row.id, "recoverablePercent", event.target.value)
+                    }
+                    className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                  />
+                </label>
+              </div>
+
+              <label className="block">
+                <span className="text-sm font-medium">Notes</span>
+                <input
+                  type="text"
+                  value={row.notes}
+                  disabled={isArchived}
+                  onChange={(event) => updateRow(row.id, { notes: event.target.value })}
+                  className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+                />
+              </label>
+            </section>
+          ))}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[1040px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
               <tr>
@@ -267,12 +358,12 @@ export function CostPoolsForm({ projectId }: CostPoolsFormProps) {
         />
       </label>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t border-line bg-field/95 px-4 py-3 backdrop-blur sm:mx-0 sm:flex-row sm:items-center sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0">
         <button
           type="button"
           onClick={saveInputs}
           disabled={isArchived}
-          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30"
+          className="rounded-md bg-semarts px-4 py-2 text-sm font-semibold text-white hover:bg-semarts-dark disabled:cursor-not-allowed disabled:bg-ink/30 sm:w-fit"
         >
           Save cost pools
         </button>

@@ -121,7 +121,7 @@ export function SupplyReferenceDataForm() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-md border border-line bg-white p-6 shadow-sm">
+      <section className="rounded-md border border-line bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-semibold">Review status</h2>
@@ -161,7 +161,7 @@ export function SupplyReferenceDataForm() {
         </div>
       </section>
 
-      <section className="rounded-md border border-line bg-white p-6 shadow-sm">
+      <section className="rounded-md border border-line bg-white p-4 shadow-sm sm:p-6">
         <div>
           <h2 className="font-semibold">DNO source register</h2>
           <p className="mt-1 text-sm text-ink/70">
@@ -173,22 +173,24 @@ export function SupplyReferenceDataForm() {
           <table className="w-full min-w-[1320px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
               <tr>
-                <th className="px-3 py-2 font-semibold">Network area</th>
-                <th className="px-3 py-2 font-semibold">Charging year</th>
-                <th className="px-3 py-2 font-semibold">Status</th>
-                <th className="px-3 py-2 font-semibold">Extraction</th>
-                <th className="px-3 py-2 font-semibold">TOU review</th>
-                <th className="px-3 py-2 font-semibold">Losses review</th>
-                <th className="px-3 py-2 font-semibold">Source</th>
-                <th className="px-3 py-2 font-semibold">Reviewed</th>
-                <th className="px-3 py-2 font-semibold">Time bands</th>
-                <th className="px-3 py-2 font-semibold">Loss factors</th>
+                <th className="sticky left-0 z-10 bg-field px-3 py-2 font-semibold shadow-[1px_0_0_#dce3d7]">
+                  Network area
+                </th>
+                <th className="bg-field px-3 py-2 font-semibold">Charging year</th>
+                <th className="bg-field px-3 py-2 font-semibold">Status</th>
+                <th className="bg-field px-3 py-2 font-semibold">Extraction</th>
+                <th className="bg-field px-3 py-2 font-semibold">TOU review</th>
+                <th className="bg-field px-3 py-2 font-semibold">Losses review</th>
+                <th className="bg-field px-3 py-2 font-semibold">Source</th>
+                <th className="bg-field px-3 py-2 font-semibold">Reviewed</th>
+                <th className="bg-field px-3 py-2 font-semibold">Time bands</th>
+                <th className="bg-field px-3 py-2 font-semibold">Loss factors</th>
               </tr>
             </thead>
             <tbody>
               {sortedDataSets.map((dataSet) => (
                 <tr key={dataSet.id} className="border-t border-line align-top">
-                  <td className="px-3 py-3 font-semibold">
+                  <td className="sticky left-0 bg-white px-3 py-3 font-semibold shadow-[1px_0_0_#dce3d7]">
                     {getNetworkAreaLabel(dataSet, sortedNetworkAreas)}
                   </td>
                   <td className="px-3 py-3">{dataSet.chargingYear}</td>
@@ -249,7 +251,7 @@ export function SupplyReferenceDataForm() {
         ) : null}
       </section>
 
-      <section className="rounded-md border border-line bg-white p-6 shadow-sm">
+      <section className="rounded-md border border-line bg-white p-4 shadow-sm sm:p-6">
         <div>
           <h2 className="font-semibold">MPAN distributor mapping</h2>
           <p className="mt-1 text-sm text-ink/70">

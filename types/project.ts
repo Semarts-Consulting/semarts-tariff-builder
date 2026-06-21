@@ -454,12 +454,44 @@ export type TariffCalculationClassResult = {
   demandChargePerKw: number;
 };
 
+export type TariffCalculationValidationSeverity = "Error" | "Warning";
+
+export type TariffCalculationValidationCode =
+  | "Missing customer class"
+  | "Missing allocation share customer class"
+  | "Negative data input"
+  | "Negative cost pool"
+  | "Recoverable percentage outside range"
+  | "Duplicate customer class"
+  | "Negative allocation share"
+  | "Unbalanced allocation"
+  | "Missing cost pool"
+  | "Missing allocation method"
+  | "Duplicate allocation method"
+  | "Missing allocation shares"
+  | "Duplicate allocation share"
+  | "Unknown customer class"
+  | "Missing fixed denominator"
+  | "Missing consumption denominator"
+  | "Missing capacity denominator";
+
+export type TariffCalculationValidationIssue = {
+  code: TariffCalculationValidationCode;
+  severity: TariffCalculationValidationSeverity;
+  message: string;
+  rowId?: string;
+  customerClass?: string;
+  costPoolId?: string;
+};
+
 export type TariffCalculationResult = {
   projectId: string;
   revenueRequirement: number;
   allocatedCost: number;
   unallocatedCost: number;
   unbalancedAllocationCount: number;
+  isRevenueRecovered: boolean;
+  validationIssues: TariffCalculationValidationIssue[];
   classResults: TariffCalculationClassResult[];
 };
 

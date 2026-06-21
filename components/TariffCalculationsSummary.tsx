@@ -11,7 +11,11 @@ import {
 } from "@/lib/project-storage";
 import { loadSupplyReferenceDataFromSupabase } from "@/lib/supabase-sync";
 import { getSupplyReferenceReviewIssues } from "@/lib/supply-reference-review";
-import type { SupplyReferenceData, TariffCalculationResult } from "@/types/project";
+import type {
+  SupplyReferenceData,
+  TariffCalculationResult,
+  TariffCalculationValidationIssue
+} from "@/types/project";
 
 type TariffCalculationsSummaryProps = {
   projectId: string;
@@ -38,8 +42,19 @@ function emptyResult(projectId: string): TariffCalculationResult {
     allocatedCost: 0,
     unallocatedCost: 0,
     unbalancedAllocationCount: 0,
+    isRevenueRecovered: true,
+    validationIssues: [],
     classResults: []
   };
+}
+
+function getIssueLabel(issue: TariffCalculationValidationIssue) {
+  const context = [
+    issue.customerClass ? `Class: ${issue.customerClass}` : "",
+    issue.costPoolId ? `Cost pool: ${issue.costPoolId}` : ""
+  ].filter(Boolean);
+
+  return context.length > 0 ? `${issue.message} ${context.join("; ")}.` : issue.message;
 }
 
 export function TariffCalculationsSummary({ projectId }: TariffCalculationsSummaryProps) {
@@ -133,6 +148,27 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
         </div>
       ) : null}
 
+      {calculationResult.validationIssues.length > 0 || !calculationResult.isRevenueRecovered ? (
+        <div className="rounded-md border border-red-200 bg-red-50 p-5 text-sm text-red-900 shadow-sm">
+          <h2 className="font-semibold">Calculation inputs need review</h2>
+          <p className="mt-2">
+            Tariff outputs remain available, but these readiness issues should be reviewed before approval.
+          </p>
+          <ul className="mt-3 space-y-1">
+            {!calculationResult.isRevenueRecovered ? (
+              <li>
+                Revenue is not fully allocated. Variance {formatCurrency(calculationResult.unallocatedCost)}.
+              </li>
+            ) : null}
+            {calculationResult.validationIssues.map((issue, index) => (
+              <li key={`${issue.code}-${issue.rowId ?? issue.customerClass ?? index}`}>
+                {getIssueLabel(issue)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       {supplyReferenceIssues.length > 0 ? (
         <div className="rounded-md border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 shadow-sm">
           <h2 className="font-semibold">Supply reference data requires Semarts review</h2>
@@ -158,21 +194,25 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
           <table className="w-full min-w-[1040px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
               <tr>
-                <th className="px-4 py-3 font-semibold">Customer class</th>
-                <th className="px-4 py-3 font-semibold">Allocated cost</th>
-                <th className="px-4 py-3 font-semibold">Fixed cost</th>
-                <th className="px-4 py-3 font-semibold">Energy cost</th>
-                <th className="px-4 py-3 font-semibold">Demand cost</th>
-                <th className="px-4 py-3 font-semibold">Pass-through</th>
-                <th className="px-4 py-3 font-semibold">Fixed / customer</th>
-                <th className="px-4 py-3 font-semibold">Energy / kWh</th>
-                <th className="px-4 py-3 font-semibold">Demand / kW</th>
+                <th className="sticky left-0 z-10 bg-field px-4 py-3 font-semibold shadow-[1px_0_0_#dce3d7]">
+                  Customer class
+                </th>
+                <th className="bg-field px-4 py-3 font-semibold">Allocated cost</th>
+                <th className="bg-field px-4 py-3 font-semibold">Fixed cost</th>
+                <th className="bg-field px-4 py-3 font-semibold">Energy cost</th>
+                <th className="bg-field px-4 py-3 font-semibold">Demand cost</th>
+                <th className="bg-field px-4 py-3 font-semibold">Pass-through</th>
+                <th className="bg-field px-4 py-3 font-semibold">Fixed / customer</th>
+                <th className="bg-field px-4 py-3 font-semibold">Energy / kWh</th>
+                <th className="bg-field px-4 py-3 font-semibold">Demand / kW</th>
               </tr>
             </thead>
             <tbody>
               {calculationResult.classResults.map((row) => (
                 <tr key={row.customerClass} className="border-t border-line">
-                  <td className="px-4 py-3 font-medium">{row.customerClass}</td>
+                  <td className="sticky left-0 bg-white px-4 py-3 font-medium shadow-[1px_0_0_#dce3d7]">
+                    {row.customerClass}
+                  </td>
                   <td className="px-4 py-3">{formatCurrency(row.totalAllocatedCost)}</td>
                   <td className="px-4 py-3">{formatCurrency(row.fixedCost)}</td>
                   <td className="px-4 py-3">{formatCurrency(row.energyCost)}</td>

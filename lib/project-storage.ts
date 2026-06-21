@@ -924,6 +924,30 @@ export function createAllocationMethodRow(
   };
 }
 
+export function reconcileAllocationMethodsWithCostPools(
+  projectId: string,
+  allocationMethods: ProjectAllocationMethods,
+  costPools: ProjectCostPools = getProjectCostPools(projectId)
+): ProjectAllocationMethods {
+  const existingRowsByCostPoolId = new Map(
+    allocationMethods.rows.map((row) => [row.costPoolId, row])
+  );
+  const reconciledRows = costPools.rows.map((costPool) => {
+    const existingRow = existingRowsByCostPoolId.get(costPool.id);
+
+    return existingRow
+      ? {
+          ...existingRow,
+          costPoolName: costPool.name
+        }
+      : createAllocationMethodRow(projectId, costPool);
+  });
+  return {
+    ...allocationMethods,
+    rows: reconciledRows
+  };
+}
+
 export function createDefaultAllocationMethods(projectId: string): ProjectAllocationMethods {
   const costPools = getProjectCostPools(projectId);
 
@@ -946,11 +970,12 @@ export function getStoredAllocationMethods() {
 }
 
 export function getProjectAllocationMethods(projectId: string) {
-  return (
+  const allocationMethods =
     getStoredAllocationMethods().find(
       (allocationMethods) => allocationMethods.projectId === projectId
-    ) ?? createDefaultAllocationMethods(projectId)
-  );
+    ) ?? createDefaultAllocationMethods(projectId);
+
+  return reconcileAllocationMethodsWithCostPools(projectId, allocationMethods);
 }
 
 export function saveProjectAllocationMethods(allocationMethods: ProjectAllocationMethods) {
