@@ -6,7 +6,9 @@ import type {
   DirectCostInput,
   EmployeeCostInput,
   IndirectOverheadInput,
-  ProjectStatus
+  ProjectStatus,
+  SupplyContractChargeInput,
+  SupplyDetailsInput
 } from "@/types/project";
 
 export type Database = {
@@ -436,6 +438,88 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["indirect_overhead_data"]["Insert"]>;
+        Relationships: [];
+      };
+      supply_details: {
+        Row: {
+          id: string;
+          project_local_id: string;
+          user_id: string | null;
+          mpan: string;
+          supply_capacity_kva: number;
+          voltage: SupplyDetailsInput["voltage"];
+          transmission: SupplyDetailsInput["transmission"];
+          distribution: SupplyDetailsInput["distribution"];
+          tnuos_non_locational_charge_per_day: number;
+          tnuos_triad_charge_per_kw: number;
+          duos_fixed_charge_per_day: number;
+          duos_import_capacity_pence_per_kva_per_day: number;
+          duos_red_unit_pence_per_kwh: number;
+          duos_amber_unit_pence_per_kwh: number;
+          duos_green_unit_pence_per_kwh: number;
+          duos_super_red_unit_pence_per_kwh: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          project_local_id: string;
+          user_id?: string | null;
+          mpan: string;
+          supply_capacity_kva: number;
+          voltage: SupplyDetailsInput["voltage"];
+          transmission: SupplyDetailsInput["transmission"];
+          distribution: SupplyDetailsInput["distribution"];
+          tnuos_non_locational_charge_per_day?: number;
+          tnuos_triad_charge_per_kw?: number;
+          duos_fixed_charge_per_day?: number;
+          duos_import_capacity_pence_per_kva_per_day?: number;
+          duos_red_unit_pence_per_kwh?: number;
+          duos_amber_unit_pence_per_kwh?: number;
+          duos_green_unit_pence_per_kwh?: number;
+          duos_super_red_unit_pence_per_kwh?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["supply_details"]["Insert"]>;
+        Relationships: [];
+      };
+      supply_contract_charges: {
+        Row: {
+          id: string;
+          project_local_id: string;
+          user_id: string | null;
+          supply_detail_id: string;
+          charge_name: string;
+          losses: SupplyContractChargeInput["losses"];
+          charge_type: SupplyContractChargeInput["chargeType"];
+          unit_of_measurement: SupplyContractChargeInput["unitOfMeasurement"];
+          time_of_use: SupplyContractChargeInput["timeOfUse"];
+          custom_time_of_use: SupplyContractChargeInput["customTimeOfUse"];
+          rate_unit: SupplyContractChargeInput["rateUnit"];
+          rate: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          project_local_id: string;
+          user_id?: string | null;
+          supply_detail_id: string;
+          charge_name: string;
+          losses: SupplyContractChargeInput["losses"];
+          charge_type: SupplyContractChargeInput["chargeType"];
+          unit_of_measurement: SupplyContractChargeInput["unitOfMeasurement"];
+          time_of_use?: SupplyContractChargeInput["timeOfUse"];
+          custom_time_of_use?: SupplyContractChargeInput["customTimeOfUse"];
+          rate_unit: SupplyContractChargeInput["rateUnit"];
+          rate: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["supply_contract_charges"]["Insert"]
+        >;
         Relationships: [];
       };
     };

@@ -126,6 +126,11 @@ function normalizeProjectMethodologyInputs(
               (legacyCharge.lossesApplied ? "GSP" : "NBP"),
             chargeType: legacyCharge.chargeType ?? "Consumption",
             unitOfMeasurement: legacyCharge.unitOfMeasurement || "per kWh",
+            timeOfUse: legacyCharge.timeOfUse ?? "All times",
+            customTimeOfUse: {
+              ...createSupplyContractChargeInput().customTimeOfUse,
+              ...legacyCharge.customTimeOfUse
+            },
             rateUnit: legacyCharge.rateUnit ?? "p"
           };
         })
@@ -384,6 +389,14 @@ export function createSupplyContractChargeInput(): ProjectMethodologyInputs["sup
     losses: "NBP",
     chargeType: "Consumption",
     unitOfMeasurement: "per kWh",
+    timeOfUse: "All times",
+    customTimeOfUse: {
+      daysOfWeek: [],
+      appliesOnBankHolidays: false,
+      months: [],
+      startTime: "00:00",
+      endTime: "23:30"
+    },
     rateUnit: "p",
     rate: 0
   };

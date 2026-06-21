@@ -40,6 +40,12 @@ add column if not exists user_id uuid references auth.users(id) on delete cascad
 alter table public.indirect_overhead_data
 add column if not exists user_id uuid references auth.users(id) on delete cascade;
 
+alter table public.supply_details
+add column if not exists user_id uuid references auth.users(id) on delete cascade;
+
+alter table public.supply_contract_charges
+add column if not exists user_id uuid references auth.users(id) on delete cascade;
+
 create index if not exists projects_user_id_idx on public.projects(user_id);
 create index if not exists project_data_inputs_user_id_idx on public.project_data_inputs(user_id);
 create index if not exists project_cost_pools_user_id_idx on public.project_cost_pools(user_id);
@@ -69,6 +75,11 @@ create index if not exists indirect_overhead_import_batches_project_idx on publi
 create index if not exists indirect_overhead_data_user_id_idx on public.indirect_overhead_data(user_id);
 create index if not exists indirect_overhead_data_project_idx on public.indirect_overhead_data(project_local_id);
 create index if not exists indirect_overhead_data_batch_idx on public.indirect_overhead_data(import_batch_id);
+create index if not exists supply_details_user_id_idx on public.supply_details(user_id);
+create index if not exists supply_details_project_idx on public.supply_details(project_local_id);
+create index if not exists supply_contract_charges_user_id_idx on public.supply_contract_charges(user_id);
+create index if not exists supply_contract_charges_project_idx on public.supply_contract_charges(project_local_id);
+create index if not exists supply_contract_charges_supply_detail_idx on public.supply_contract_charges(supply_detail_id);
 
 drop policy if exists "Users can read their projects" on public.projects;
 create policy "Users can read their projects"
@@ -260,6 +271,32 @@ using (user_id = auth.uid());
 drop policy if exists "Users can manage their indirect overhead data" on public.indirect_overhead_data;
 create policy "Users can manage their indirect overhead data"
 on public.indirect_overhead_data for all
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+drop policy if exists "Users can read their supply details" on public.supply_details;
+create policy "Users can read their supply details"
+on public.supply_details for select
+to authenticated
+using (user_id = auth.uid());
+
+drop policy if exists "Users can manage their supply details" on public.supply_details;
+create policy "Users can manage their supply details"
+on public.supply_details for all
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+drop policy if exists "Users can read their supply contract charges" on public.supply_contract_charges;
+create policy "Users can read their supply contract charges"
+on public.supply_contract_charges for select
+to authenticated
+using (user_id = auth.uid());
+
+drop policy if exists "Users can manage their supply contract charges" on public.supply_contract_charges;
+create policy "Users can manage their supply contract charges"
+on public.supply_contract_charges for all
 to authenticated
 using (user_id = auth.uid())
 with check (user_id = auth.uid());

@@ -10,7 +10,8 @@ import type {
   Project,
   ProjectAllocationMethods,
   ProjectCostPools,
-  ProjectDataInputs
+  ProjectDataInputs,
+  SupplyDetailsInput
 } from "@/types/project";
 
 function sumHalfHourlyValues(row: HalfHourlyImportRow) {
@@ -425,6 +426,125 @@ function fromIndirectOverheadDataRow(row: {
     importBatchId: row.import_batch_id,
     rowFingerprint: row.row_fingerprint
   };
+}
+
+function toSupplyDetailsDataRow(projectId: string, row: SupplyDetailsInput, userId: string) {
+  return {
+    id: row.id,
+    user_id: userId,
+    project_local_id: projectId,
+    mpan: row.mpan,
+    supply_capacity_kva: row.supplyCapacityKva,
+    voltage: row.voltage,
+    transmission: row.transmission,
+    distribution: row.distribution,
+    tnuos_non_locational_charge_per_day: row.tnuosNonLocationalChargePerDay,
+    tnuos_triad_charge_per_kw: row.tnuosTriadChargePerKw,
+    duos_fixed_charge_per_day: row.duosFixedChargePerDay,
+    duos_import_capacity_pence_per_kva_per_day:
+      row.duosImportCapacityPencePerKvaPerDay,
+    duos_red_unit_pence_per_kwh: row.duosRedUnitPencePerKwh,
+    duos_amber_unit_pence_per_kwh: row.duosAmberUnitPencePerKwh,
+    duos_green_unit_pence_per_kwh: row.duosGreenUnitPencePerKwh,
+    duos_super_red_unit_pence_per_kwh: row.duosSuperRedUnitPencePerKwh
+  };
+}
+
+function toSupplyContractChargeDataRows(
+  projectId: string,
+  supplyRows: SupplyDetailsInput[],
+  userId: string
+) {
+  return supplyRows.flatMap((supplyRow) =>
+    supplyRow.supplyContractCharges.map((charge) => ({
+      id: charge.id,
+      user_id: userId,
+      project_local_id: projectId,
+      supply_detail_id: supplyRow.id,
+      charge_name: charge.chargeName,
+      losses: charge.losses,
+      charge_type: charge.chargeType,
+      unit_of_measurement: charge.unitOfMeasurement,
+      time_of_use: charge.timeOfUse,
+      custom_time_of_use: charge.customTimeOfUse,
+      rate_unit: charge.rateUnit,
+      rate: charge.rate
+    }))
+  );
+}
+
+function fromSupplyDataRows(
+  detailRows: {
+    id: string;
+    mpan: string;
+    supply_capacity_kva: number;
+    voltage: SupplyDetailsInput["voltage"];
+    transmission: SupplyDetailsInput["transmission"];
+    distribution: SupplyDetailsInput["distribution"];
+    tnuos_non_locational_charge_per_day: number;
+    tnuos_triad_charge_per_kw: number;
+    duos_fixed_charge_per_day: number;
+    duos_import_capacity_pence_per_kva_per_day: number;
+    duos_red_unit_pence_per_kwh: number;
+    duos_amber_unit_pence_per_kwh: number;
+    duos_green_unit_pence_per_kwh: number;
+    duos_super_red_unit_pence_per_kwh: number;
+  }[],
+  chargeRows: {
+    id: string;
+    supply_detail_id: string;
+    charge_name: string;
+    losses: SupplyDetailsInput["supplyContractCharges"][number]["losses"];
+    charge_type: SupplyDetailsInput["supplyContractCharges"][number]["chargeType"];
+    unit_of_measurement: SupplyDetailsInput["supplyContractCharges"][number]["unitOfMeasurement"];
+    time_of_use: SupplyDetailsInput["supplyContractCharges"][number]["timeOfUse"];
+    custom_time_of_use: SupplyDetailsInput["supplyContractCharges"][number]["customTimeOfUse"];
+    rate_unit: SupplyDetailsInput["supplyContractCharges"][number]["rateUnit"];
+    rate: number;
+  }[]
+): SupplyDetailsInput[] {
+  function normaliseCustomTimeOfUse(
+    value: Partial<SupplyDetailsInput["supplyContractCharges"][number]["customTimeOfUse"]>
+  ): SupplyDetailsInput["supplyContractCharges"][number]["customTimeOfUse"] {
+    return {
+      daysOfWeek: value.daysOfWeek ?? [],
+      appliesOnBankHolidays: value.appliesOnBankHolidays ?? false,
+      months: value.months ?? [],
+      startTime: value.startTime ?? "00:00",
+      endTime: value.endTime ?? "23:30"
+    };
+  }
+
+  return detailRows.map((row) => ({
+    id: row.id,
+    mpan: row.mpan,
+    supplyCapacityKva: row.supply_capacity_kva,
+    voltage: row.voltage,
+    transmission: row.transmission,
+    distribution: row.distribution,
+    tnuosNonLocationalChargePerDay: row.tnuos_non_locational_charge_per_day,
+    tnuosTriadChargePerKw: row.tnuos_triad_charge_per_kw,
+    duosFixedChargePerDay: row.duos_fixed_charge_per_day,
+    duosImportCapacityPencePerKvaPerDay:
+      row.duos_import_capacity_pence_per_kva_per_day,
+    duosRedUnitPencePerKwh: row.duos_red_unit_pence_per_kwh,
+    duosAmberUnitPencePerKwh: row.duos_amber_unit_pence_per_kwh,
+    duosGreenUnitPencePerKwh: row.duos_green_unit_pence_per_kwh,
+    duosSuperRedUnitPencePerKwh: row.duos_super_red_unit_pence_per_kwh,
+    supplyContractCharges: chargeRows
+      .filter((charge) => charge.supply_detail_id === row.id)
+      .map((charge) => ({
+        id: charge.id,
+        chargeName: charge.charge_name,
+        losses: charge.losses,
+        chargeType: charge.charge_type,
+        unitOfMeasurement: charge.unit_of_measurement,
+        timeOfUse: charge.time_of_use,
+        customTimeOfUse: normaliseCustomTimeOfUse(charge.custom_time_of_use),
+        rateUnit: charge.rate_unit,
+        rate: charge.rate
+      }))
+  }));
 }
 
 function toProjectRow(project: Project, userId: string) {
@@ -1197,6 +1317,120 @@ export async function clearIndirectOverheadDataFromSupabase(projectId: string) {
 
   const { error } = await supabase
     .from("indirect_overhead_import_batches")
+    .delete()
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
+export async function saveSupplyDetailsToSupabase(
+  projectId: string,
+  rows: SupplyDetailsInput[]
+) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error: deleteError } = await supabase
+    .from("supply_details")
+    .delete()
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId);
+
+  if (deleteError) {
+    throw deleteError;
+  }
+
+  if (rows.length === 0) {
+    return true;
+  }
+
+  const detailRows = rows.map((row) => toSupplyDetailsDataRow(projectId, row, userId));
+  const chargeRows = toSupplyContractChargeDataRows(projectId, rows, userId);
+
+  const { error: detailError } = await supabase.from("supply_details").insert(detailRows);
+
+  if (detailError) {
+    throw detailError;
+  }
+
+  if (chargeRows.length > 0) {
+    const { error: chargeError } = await supabase
+      .from("supply_contract_charges")
+      .insert(chargeRows);
+
+    if (chargeError) {
+      throw chargeError;
+    }
+  }
+
+  return true;
+}
+
+export async function loadSupplyDetailsFromSupabase(projectId: string) {
+  if (!supabase) {
+    return [];
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return [];
+  }
+
+  const { data: detailRows, error: detailError } = await supabase
+    .from("supply_details")
+    .select(
+      "id, mpan, supply_capacity_kva, voltage, transmission, distribution, tnuos_non_locational_charge_per_day, tnuos_triad_charge_per_kw, duos_fixed_charge_per_day, duos_import_capacity_pence_per_kva_per_day, duos_red_unit_pence_per_kwh, duos_amber_unit_pence_per_kwh, duos_green_unit_pence_per_kwh, duos_super_red_unit_pence_per_kwh"
+    )
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId)
+    .order("mpan", { ascending: true });
+
+  if (detailError) {
+    throw detailError;
+  }
+
+  const { data: chargeRows, error: chargeError } = await supabase
+    .from("supply_contract_charges")
+    .select(
+      "id, supply_detail_id, charge_name, losses, charge_type, unit_of_measurement, time_of_use, custom_time_of_use, rate_unit, rate"
+    )
+    .eq("project_local_id", projectId)
+    .eq("user_id", userId)
+    .order("charge_name", { ascending: true });
+
+  if (chargeError) {
+    throw chargeError;
+  }
+
+  return fromSupplyDataRows(detailRows, chargeRows);
+}
+
+export async function clearSupplyDetailsFromSupabase(projectId: string) {
+  if (!supabase) {
+    return false;
+  }
+
+  const userId = await getOptionalSignedInUserId();
+
+  if (!userId) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("supply_details")
     .delete()
     .eq("project_local_id", projectId)
     .eq("user_id", userId);

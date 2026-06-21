@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, Fragment, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { readSheet } from "read-excel-file/browser";
 import writeXlsxFile from "write-excel-file/browser";
@@ -26,6 +26,7 @@ import {
   clearDirectCostDataFromSupabase,
   clearEmployeeCostDataFromSupabase,
   clearIndirectOverheadDataFromSupabase,
+  clearSupplyDetailsFromSupabase,
   deleteAssetBatchFromSupabase,
   deleteBoundaryMeterBatchFromSupabase,
   deleteDirectCostBatchFromSupabase,
@@ -36,11 +37,13 @@ import {
   loadDirectCostDataFromSupabase,
   loadEmployeeCostDataFromSupabase,
   loadIndirectOverheadDataFromSupabase,
+  loadSupplyDetailsFromSupabase,
   saveAssetDataToSupabase,
   saveDirectCostDataToSupabase,
   saveEmployeeCostDataToSupabase,
   saveIndirectOverheadDataToSupabase,
   saveProjectToSupabase,
+  saveSupplyDetailsToSupabase,
   saveBoundaryMeterDataToSupabase
 } from "@/lib/supabase-sync";
 import type {
@@ -55,8 +58,11 @@ import type {
   SupplyChargeBasis,
   SupplyContractChargeType,
   SupplyContractChargeInput,
+  SupplyContractDayOfWeek,
   SupplyContractLosses,
+  SupplyContractMonth,
   SupplyContractRateUnit,
+  SupplyContractTimeOfUse,
   SupplyContractUnitOfMeasurement,
   SupplyDetailsInput,
   SupplyVoltage,
@@ -116,7 +122,47 @@ const supplyContractChargeTypes: SupplyContractChargeType[] = [
   "Fixed",
   "Capacity"
 ];
-const supplyContractRateUnits: SupplyContractRateUnit[] = ["£", "p"];
+const supplyContractRateUnits: SupplyContractRateUnit[] = ["\u00a3", "p"];
+const supplyContractTimeOfUseOptions: SupplyContractTimeOfUse[] = [
+  "All times",
+  "Red",
+  "Amber",
+  "Green",
+  "Super Red",
+  "Day",
+  "Night",
+  "Custom"
+];
+const supplyContractDaysOfWeek: SupplyContractDayOfWeek[] = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday"
+];
+const supplyContractMonths: SupplyContractMonth[] = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+];
+const defaultCustomTimeOfUse: SupplyContractChargeInput["customTimeOfUse"] = {
+  daysOfWeek: [],
+  appliesOnBankHolidays: false,
+  months: [],
+  startTime: "00:00",
+  endTime: "23:30"
+};
 const supplyContractUnitsByChargeType: Record<
   SupplyContractChargeType,
   SupplyContractUnitOfMeasurement[]
@@ -1529,6 +1575,31 @@ function validateSupplyDetails(supplyDetails: SupplyDetailsInput[]) {
           `Supply contract row ${index + 1}.${chargeIndex + 1}: unit does not match charge type.`
         );
       }
+
+      if (charge.timeOfUse === "Custom") {
+        const customTimeOfUse = {
+          ...defaultCustomTimeOfUse,
+          ...charge.customTimeOfUse
+        };
+
+        if (customTimeOfUse.daysOfWeek.length === 0) {
+          errors.push(
+            `Supply contract row ${index + 1}.${chargeIndex + 1}: select at least one day of week.`
+          );
+        }
+
+        if (customTimeOfUse.months.length === 0) {
+          errors.push(
+            `Supply contract row ${index + 1}.${chargeIndex + 1}: select at least one month.`
+          );
+        }
+
+        if (!customTimeOfUse.startTime || !customTimeOfUse.endTime) {
+          errors.push(
+            `Supply contract row ${index + 1}.${chargeIndex + 1}: start and end time are required.`
+          );
+        }
+      }
     });
   });
 
@@ -2561,6 +2632,8 @@ export function WorkbookCostInputsForm({
   const [indirectOverheadCloudStatus, setIndirectOverheadCloudStatus] = useState("");
   const [indirectOverheadBatchToRemove, setIndirectOverheadBatchToRemove] = useState("");
   const [confirmClearIndirectOverheads, setConfirmClearIndirectOverheads] = useState(false);
+  const [supplyCloudStatus, setSupplyCloudStatus] = useState("");
+  const [confirmClearSupplyDetails, setConfirmClearSupplyDetails] = useState(false);
   const assetSummary = useMemo(
     () => getAssetSummary(methodologyInputs.assets),
     [methodologyInputs.assets]
@@ -2731,6 +2804,45 @@ export function WorkbookCostInputsForm({
     };
   }, [projectId, section, showAllSections, setMethodologyInputs]);
 
+  useEffect(() => {
+    if (
+      !showAllSections &&
+      section !== "transmission-distribution" &&
+      section !== "supply-contract"
+    ) {
+      return;
+    }
+
+    let isMounted = true;
+
+    loadSupplyDetailsFromSupabase(projectId)
+      .then((cloudRows) => {
+        if (!isMounted || cloudRows.length === 0) {
+          return;
+        }
+
+        const nextInputs = {
+          ...getProjectMethodologyInputs(projectId),
+          supplyDetails: cloudRows
+        };
+
+        saveProjectMethodologyInputs(nextInputs);
+        setMethodologyInputs(nextInputs);
+        setSupplyCloudStatus("Loaded supply inputs from cloud.");
+      })
+      .catch((error: unknown) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setSupplyCloudStatus(`Cloud load failed: ${getErrorMessage(error)}`);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, section, showAllSections, setMethodologyInputs]);
+
   function updateSupplyDetails(rowId: string, updates: Partial<SupplyDetailsInput>) {
     if (isArchived) return;
     setMethodologyInputs({
@@ -2778,6 +2890,29 @@ export function WorkbookCostInputsForm({
           : row
       )
     });
+  }
+
+  function updateSupplyContractCustomTimeOfUse(
+    supplyId: string,
+    charge: SupplyContractChargeInput,
+    updates: Partial<SupplyContractChargeInput["customTimeOfUse"]>
+  ) {
+    updateSupplyContractCharge(supplyId, charge.id, {
+      customTimeOfUse: {
+        ...defaultCustomTimeOfUse,
+        ...charge.customTimeOfUse,
+        ...updates
+      }
+    });
+  }
+
+  function toggleSupplyContractCustomValue<T extends string>(
+    currentValues: T[],
+    value: T
+  ) {
+    return currentValues.includes(value)
+      ? currentValues.filter((currentValue) => currentValue !== value)
+      : [...currentValues, value];
   }
 
   function removeSupplyContractCharge(supplyId: string, chargeId: string) {
@@ -3116,6 +3251,62 @@ export function WorkbookCostInputsForm({
     } catch (error) {
       setIndirectOverheadCloudStatus(
         `Indirect overheads cleared locally. Cloud clear failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async function saveSupplyDetailsToCloud() {
+    try {
+      await saveProjectToSupabase(getProjectById(projectId));
+      const cloudSaved = await saveSupplyDetailsToSupabase(
+        projectId,
+        methodologyInputs.supplyDetails
+      );
+      setSupplyCloudStatus(
+        cloudSaved ? "Supply inputs saved to cloud." : "Saved locally only."
+      );
+    } catch (error) {
+      setSupplyCloudStatus(`Cloud save failed: ${getErrorMessage(error)}`);
+    }
+  }
+
+  async function restoreSupplyDetailsFromCloud() {
+    try {
+      const cloudRows = await loadSupplyDetailsFromSupabase(projectId);
+      const nextInputs = {
+        ...methodologyInputs,
+        supplyDetails: cloudRows
+      };
+
+      setMethodologyInputs(nextInputs);
+      save(nextInputs, "Supply inputs restored from cloud.");
+      setSupplyCloudStatus(
+        cloudRows.length > 0 ? "Supply inputs restored from cloud." : "No cloud supply inputs found."
+      );
+    } catch (error) {
+      setSupplyCloudStatus(`Cloud restore failed: ${getErrorMessage(error)}`);
+    }
+  }
+
+  async function clearSupplyDetails() {
+    if (isArchived) return;
+    const nextInputs = {
+      ...methodologyInputs,
+      supplyDetails: []
+    };
+
+    setMethodologyInputs(nextInputs);
+    save(nextInputs, "Supply inputs cleared locally.");
+    setConfirmClearSupplyDetails(false);
+
+    try {
+      const cloudCleared = await clearSupplyDetailsFromSupabase(projectId);
+      setSupplyCloudStatus(
+        cloudCleared ? "Supply inputs cleared from cloud." : "Supply inputs cleared locally only."
+      );
+    } catch (error) {
+      setSupplyCloudStatus(
+        `Supply inputs cleared locally. Cloud clear failed: ${getErrorMessage(error)}`
       );
     }
   }
@@ -4696,6 +4887,57 @@ export function WorkbookCostInputsForm({
         <p className="mt-1 text-sm text-ink/70">
           Source: Inputs and Selections A112:B146.
         </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button
+            type="button"
+            disabled={isArchived}
+            onClick={() => {
+              saveSupplyDetailsToCloud().catch((error: unknown) => {
+                setSupplyCloudStatus(`Cloud save failed: ${getErrorMessage(error)}`);
+              });
+            }}
+            className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+          >
+            Save to cloud
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              restoreSupplyDetailsFromCloud().catch((error: unknown) => {
+                setSupplyCloudStatus(`Cloud restore failed: ${getErrorMessage(error)}`);
+              });
+            }}
+            className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+          >
+            Restore from cloud
+          </button>
+          {confirmClearSupplyDetails ? (
+            <button
+              type="button"
+              disabled={isArchived}
+              onClick={() => {
+                clearSupplyDetails().catch((error: unknown) => {
+                  setSupplyCloudStatus(`Cloud clear failed: ${getErrorMessage(error)}`);
+                });
+              }}
+              className="rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:border-red-400 disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Confirm clear supply inputs
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={isArchived || methodologyInputs.supplyDetails.length === 0}
+              onClick={() => setConfirmClearSupplyDetails(true)}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Clear supply inputs
+            </button>
+          )}
+        </div>
+        {supplyCloudStatus ? (
+          <p className="mt-2 text-sm font-medium text-semarts-dark">{supplyCloudStatus}</p>
+        ) : null}
         <div className="mt-5 space-y-5">
           <div className="rounded-md border border-line bg-field p-4">
             <div className="flex items-center justify-between gap-4">
@@ -4927,6 +5169,57 @@ export function WorkbookCostInputsForm({
           <p className="mt-1 text-sm text-ink/70">
             Source: Inputs and Selections A112:B146.
           </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button
+              type="button"
+              disabled={isArchived}
+              onClick={() => {
+                saveSupplyDetailsToCloud().catch((error: unknown) => {
+                  setSupplyCloudStatus(`Cloud save failed: ${getErrorMessage(error)}`);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+            >
+              Save to cloud
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                restoreSupplyDetailsFromCloud().catch((error: unknown) => {
+                  setSupplyCloudStatus(`Cloud restore failed: ${getErrorMessage(error)}`);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+            >
+              Restore from cloud
+            </button>
+            {confirmClearSupplyDetails ? (
+              <button
+                type="button"
+                disabled={isArchived}
+                onClick={() => {
+                  clearSupplyDetails().catch((error: unknown) => {
+                    setSupplyCloudStatus(`Cloud clear failed: ${getErrorMessage(error)}`);
+                  });
+                }}
+                className="rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:border-red-400 disabled:cursor-not-allowed disabled:text-ink/40"
+              >
+                Confirm clear supply inputs
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isArchived || methodologyInputs.supplyDetails.length === 0}
+                onClick={() => setConfirmClearSupplyDetails(true)}
+                className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:text-ink/40"
+              >
+                Clear supply inputs
+              </button>
+            )}
+          </div>
+          {supplyCloudStatus ? (
+            <p className="mt-2 text-sm font-medium text-semarts-dark">{supplyCloudStatus}</p>
+          ) : null}
           <div className="mt-5 space-y-5">
             {methodologyInputs.supplyDetails.map((supply) => {
               const supplyLabel = supply.mpan ? `MPAN ${supply.mpan}` : "New supply MPAN";
@@ -4957,14 +5250,22 @@ export function WorkbookCostInputsForm({
                           <th className="px-3 py-2 font-semibold">Losses</th>
                           <th className="px-3 py-2 font-semibold">Charge Type</th>
                           <th className="px-3 py-2 font-semibold">Unit of Measurement</th>
+                          <th className="px-3 py-2 font-semibold">Time of Use</th>
                           <th className="px-3 py-2 font-semibold">Rate Unit</th>
                           <th className="px-3 py-2 font-semibold">Rate</th>
                           <th className="px-3 py-2 font-semibold">Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {supply.supplyContractCharges.map((charge) => (
-                          <tr key={charge.id} className="border-t border-line">
+                        {supply.supplyContractCharges.map((charge) => {
+                          const customTimeOfUse = {
+                            ...defaultCustomTimeOfUse,
+                            ...charge.customTimeOfUse
+                          };
+
+                          return (
+                          <Fragment key={charge.id}>
+                          <tr className="border-t border-line">
                             <td className="px-3 py-2">
                               <input
                                 value={charge.chargeName}
@@ -5030,6 +5331,22 @@ export function WorkbookCostInputsForm({
                             </td>
                             <td className="px-3 py-2">
                               <select
+                                value={charge.timeOfUse}
+                                disabled={isArchived}
+                                onChange={(event) =>
+                                  updateSupplyContractCharge(supply.id, charge.id, {
+                                    timeOfUse: event.target.value as SupplyContractTimeOfUse
+                                  })
+                                }
+                                className="w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                              >
+                                {supplyContractTimeOfUseOptions.map((timeOfUse) => (
+                                  <option key={timeOfUse}>{timeOfUse}</option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="px-3 py-2">
+                              <select
                                 value={charge.rateUnit}
                                 disabled={isArchived}
                                 onChange={(event) =>
@@ -5062,10 +5379,137 @@ export function WorkbookCostInputsForm({
                               />
                             </td>
                           </tr>
-                        ))}
+                          {charge.timeOfUse === "Custom" ? (
+                            <tr className="border-t border-line">
+                              <td colSpan={8} className="bg-white px-3 py-4">
+                                <div className="rounded-md border border-line bg-field p-4">
+                                  <h4 className="font-semibold">Custom time of use</h4>
+                                  <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                                    <div>
+                                      <p className="text-sm font-medium">Days of week</p>
+                                      <div className="mt-2 flex flex-wrap gap-2">
+                                        {supplyContractDaysOfWeek.map((day) => (
+                                          <label
+                                            key={day}
+                                            className="flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm"
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              checked={customTimeOfUse.daysOfWeek.includes(day)}
+                                              disabled={isArchived}
+                                              onChange={() =>
+                                                updateSupplyContractCustomTimeOfUse(
+                                                  supply.id,
+                                                  charge,
+                                                  {
+                                                    daysOfWeek: toggleSupplyContractCustomValue(
+                                                      customTimeOfUse.daysOfWeek,
+                                                      day
+                                                    )
+                                                  }
+                                                )
+                                              }
+                                            />
+                                            {day}
+                                          </label>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium">Months</p>
+                                      <div className="mt-2 flex flex-wrap gap-2">
+                                        {supplyContractMonths.map((month) => (
+                                          <label
+                                            key={month}
+                                            className="flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm"
+                                          >
+                                            <input
+                                              type="checkbox"
+                                              checked={customTimeOfUse.months.includes(month)}
+                                              disabled={isArchived}
+                                              onChange={() =>
+                                                updateSupplyContractCustomTimeOfUse(
+                                                  supply.id,
+                                                  charge,
+                                                  {
+                                                    months: toggleSupplyContractCustomValue(
+                                                      customTimeOfUse.months,
+                                                      month
+                                                    )
+                                                  }
+                                                )
+                                              }
+                                            />
+                                            {month}
+                                          </label>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-medium">Bank holidays</p>
+                                      <label className="mt-2 flex items-center gap-2 rounded-md border border-line bg-white px-3 py-2 text-sm">
+                                        <input
+                                          type="checkbox"
+                                          checked={customTimeOfUse.appliesOnBankHolidays}
+                                          disabled={isArchived}
+                                          onChange={(event) =>
+                                            updateSupplyContractCustomTimeOfUse(
+                                              supply.id,
+                                              charge,
+                                              {
+                                                appliesOnBankHolidays: event.target.checked
+                                              }
+                                            )
+                                          }
+                                        />
+                                        Included
+                                      </label>
+                                    </div>
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                      <label className="block">
+                                        <span className="text-sm font-medium">Start time</span>
+                                        <input
+                                          type="time"
+                                          value={customTimeOfUse.startTime}
+                                          disabled={isArchived}
+                                          onChange={(event) =>
+                                            updateSupplyContractCustomTimeOfUse(
+                                              supply.id,
+                                              charge,
+                                              { startTime: event.target.value }
+                                            )
+                                          }
+                                          className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                                        />
+                                      </label>
+                                      <label className="block">
+                                        <span className="text-sm font-medium">End time</span>
+                                        <input
+                                          type="time"
+                                          value={customTimeOfUse.endTime}
+                                          disabled={isArchived}
+                                          onChange={(event) =>
+                                            updateSupplyContractCustomTimeOfUse(
+                                              supply.id,
+                                              charge,
+                                              { endTime: event.target.value }
+                                            )
+                                          }
+                                          className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+                                        />
+                                      </label>
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : null}
+                          </Fragment>
+                          );
+                        })}
                         {supply.supplyContractCharges.length === 0 ? (
                           <tr className="border-t border-line">
-                            <td colSpan={7} className="px-3 py-4 text-center text-ink/60">
+                            <td colSpan={8} className="px-3 py-4 text-center text-ink/60">
                               No supply contract charges entered yet.
                             </td>
                           </tr>

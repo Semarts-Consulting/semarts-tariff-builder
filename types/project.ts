@@ -179,7 +179,48 @@ export type SupplyContractUnitOfMeasurement =
   | "per kVA per day"
   | "per kVA per Month";
 
-export type SupplyContractRateUnit = "£" | "p";
+export type SupplyContractRateUnit = "\u00a3" | "p";
+
+export type SupplyContractTimeOfUse =
+  | "All times"
+  | "Red"
+  | "Amber"
+  | "Green"
+  | "Super Red"
+  | "Day"
+  | "Night"
+  | "Custom";
+
+export type SupplyContractDayOfWeek =
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday"
+  | "Sunday";
+
+export type SupplyContractMonth =
+  | "January"
+  | "February"
+  | "March"
+  | "April"
+  | "May"
+  | "June"
+  | "July"
+  | "August"
+  | "September"
+  | "October"
+  | "November"
+  | "December";
+
+export type SupplyContractCustomTimeOfUse = {
+  daysOfWeek: SupplyContractDayOfWeek[];
+  appliesOnBankHolidays: boolean;
+  months: SupplyContractMonth[];
+  startTime: string;
+  endTime: string;
+};
 
 export type SupplyContractChargeInput = {
   id: string;
@@ -187,6 +228,8 @@ export type SupplyContractChargeInput = {
   losses: SupplyContractLosses;
   chargeType: SupplyContractChargeType;
   unitOfMeasurement: SupplyContractUnitOfMeasurement;
+  timeOfUse: SupplyContractTimeOfUse;
+  customTimeOfUse: SupplyContractCustomTimeOfUse;
   rateUnit: SupplyContractRateUnit;
   rate: number;
 };

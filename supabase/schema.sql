@@ -203,6 +203,95 @@ create table if not exists public.indirect_overhead_data (
   constraint indirect_overhead_data_project_description_unique unique (project_local_id, description)
 );
 
+create table if not exists public.supply_details (
+  id text primary key,
+  project_local_id text not null references public.projects(local_id) on delete cascade,
+  mpan text not null,
+  supply_capacity_kva numeric not null,
+  voltage text not null,
+  transmission text not null,
+  distribution text not null,
+  tnuos_non_locational_charge_per_day numeric not null default 0,
+  tnuos_triad_charge_per_kw numeric not null default 0,
+  duos_fixed_charge_per_day numeric not null default 0,
+  duos_import_capacity_pence_per_kva_per_day numeric not null default 0,
+  duos_red_unit_pence_per_kwh numeric not null default 0,
+  duos_amber_unit_pence_per_kwh numeric not null default 0,
+  duos_green_unit_pence_per_kwh numeric not null default 0,
+  duos_super_red_unit_pence_per_kwh numeric not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint supply_details_capacity_non_negative check (supply_capacity_kva >= 0),
+  constraint supply_details_voltage_check check (voltage in ('EHV', 'HV', 'LV')),
+  constraint supply_details_transmission_check check (transmission in ('Fixed', 'Pass Through')),
+  constraint supply_details_distribution_check check (distribution in ('Fixed', 'Pass Through')),
+  constraint supply_details_charges_non_negative check (
+    tnuos_non_locational_charge_per_day >= 0 and
+    tnuos_triad_charge_per_kw >= 0 and
+    duos_fixed_charge_per_day >= 0 and
+    duos_import_capacity_pence_per_kva_per_day >= 0 and
+    duos_red_unit_pence_per_kwh >= 0 and
+    duos_amber_unit_pence_per_kwh >= 0 and
+    duos_green_unit_pence_per_kwh >= 0 and
+    duos_super_red_unit_pence_per_kwh >= 0
+  )
+);
+
+create table if not exists public.supply_contract_charges (
+  id text primary key,
+  project_local_id text not null references public.projects(local_id) on delete cascade,
+  supply_detail_id text not null references public.supply_details(id) on delete cascade,
+  charge_name text not null,
+  losses text not null,
+  charge_type text not null,
+  unit_of_measurement text not null,
+  time_of_use text not null default 'All times',
+  custom_time_of_use jsonb not null default '{}'::jsonb,
+  rate_unit text not null,
+  rate numeric not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint supply_contract_charges_losses_check check (losses in ('CM', 'GSP', 'NBP')),
+  constraint supply_contract_charges_charge_type_check check (charge_type in ('Consumption', 'Fixed', 'Capacity')),
+  constraint supply_contract_charges_unit_check check (
+    unit_of_measurement in (
+      'per kWh',
+      'per MWh',
+      'per day',
+      'per Month',
+      'per year',
+      'per kVA per day',
+      'per kVA per Month'
+    )
+  ),
+  constraint supply_contract_charges_time_of_use_check check (
+    time_of_use in ('All times', 'Red', 'Amber', 'Green', 'Super Red', 'Day', 'Night', 'Custom')
+  ),
+  constraint supply_contract_charges_rate_unit_check check (rate_unit in (U&'\00A3', 'p')),
+  constraint supply_contract_charges_rate_non_negative check (rate >= 0)
+);
+
+alter table public.supply_contract_charges
+add column if not exists time_of_use text not null default 'All times';
+
+alter table public.supply_contract_charges
+add column if not exists custom_time_of_use jsonb not null default '{}'::jsonb;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'supply_contract_charges_time_of_use_check'
+      and conrelid = 'public.supply_contract_charges'::regclass
+  ) then
+    alter table public.supply_contract_charges
+    add constraint supply_contract_charges_time_of_use_check check (
+      time_of_use in ('All times', 'Red', 'Amber', 'Green', 'Super Red', 'Day', 'Night', 'Custom')
+    );
+  end if;
+end $$;
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -283,6 +372,16 @@ create trigger indirect_overhead_data_set_updated_at
 before update on public.indirect_overhead_data
 for each row execute function public.set_updated_at();
 
+drop trigger if exists supply_details_set_updated_at on public.supply_details;
+create trigger supply_details_set_updated_at
+before update on public.supply_details
+for each row execute function public.set_updated_at();
+
+drop trigger if exists supply_contract_charges_set_updated_at on public.supply_contract_charges;
+create trigger supply_contract_charges_set_updated_at
+before update on public.supply_contract_charges
+for each row execute function public.set_updated_at();
+
 alter table public.projects enable row level security;
 alter table public.project_data_inputs enable row level security;
 alter table public.project_cost_pools enable row level security;
@@ -297,6 +396,8 @@ alter table public.employee_cost_import_batches enable row level security;
 alter table public.employee_cost_data enable row level security;
 alter table public.indirect_overhead_import_batches enable row level security;
 alter table public.indirect_overhead_data enable row level security;
+alter table public.supply_details enable row level security;
+alter table public.supply_contract_charges enable row level security;
 
 -- RLS policies should be added with authentication.
 -- Until auth is implemented, keep the app on local browser storage.
