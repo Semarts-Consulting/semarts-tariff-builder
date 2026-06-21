@@ -4,6 +4,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
+| MVP-002 Manual MVP demo path check | PM plus user sign-off owner | `docs/MVP_DEMO_PATH_CHECK.md`, `docs/MVP_TIMELINE_TRACKER.md`, manager docs | PR #7 baseline | High | Validate path from inputs to allocation, calculation, audit trace, outputs, and reconciliation. |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
 | OUT-003 Report readiness UI alignment | UI Flow plus PM/Engine review | `components/ReportsSummary.tsx`, possibly `components/TariffAuditTracePanel.tsx` | OUT-001 contract | Medium | Align rendered report with readiness mapping, warning severity, and audit evidence expectations. |
 | QA-003 Report/export regression tests | QA plus UI review | report/calculation component tests and fixtures | OUT-001 contract | Medium | Cover report sections, warnings, audit trace visibility, and HTML/print actions. |
@@ -14,7 +15,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| MVP-001 Internal MVP candidate validation | PM plus Tariff Engine/QA review | `tests/mvp-candidate-scenario.test.ts`, `tests/fixtures/mvp-candidate-scenario.ts`, `docs/MVP_CANDIDATE_SIGNOFF.md`, `docs/MVP_TIMELINE_TRACKER.md`, manager docs | PR #6 baseline | High | Representative scenario, cost-base reconciliation, audit-trace evidence, sign-off pack, and timeline tracking. |
+| _None_ |  |  |  |  |  |
 
 ## Review
 
@@ -39,6 +40,7 @@
 | PR-004 Audit trace UI display | UI Flow plus PM | tariff calculations UI | Merged PR #4 | Medium | Tariff audit trace display merged to `main`. |
 | PR-005 Default allocation review indicator | Data/storage, Tariff Engine, UI, PM | allocation row contract, reconciliation, engine warning, allocation UI | Merged PR #5 | Medium | Default-created allocation methods are flagged, surfaced, and cleared on user review. |
 | PR-006 Report/export readiness contract | PM plus UI/Engine/QA review | `docs/APP_CONTRACTS.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Merged PR #6 | Medium | Defines MVP rendered report output and keeps formal export DTO as future work. |
+| PR-007 MVP candidate validation scenario | PM plus Tariff Engine/QA review | `tests/mvp-candidate-scenario.test.ts`, `tests/fixtures/mvp-candidate-scenario.ts`, `docs/MVP_CANDIDATE_SIGNOFF.md`, `docs/MVP_TIMELINE_TRACKER.md`, manager docs | Merged PR #7 | High | Representative scenario, cost-base reconciliation, audit-trace evidence, sign-off pack, and timeline tracking. |
 | DATA-001 Import parser extraction and workbook wiring | Data Import | import modules, workbook form, import tests | Merged in PR #1 | Medium | Header, dedupe, and fingerprint contracts documented. |
 | ENG-001 Tariff calculation validation package | Tariff Engine | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Merged in PR #1 | High | Validation issues and revenue recovery accepted for MVP. |
 | UI-001 Layout-only UI package | UI Flow | layout/page/component files | Merged in PR #1 | Medium | Broad responsive layout package integrated. |
