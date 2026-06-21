@@ -3,7 +3,10 @@ import {
   createDefaultSupplyReferenceData,
   createSupplyDetailsInput
 } from "@/lib/project-storage";
-import { getSupplyReferenceReviewIssues } from "@/lib/supply-reference-review";
+import {
+  getSupplyReferenceRequirements,
+  getSupplyReferenceReviewIssues
+} from "@/lib/supply-reference-review";
 import type { SupplyReferenceData } from "@/types/project";
 
 function createSupply(mpan: string) {
@@ -97,5 +100,34 @@ describe("getSupplyReferenceReviewIssues", () => {
     const issues = getSupplyReferenceReviewIssues([createSupply("10")], referenceData);
 
     expect(issues).toHaveLength(0);
+  });
+});
+
+describe("getSupplyReferenceRequirements", () => {
+  it("returns separate requirements for unreviewed TOU and losses", () => {
+    const referenceData = withPendingDistributor(createDefaultSupplyReferenceData(), "10");
+
+    const requirements = getSupplyReferenceRequirements(
+      [createSupply("1000000000000")],
+      referenceData
+    );
+
+    expect(requirements).toHaveLength(1);
+    expect(requirements[0]).toMatchObject({
+      distributorId: "10",
+      requiresTimeOfUseReview: true,
+      requiresLossesReview: true
+    });
+  });
+
+  it("returns no requirements when TOU and losses are both reviewed", () => {
+    const referenceData = withReviewedDistributor(createDefaultSupplyReferenceData(), "10");
+
+    const requirements = getSupplyReferenceRequirements(
+      [createSupply("1000000000000")],
+      referenceData
+    );
+
+    expect(requirements).toHaveLength(0);
   });
 });

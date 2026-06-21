@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getSupplyReferenceExtractionSummary } from "@/lib/supply-reference-extraction";
+import {
+  getSupplyReferenceExtractionSummary,
+  parseSupplyReferenceExtractionWorkbook,
+  supplyReferenceLossCandidateHeaders,
+  supplyReferenceTouCandidateHeaders
+} from "@/lib/supply-reference-extraction";
 import type {
   SupplyReferenceLossCandidate,
   SupplyReferenceSourceDocument,
@@ -66,5 +71,62 @@ describe("getSupplyReferenceExtractionSummary", () => {
       rejectedCandidateCount: 0,
       needsReviewCandidateCount: 1
     });
+  });
+});
+
+describe("parseSupplyReferenceExtractionWorkbook", () => {
+  it("parses valid TOU and loss candidate rows", () => {
+    const result = parseSupplyReferenceExtractionWorkbook({
+      fileName: "source.xlsx",
+      uploadedAt: "2026-06-21T00:00:00.000Z",
+      touRows: [
+        [...supplyReferenceTouCandidateHeaders],
+        [
+          "10",
+          "2026/27",
+          "Red",
+          "Monday, Tuesday",
+          "Excluded",
+          "January, February",
+          "16:00",
+          "19:00",
+          "Page 4",
+          0.9
+        ]
+      ],
+      lossRows: [
+        [...supplyReferenceLossCandidateHeaders],
+        ["10", "2026/27", "LV", "LV losses", 5, 1.05, "Page 8", 0.8]
+      ]
+    });
+
+    expect(result.errors).toHaveLength(0);
+    expect(result.sourceDocument).toMatchObject({
+      distributorId: "10",
+      chargingYear: "2026/27",
+      fileType: "Excel",
+      extractionStatus: "Extracted"
+    });
+    expect(result.touCandidates).toHaveLength(1);
+    expect(result.lossCandidates).toHaveLength(1);
+  });
+
+  it("returns validation errors for unrecognised values", () => {
+    const result = parseSupplyReferenceExtractionWorkbook({
+      fileName: "source.xlsx",
+      uploadedAt: "2026-06-21T00:00:00.000Z",
+      touRows: [
+        [...supplyReferenceTouCandidateHeaders],
+        ["1", "2026/27", "Purple", "Weekday", "Excluded", "January", "", "", "", 0.9]
+      ],
+      lossRows: [[...supplyReferenceLossCandidateHeaders]]
+    });
+
+    expect(result.errors).toEqual(
+      expect.arrayContaining([
+        "TOU row 2: distributor ID must be two digits.",
+        "TOU row 2: band name is not recognised."
+      ])
+    );
   });
 });

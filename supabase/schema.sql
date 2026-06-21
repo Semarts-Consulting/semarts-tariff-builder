@@ -1,5 +1,27 @@
 create extension if not exists pgcrypto;
 
+create table if not exists public.semarts_admin_users (
+  user_id uuid primary key,
+  email text not null default '',
+  notes text not null default '',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create or replace function public.is_semarts_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.semarts_admin_users
+    where user_id = auth.uid()
+  );
+$$;
+
 create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),
   local_id text unique not null,
@@ -503,6 +525,11 @@ create trigger projects_set_updated_at
 before update on public.projects
 for each row execute function public.set_updated_at();
 
+drop trigger if exists semarts_admin_users_set_updated_at on public.semarts_admin_users;
+create trigger semarts_admin_users_set_updated_at
+before update on public.semarts_admin_users
+for each row execute function public.set_updated_at();
+
 drop trigger if exists project_data_inputs_set_updated_at on public.project_data_inputs;
 create trigger project_data_inputs_set_updated_at
 before update on public.project_data_inputs
@@ -604,6 +631,7 @@ before update on public.supply_reference_loss_candidates
 for each row execute function public.set_updated_at();
 
 alter table public.projects enable row level security;
+alter table public.semarts_admin_users enable row level security;
 alter table public.project_data_inputs enable row level security;
 alter table public.project_cost_pools enable row level security;
 alter table public.project_allocation_methods enable row level security;

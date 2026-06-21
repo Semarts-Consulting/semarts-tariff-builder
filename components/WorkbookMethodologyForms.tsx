@@ -49,6 +49,7 @@ import {
   saveSupplyDetailsToSupabase,
   saveBoundaryMeterDataToSupabase
 } from "@/lib/supabase-sync";
+import { getSupplyReferenceRequirements } from "@/lib/supply-reference-review";
 import type {
   AssetInput,
   DirectCostInput,
@@ -2668,6 +2669,10 @@ export function WorkbookCostInputsForm({
       ),
     [methodologyInputs.supplyDetails]
   );
+  const supplyReferenceRequirements = useMemo(
+    () => getSupplyReferenceRequirements(methodologyInputs.supplyDetails, supplyReferenceData),
+    [methodologyInputs.supplyDetails, supplyReferenceData]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -5120,6 +5125,22 @@ export function WorkbookCostInputsForm({
                 </tbody>
               </table>
             </div>
+            {supplyReferenceRequirements.length > 0 ? (
+              <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                <h4 className="font-semibold">Reference data required</h4>
+                <p className="mt-1">
+                  These MPANs require Semarts review before DNO time bands or loss factors can be
+                  used in calculations.
+                </p>
+                <ul className="mt-3 space-y-1">
+                  {supplyReferenceRequirements.map((requirement) => (
+                    <li key={`${requirement.supplyId}-${requirement.distributorId}`}>
+                      {requirement.message} MPAN {requirement.mpan}.
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             <div className="mt-5 border-t border-line pt-5">
               <h4 className="font-semibold">MPAN-specific fixed charges</h4>
               {supplyRowsRequiringCharges.length === 0 ? (

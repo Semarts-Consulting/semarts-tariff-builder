@@ -46,6 +46,7 @@ add column if not exists user_id uuid references auth.users(id) on delete cascad
 alter table public.supply_contract_charges
 add column if not exists user_id uuid references auth.users(id) on delete cascade;
 
+create index if not exists semarts_admin_users_user_id_idx on public.semarts_admin_users(user_id);
 create index if not exists projects_user_id_idx on public.projects(user_id);
 create index if not exists project_data_inputs_user_id_idx on public.project_data_inputs(user_id);
 create index if not exists project_cost_pools_user_id_idx on public.project_cost_pools(user_id);
@@ -90,6 +91,14 @@ create index if not exists supply_reference_tou_candidates_status_idx on public.
 create index if not exists supply_reference_loss_candidates_document_idx on public.supply_reference_loss_candidates(source_document_id);
 create index if not exists supply_reference_loss_candidates_distributor_year_idx on public.supply_reference_loss_candidates(distributor_id, charging_year);
 create index if not exists supply_reference_loss_candidates_status_idx on public.supply_reference_loss_candidates(status);
+
+drop policy if exists "Semarts admins can read their admin marker" on public.semarts_admin_users;
+create policy "Semarts admins can read their admin marker"
+on public.semarts_admin_users for select
+to authenticated
+using (user_id = auth.uid());
+
+drop policy if exists "Users can manage Semarts admin markers" on public.semarts_admin_users;
 
 drop policy if exists "Users can read their projects" on public.projects;
 create policy "Users can read their projects"
@@ -327,6 +336,13 @@ using (true);
 
 drop policy if exists "Users can manage their supply reference data sets" on public.supply_reference_data_sets;
 
+drop policy if exists "Semarts admins can manage supply reference data sets" on public.supply_reference_data_sets;
+create policy "Semarts admins can manage supply reference data sets"
+on public.supply_reference_data_sets for all
+to authenticated
+using (public.is_semarts_admin())
+with check (public.is_semarts_admin());
+
 drop policy if exists "Users can read supply reference source documents" on public.supply_reference_source_documents;
 create policy "Users can read supply reference source documents"
 on public.supply_reference_source_documents for select
@@ -334,6 +350,13 @@ to anon, authenticated
 using (true);
 
 drop policy if exists "Users can manage supply reference source documents" on public.supply_reference_source_documents;
+
+drop policy if exists "Semarts admins can manage supply reference source documents" on public.supply_reference_source_documents;
+create policy "Semarts admins can manage supply reference source documents"
+on public.supply_reference_source_documents for all
+to authenticated
+using (public.is_semarts_admin())
+with check (public.is_semarts_admin());
 
 drop policy if exists "Users can read supply reference TOU candidates" on public.supply_reference_tou_candidates;
 create policy "Users can read supply reference TOU candidates"
@@ -343,6 +366,13 @@ using (true);
 
 drop policy if exists "Users can manage supply reference TOU candidates" on public.supply_reference_tou_candidates;
 
+drop policy if exists "Semarts admins can manage supply reference TOU candidates" on public.supply_reference_tou_candidates;
+create policy "Semarts admins can manage supply reference TOU candidates"
+on public.supply_reference_tou_candidates for all
+to authenticated
+using (public.is_semarts_admin())
+with check (public.is_semarts_admin());
+
 drop policy if exists "Users can read supply reference loss candidates" on public.supply_reference_loss_candidates;
 create policy "Users can read supply reference loss candidates"
 on public.supply_reference_loss_candidates for select
@@ -350,3 +380,10 @@ to anon, authenticated
 using (true);
 
 drop policy if exists "Users can manage supply reference loss candidates" on public.supply_reference_loss_candidates;
+
+drop policy if exists "Semarts admins can manage supply reference loss candidates" on public.supply_reference_loss_candidates;
+create policy "Semarts admins can manage supply reference loss candidates"
+on public.supply_reference_loss_candidates for all
+to authenticated
+using (public.is_semarts_admin())
+with check (public.is_semarts_admin());

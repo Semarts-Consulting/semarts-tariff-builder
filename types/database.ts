@@ -17,6 +17,24 @@ import type {
 export type Database = {
   public: {
     Tables: {
+      semarts_admin_users: {
+        Row: {
+          user_id: string;
+          email: string;
+          notes: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          email?: string;
+          notes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["semarts_admin_users"]["Insert"]>;
+        Relationships: [];
+      };
       projects: {
         Row: {
           id: string;
@@ -701,7 +719,12 @@ export type Database = {
       };
     };
     Views: {};
-    Functions: {};
+    Functions: {
+      is_semarts_admin: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+    };
     Enums: {};
     CompositeTypes: {};
   };

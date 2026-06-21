@@ -15,6 +15,17 @@ export type SupplyReferenceReviewIssue = {
   message: string;
 };
 
+export type SupplyReferenceRequirement = {
+  supplyId: string;
+  mpan: string;
+  distributorId: string;
+  networkArea: string;
+  chargingYear: string;
+  requiresTimeOfUseReview: boolean;
+  requiresLossesReview: boolean;
+  message: string;
+};
+
 function getReferenceDataSet(
   distributorId: string,
   referenceData: SupplyReferenceData
@@ -80,6 +91,78 @@ export function getSupplyReferenceReviewIssues(
         chargingYear: dataSet.chargingYear,
         status: dataSet.reviewStatus,
         message: `${networkArea.networkArea} ${dataSet.chargingYear} reference data is ${dataSet.reviewStatus.toLowerCase()}.`
+      }
+    ];
+  });
+}
+
+export function getSupplyReferenceRequirements(
+  supplyDetails: SupplyDetailsInput[],
+  referenceData: SupplyReferenceData
+): SupplyReferenceRequirement[] {
+  return supplyDetails.flatMap((supply): SupplyReferenceRequirement[] => {
+    const mpan = supply.mpan.replace(/\D/g, "");
+
+    if (!/^\d{13}$/.test(mpan)) {
+      return [];
+    }
+
+    const networkArea = getDnoNetworkAreaForMpan(mpan, referenceData);
+
+    if (!networkArea) {
+      return [
+        {
+          supplyId: supply.id,
+          mpan,
+          distributorId: mpan.slice(0, 2),
+          networkArea: "Unknown",
+          chargingYear: "",
+          requiresTimeOfUseReview: true,
+          requiresLossesReview: true,
+          message: `MPAN ${mpan} does not match a configured DNO/network area.`
+        }
+      ];
+    }
+
+    const dataSet = getReferenceDataSet(networkArea.distributorId, referenceData);
+
+    if (!dataSet) {
+      return [
+        {
+          supplyId: supply.id,
+          mpan,
+          distributorId: networkArea.distributorId,
+          networkArea: networkArea.networkArea,
+          chargingYear: "",
+          requiresTimeOfUseReview: true,
+          requiresLossesReview: true,
+          message: `${networkArea.networkArea} has no reference dataset.`
+        }
+      ];
+    }
+
+    const requiresTimeOfUseReview = dataSet.timeOfUseReviewStatus !== "Reviewed";
+    const requiresLossesReview = dataSet.lossesReviewStatus !== "Reviewed";
+
+    if (!requiresTimeOfUseReview && !requiresLossesReview) {
+      return [];
+    }
+
+    const missingItems = [
+      requiresTimeOfUseReview ? "TOU bands" : "",
+      requiresLossesReview ? "distribution losses" : ""
+    ].filter(Boolean);
+
+    return [
+      {
+        supplyId: supply.id,
+        mpan,
+        distributorId: networkArea.distributorId,
+        networkArea: networkArea.networkArea,
+        chargingYear: dataSet.chargingYear,
+        requiresTimeOfUseReview,
+        requiresLossesReview,
+        message: `${networkArea.networkArea} ${dataSet.chargingYear} requires Semarts review for ${missingItems.join(" and ")}.`
       }
     ];
   });

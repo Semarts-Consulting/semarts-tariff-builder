@@ -1622,6 +1622,106 @@ export async function loadSupplyReferenceExtractionFromSupabase() {
   };
 }
 
+export async function isCurrentUserSemartsAdmin() {
+  if (!supabase) {
+    return false;
+  }
+
+  const { data, error } = await supabase.rpc("is_semarts_admin");
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function saveSupplyReferenceExtractionToSupabase({
+  sourceDocument,
+  touCandidates,
+  lossCandidates
+}: {
+  sourceDocument: SupplyReferenceSourceDocument;
+  touCandidates: SupplyReferenceTouCandidate[];
+  lossCandidates: SupplyReferenceLossCandidate[];
+}) {
+  if (!supabase) {
+    return false;
+  }
+
+  const { error: sourceDocumentError } = await supabase
+    .from("supply_reference_source_documents")
+    .upsert(
+      {
+        id: sourceDocument.id,
+        distributor_id: sourceDocument.distributorId,
+        charging_year: sourceDocument.chargingYear,
+        title: sourceDocument.title,
+        source_url: sourceDocument.sourceUrl,
+        file_name: sourceDocument.fileName,
+        file_type: sourceDocument.fileType,
+        extraction_status: sourceDocument.extractionStatus,
+        extraction_notes: sourceDocument.extractionNotes,
+        uploaded_at: sourceDocument.uploadedAt
+      },
+      { onConflict: "id" }
+    );
+
+  if (sourceDocumentError) {
+    throw sourceDocumentError;
+  }
+
+  if (touCandidates.length > 0) {
+    const { error } = await supabase.from("supply_reference_tou_candidates").upsert(
+      touCandidates.map((candidate) => ({
+        id: candidate.id,
+        source_document_id: candidate.sourceDocumentId,
+        distributor_id: candidate.distributorId,
+        charging_year: candidate.chargingYear,
+        band_name: candidate.bandName,
+        days_of_week: candidate.daysOfWeek,
+        applies_on_bank_holidays: candidate.appliesOnBankHolidays,
+        months: candidate.months,
+        start_time: candidate.startTime,
+        end_time: candidate.endTime,
+        source_reference: candidate.sourceReference,
+        confidence: candidate.confidence,
+        status: candidate.status
+      })),
+      { onConflict: "id" }
+    );
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  if (lossCandidates.length > 0) {
+    const { error } = await supabase.from("supply_reference_loss_candidates").upsert(
+      lossCandidates.map((candidate) => ({
+        id: candidate.id,
+        source_document_id: candidate.sourceDocumentId,
+        distributor_id: candidate.distributorId,
+        charging_year: candidate.chargingYear,
+        voltage: candidate.voltage,
+        loss_factor_name: candidate.lossFactorName,
+        loss_percent: candidate.lossPercent,
+        loss_multiplier: candidate.lossMultiplier,
+        source_reference: candidate.sourceReference,
+        confidence: candidate.confidence,
+        status: candidate.status
+      })),
+      { onConflict: "id" }
+    );
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  return true;
+}
+
 export async function pushBackupToSupabase(backup: LocalProjectBackup) {
   if (!supabase) {
     throw new Error("Supabase is not configured.");

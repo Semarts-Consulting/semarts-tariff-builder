@@ -1,8 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { getSupplyReferenceExtractionSummary } from "@/lib/supply-reference-extraction";
-import { loadSupplyReferenceExtractionFromSupabase } from "@/lib/supabase-sync";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { readSheet } from "read-excel-file/browser";
+import writeXlsxFile from "write-excel-file/browser";
+import type { SheetData } from "write-excel-file/browser";
+import {
+  getSupplyReferenceExtractionSummary,
+  parseSupplyReferenceExtractionWorkbook,
+  supplyReferenceLossCandidateHeaders,
+  supplyReferenceTouCandidateHeaders
+} from "@/lib/supply-reference-extraction";
+import {
+  isCurrentUserSemartsAdmin,
+  loadSupplyReferenceExtractionFromSupabase,
+  saveSupplyReferenceExtractionToSupabase
+} from "@/lib/supabase-sync";
 import type {
   SupplyReferenceCandidateStatus,
   SupplyReferenceExtractionStatus,
@@ -57,6 +69,8 @@ export function SupplyReferenceExtractionReview() {
   const [extractionState, setExtractionState] =
     useState<ExtractionState>(emptyExtractionState);
   const [statusMessage, setStatusMessage] = useState("");
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const summary = useMemo(
     () => getSupplyReferenceExtractionSummary(extractionState),
@@ -69,6 +83,9 @@ export function SupplyReferenceExtractionReview() {
         error instanceof Error ? `Cloud load failed: ${error.message}` : "Cloud load failed."
       );
     });
+    isCurrentUserSemartsAdmin()
+      .then(setIsAdmin)
+      .catch(() => setIsAdmin(false));
   }, []);
 
   async function loadExtractionData() {
@@ -84,6 +101,81 @@ export function SupplyReferenceExtractionReview() {
     setStatusMessage("Extraction staging data loaded from cloud.");
   }
 
+  async function downloadTemplate() {
+    const touSheetData: SheetData = [
+        supplyReferenceTouCandidateHeaders.map((header) => ({
+          value: header,
+          type: String,
+          fontWeight: "bold"
+        }))
+    ];
+    const lossSheetData: SheetData = [
+        supplyReferenceLossCandidateHeaders.map((header) => ({
+          value: header,
+          type: String,
+          fontWeight: "bold"
+        }))
+    ];
+
+    const file = await writeXlsxFile([
+      { sheet: "TOU Candidates", data: touSheetData },
+      { sheet: "Loss Candidates", data: lossSheetData }
+    ]);
+    await file.toFile("supply-reference-extraction-template.xlsx");
+  }
+
+  async function importWorkbook(file: File) {
+    if (!isAdmin) {
+      setImportErrors(["Only Semarts admin users can import extraction candidates."]);
+      return;
+    }
+
+    const uploadedAt = new Date().toISOString();
+    const touRows = await readSheet(file, "TOU Candidates");
+    const lossRows = await readSheet(file, "Loss Candidates");
+    const result = parseSupplyReferenceExtractionWorkbook({
+      fileName: file.name,
+      uploadedAt,
+      touRows,
+      lossRows
+    });
+
+    if (result.errors.length > 0) {
+      setImportErrors(result.errors.slice(0, 12));
+      setStatusMessage("");
+      return;
+    }
+
+    const cloudSaved = await saveSupplyReferenceExtractionToSupabase(result);
+
+    setImportErrors([]);
+    setStatusMessage(
+      cloudSaved
+        ? `Imported ${result.touCandidates.length} TOU candidates and ${result.lossCandidates.length} loss candidates.`
+        : "Supabase is not configured. Import was parsed but not saved."
+    );
+
+    await loadExtractionData();
+  }
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    importWorkbook(file).catch((error: unknown) => {
+      setImportErrors([
+        error instanceof Error
+          ? `Import failed: ${error.message}`
+          : "Import failed. Check the file format and try again."
+      ]);
+      setStatusMessage("");
+    });
+    event.target.value = "";
+  }
+
   return (
     <div className="space-y-6">
       <section className="rounded-md border border-line bg-white p-6 shadow-sm">
@@ -91,29 +183,81 @@ export function SupplyReferenceExtractionReview() {
           <div>
             <h2 className="font-semibold">Extraction staging</h2>
             <p className="mt-1 text-sm text-ink/70">
-              Extracted values are candidates only. They do not update approved reference data until
-              Semarts admin review is added.
+              Extracted values are candidates only. The target workflow is on-demand extraction from
+              project MPAN requirements; manual import is an admin fallback.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              loadExtractionData().catch((error: unknown) => {
-                setStatusMessage(
-                  error instanceof Error
-                    ? `Cloud load failed: ${error.message}`
-                    : "Cloud load failed."
-                );
-              });
-            }}
-            className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
-          >
-            Refresh from cloud
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {isAdmin ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    downloadTemplate().catch((error: unknown) => {
+                      setStatusMessage(
+                        error instanceof Error
+                          ? `Template download failed: ${error.message}`
+                          : "Template download failed."
+                      );
+                    });
+                  }}
+                  className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+                >
+                  Download template
+                </button>
+                <label className="cursor-pointer rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts">
+                  Import workbook
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                </label>
+              </>
+            ) : (
+              <span className="rounded-md border border-line bg-field px-3 py-2 text-sm font-semibold text-ink/60">
+                Read-only access
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                loadExtractionData().catch((error: unknown) => {
+                  setStatusMessage(
+                    error instanceof Error
+                      ? `Cloud load failed: ${error.message}`
+                      : "Cloud load failed."
+                  );
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+            >
+              Refresh from cloud
+            </button>
+          </div>
         </div>
         {statusMessage ? (
           <p className="mt-3 text-sm font-medium text-semarts-dark">{statusMessage}</p>
         ) : null}
+        {importErrors.length > 0 ? (
+          <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <p className="font-semibold">Import errors</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              {importErrors.map((error) => (
+                <li key={error}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        <div className="mt-4 rounded-md border border-line bg-field p-4 text-sm text-ink/70">
+          <p className="font-semibold text-ink">On-demand reference workflow</p>
+          <p className="mt-1">
+            When a project MPAN maps to a DNO/year without reviewed TOU bands or distribution
+            losses, the app should create a Semarts review requirement. Manual staging import is
+            retained for controlled testing and fallback data entry.
+          </p>
+        </div>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
           <div className="rounded-md border border-line bg-field p-4">
             <p className="text-sm text-ink/60">Source documents</p>
