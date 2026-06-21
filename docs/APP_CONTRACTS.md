@@ -61,6 +61,7 @@ Archived projects are read-only in UI components.
 - `basis`: `Customer count`, `Annual kWh`, `Peak demand`, `Equal share`, or `Manual`.
 - `tariffComponent`: `Fixed`, `Energy`, `Demand`, or `Pass-through`.
 - `classShares`: customer-class percentage rows expected to total 100.
+- `requiresReview`: optional flag indicating a storage-created/defaulted allocation method needs user review.
 
 ## Tariff Calculation Contract
 
@@ -105,6 +106,7 @@ Current validation issue codes:
 - `Missing allocation shares`
 - `Duplicate allocation method`
 - `Unbalanced allocation`
+- `Allocation method requires review`
 - `Missing allocation share customer class`
 - `Duplicate allocation share`
 - `Negative allocation share`
@@ -118,9 +120,9 @@ Validation issue severity values:
 - `Error`
 - `Warning`
 
-Current implementation only emits `Error` issues.
+Current implementation emits `Error` issues for calculation-readiness problems and a `Warning` when an allocation method was automatically created and still requires review.
 
-`Warning` is reserved for future non-blocking calculation-readiness issues. MVP report/UI code should treat validation issues as readiness information and should not prevent the calculation function from returning outputs.
+`Warning` issues are non-blocking readiness items. MVP report/UI code should treat validation issues as readiness information and should not prevent the calculation function from returning outputs.
 
 ## Tariff Audit Trace Contract Proposal
 
@@ -194,7 +196,7 @@ Trace implementation risks:
 
 - Trace volume grows with cost pools multiplied by class shares.
 - Rounding policy remains raw values unless manager approval introduces output rounding.
-- Default-created allocation methods from storage are not distinguishable in current input types.
+- Default-created allocation methods from storage are distinguishable when `requiresReview` is present on an allocation row.
 - Audit trace explains calculations but does not replace validation issues.
 
 ## Imported Methodology Input Contract
@@ -298,8 +300,10 @@ Important behavior:
 - Allocation methods may be reconciled against cost pools through `reconcileAllocationMethodsWithCostPools`.
 - Allocation methods are reconciled to current cost pool IDs on read.
 - Existing allocation rows with matching `costPoolId` preserve user-entered `id`, `basis`, `tariffComponent`, `classShares`, and `notes`.
+- Existing allocation rows with matching `costPoolId` preserve `requiresReview`; missing values default to `false`.
 - `costPoolName` is refreshed from the current cost pool name.
-- New cost pools receive default allocation methods.
+- New cost pools receive default allocation methods with `requiresReview: true`.
+- Initial project default allocation methods are not automatically marked as requiring review unless created by reconciliation for a new cost pool.
 - Removed cost pools remove stale allocation method rows from the returned allocation model.
 
 Storage reconciliation changes are business behavior and must not be included in layout-only UI packages.

@@ -4,18 +4,18 @@
 
 Date: 2026-06-21
 
-Branch: `codex/audit-trace-contract`
+Branch: `codex/default-allocation-review`
 
-Working tree status: clean branch created from merged `main` for audit trace contract planning.
+Working tree status: current package implemented and awaiting staging/commit/PR.
 
-Latest full checks before PR #1 merge:
+Latest full checks on this branch:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test`: passed, 11 test files and 54 tests.
+- `npm.cmd test`: passed, 11 test files and 63 tests.
 - `npm.cmd run build`: passed.
 
-PR #1 has been merged to `main`. The current branch is for the next docs-first package: tariff audit trace contract.
+PRs #1 through #4 have been merged to `main`. The current branch adds the default-created allocation review indicator across storage, calculation warning, and allocation-method UI.
 
 ## MVP Definition
 
@@ -61,7 +61,7 @@ Review risks:
 
 ### Tariff Methodology Engine
 
-Status: validation package merged in PR #1. Audit trace contract is the next active engine package.
+Status: validation package merged in PR #1, audit trace merged through PR #4, and default allocation review warning implemented on the current branch.
 
 Observed work:
 
@@ -70,17 +70,18 @@ Observed work:
 - Whitespace-normalised customer-class matching is covered.
 - Calculation tests cover revenue requirement, allocation, denominator validation, duplicate and missing classes, missing cost pools, unbalanced allocations, and negative values.
 - Deferred supply calculation DTO and scaffold work was removed from the active package.
-- Tariff Engine accepted `validationIssues`, reserved `Warning` severity, current issue-code set, and `isRevenueRecovered` tolerance for MVP after documentation alignment.
+- Tariff Engine accepts `validationIssues`, `Warning` severity, the current issue-code set, and `isRevenueRecovered` tolerance for MVP after documentation alignment.
+- Calculation warnings now include default-created allocation methods requiring review, without changing tariff outputs or audit trace values.
 
 Review risks:
 
 - Validation issue semantics are now a shared contract consumed by calculation and report UI.
 - Validation issues currently report calculation readiness but do not block calculation.
-- Audit trace structures are not yet implemented. A docs-first contract proposal is now recorded in `APP_CONTRACTS.md`.
+- Audit trace structures are implemented and displayed on the tariff calculations page.
 
 ### UI Flow And Outputs
 
-Status: layout and warning UI merged in PR #1.
+Status: layout and warning UI merged in PR #1; audit trace display merged in PR #4; default allocation review indicator implemented on the current branch.
 
 Observed work:
 
@@ -89,6 +90,7 @@ Observed work:
 - `ProjectDashboardOverview.tsx` no longer depends on unapproved validation/revenue recovery DTOs.
 - UI review found the held calculation/report warning UI mostly aligned with the approved validation semantics.
 - Narrow wording edit completed so warning copy says outputs remain available and should be reviewed before approval, rather than implying calculation is blocked.
+- Allocation methods now show a non-blocking review indicator for storage-created default rows and clear it when the row is edited.
 
 Review risks:
 
@@ -97,16 +99,16 @@ Review risks:
 
 ### Tests And Regression Checks
 
-Status: green baseline reported before PR #1 merge.
+Status: green baseline on current branch.
 
 Observed work:
 
 - Tests cover import parsers, allocation reconciliation, supply reference flows, and tariff calculations.
-- Latest full test run reported 11 files and 54 tests.
+- Latest full test run reported 11 files and 63 tests.
 
 Review risks:
 
-- No build result has been recorded after the latest split work.
+- Build passed after the default allocation review package.
 - Test ownership should remain separate from business-logic ownership except for narrow fixes.
 
 ## Likely Dependency Clashes
@@ -134,7 +136,7 @@ Review risks:
 
 1. Whether allocation reconciliation in `project-storage.ts` is MVP behavior or should be held.
 2. Whether calculation validation issues should block final report approval, while still allowing calculations to run.
-3. Audit trace output contract for stakeholder review.
+3. Export/report treatment of calculation warnings beyond current UI display.
 4. Which imported workbook headers are contractual and which remain provisional.
 5. Whether `ReportsSummary.tsx` should be considered report UI only or the start of an export DTO contract.
 6. Supply calculation remains deferred until the open questions in `SUPPLY_CALCULATION_DESIGN.md` are answered.
@@ -143,7 +145,8 @@ Review risks:
 
 - Allocation reconciliation in `project-storage.ts` is accepted as MVP storage behavior after data/storage and tariff-engine review.
 - Reconciliation on read is acceptable for calculation because it aligns allocation rows to active cost pool IDs and removes stale allocation rows from calculation inputs.
-- New cost pools receive default allocation methods, but those defaults should be surfaced as needing review in a future validation/report follow-up.
+- New cost pools receive default allocation methods with `requiresReview: true`.
+- Default-created allocation methods produce a non-blocking calculation warning and visible allocation-method UI review indicator.
 
 ## QA Staging Warnings
 
@@ -168,4 +171,4 @@ Missing MVP-critical regression coverage:
 
 ## Immediate Next Action
 
-Review and commit the audit trace contract documentation. If accepted, approve a narrow Tariff Engine implementation package for `types/project.ts`, `lib/calculation-engine.ts`, and `tests/calculation-engine.test.ts`.
+Review and commit the default allocation review indicator package, then open a PR from `codex/default-allocation-review`.

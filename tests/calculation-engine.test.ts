@@ -296,6 +296,63 @@ describe("calculateTariffs", () => {
     );
   });
 
+  it("warns when an allocation method requires review without changing outputs", () => {
+    const reviewedResult = calculateTariffs({
+      projectId: "project",
+      dataInputRows,
+      costPoolRows,
+      allocationRows: balancedAllocationRows
+    });
+    const flaggedResult = calculateTariffs({
+      projectId: "project",
+      dataInputRows,
+      costPoolRows,
+      allocationRows: [
+        {
+          ...balancedAllocationRows[0],
+          requiresReview: true
+        },
+        ...balancedAllocationRows.slice(1)
+      ]
+    });
+
+    expect(flaggedResult.validationIssues).toContainEqual({
+      code: "Allocation method requires review",
+      severity: "Warning",
+      message:
+        "Allocation method was created automatically for a cost pool and should be reviewed before approval.",
+      rowId: "allocation-fixed",
+      costPoolId: "fixed-cost"
+    });
+    expect(flaggedResult.revenueRequirement).toBe(reviewedResult.revenueRequirement);
+    expect(flaggedResult.allocatedCost).toBe(reviewedResult.allocatedCost);
+    expect(flaggedResult.unallocatedCost).toBe(reviewedResult.unallocatedCost);
+    expect(flaggedResult.isRevenueRecovered).toBe(reviewedResult.isRevenueRecovered);
+    expect(flaggedResult.classResults).toEqual(reviewedResult.classResults);
+    expect(flaggedResult.auditTrace).toEqual(reviewedResult.auditTrace);
+  });
+
+  it("does not infer allocation review warnings from missing or false review flags", () => {
+    const result = calculateTariffs({
+      projectId: "project",
+      dataInputRows,
+      costPoolRows,
+      allocationRows: [
+        {
+          ...balancedAllocationRows[0],
+          requiresReview: false
+        },
+        ...balancedAllocationRows.slice(1)
+      ]
+    });
+
+    expect(result.validationIssues).not.toContainEqual(
+      expect.objectContaining({
+        code: "Allocation method requires review"
+      })
+    );
+  });
+
   it("traces revenue recovery reconciliation", () => {
     const result = calculateTariffs({
       projectId: "project",

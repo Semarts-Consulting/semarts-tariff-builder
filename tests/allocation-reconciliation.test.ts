@@ -69,7 +69,8 @@ describe("reconcileAllocationMethodsWithCostPools", () => {
       costPoolName: "Existing renamed pool",
       basis: "Manual",
       tariffComponent: "Energy",
-      notes: "Keep this rule"
+      notes: "Keep this rule",
+      requiresReview: false
     });
     expect(result.rows[0]?.classShares).toEqual([
       { customerClass: "Residential", percent: 70 },
@@ -93,7 +94,76 @@ describe("reconcileAllocationMethodsWithCostPools", () => {
       costPoolId: "cost-new",
       costPoolName: "New pool",
       basis: "Customer count",
-      tariffComponent: "Fixed"
+      tariffComponent: "Fixed",
+      requiresReview: true
+    });
+  });
+
+  it("preserves existing review flags for matching allocation rows", () => {
+    const reviewedAllocationMethods: ProjectAllocationMethods = {
+      ...allocationMethods,
+      rows: [
+        {
+          ...allocationMethods.rows[0],
+          requiresReview: true
+        }
+      ]
+    };
+
+    const result = reconcileAllocationMethodsWithCostPools(
+      "project",
+      reviewedAllocationMethods,
+      {
+        ...costPools,
+        rows: [costPools.rows[0]]
+      }
+    );
+
+    expect(result.rows[0]).toMatchObject({
+      costPoolId: "cost-existing",
+      requiresReview: true
+    });
+  });
+
+  it("preserves existing rows that have already been reviewed", () => {
+    const reviewedAllocationMethods: ProjectAllocationMethods = {
+      ...allocationMethods,
+      rows: [
+        {
+          ...allocationMethods.rows[0],
+          requiresReview: false
+        }
+      ]
+    };
+
+    const result = reconcileAllocationMethodsWithCostPools(
+      "project",
+      reviewedAllocationMethods,
+      {
+        ...costPools,
+        rows: [costPools.rows[0]]
+      }
+    );
+
+    expect(result.rows[0]).toMatchObject({
+      costPoolId: "cost-existing",
+      requiresReview: false
+    });
+  });
+
+  it("defaults missing review flags on existing rows to false", () => {
+    const result = reconcileAllocationMethodsWithCostPools(
+      "project",
+      allocationMethods,
+      {
+        ...costPools,
+        rows: [costPools.rows[0]]
+      }
+    );
+
+    expect(result.rows[0]).toMatchObject({
+      costPoolId: "cost-existing",
+      requiresReview: false
     });
   });
 });

@@ -75,6 +75,7 @@ export type AllocationMethodRow = {
   tariffComponent: TariffComponent;
   classShares: AllocationClassShare[];
   notes: string;
+  requiresReview?: boolean;
 };
 
 export type ProjectAllocationMethods = {
@@ -465,6 +466,7 @@ export type TariffCalculationValidationCode =
   | "Duplicate customer class"
   | "Negative allocation share"
   | "Unbalanced allocation"
+  | "Allocation method requires review"
   | "Missing cost pool"
   | "Missing allocation method"
   | "Duplicate allocation method"

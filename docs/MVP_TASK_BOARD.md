@@ -5,7 +5,6 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
-| ENG-006 Implement tariff audit trace | Tariff Engine | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Audit trace contract proposal | High | Add deterministic trace entries to `TariffCalculationResult`. |
 | ENG-003 Supply calculation design closure | PM plus Tariff Engine | `SUPPLY_CALCULATION_DESIGN.md`, future service/types | Business answers required | High | No production DTO or engine until assumptions are resolved. |
 | OUT-001 Export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages. |
 
@@ -13,13 +12,13 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| PM-003 Audit trace contract documentation | PM | `docs/APP_CONTRACTS.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Tariff Engine audit trace proposal | Medium | Document the proposed trace contract before implementation. |
+| _None_ |  |  |  |  |  |
 
 ## Review
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| ENG-007 Audit trace implementation review | Tariff Engine plus PM | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | PM-003 | High | Not started. Requires manager approval after docs-only contract update. |
+| ALLOC-001 Default allocation review indicator | Data/storage, Tariff Engine, UI, PM | `types/project.ts`, `lib/project-storage.ts`, `lib/calculation-engine.ts`, `components/AllocationMethodsForm.tsx`, focused tests, `docs/APP_CONTRACTS.md` | Allocation reconciliation storage behavior | Medium | Implemented on `codex/default-allocation-review`; awaiting staging/commit/PR. |
 
 ## Blocked
 
@@ -33,6 +32,9 @@
 | Task | Owner | Files | Evidence | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | PR-001 MVP package integration | PM plus all delivery chats | merged PR #1 | Branch `codex-mvp-package-integration` merged to `main` | Medium | Import, tariff validation, storage reconciliation, UI layout, and warning UI integrated. |
+| PR-002 Audit trace contract documentation | PM | `docs/APP_CONTRACTS.md`, manager docs | Merged PR #2 | Medium | Approved audit trace shared contract before implementation. |
+| PR-003 Audit trace implementation | Tariff Engine plus PM | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Merged PR #3 | High | Calculation audit trace implemented and tested. |
+| PR-004 Audit trace UI display | UI Flow plus PM | tariff calculations UI | Merged PR #4 | Medium | Tariff audit trace display merged to `main`. |
 | DATA-001 Import parser extraction and workbook wiring | Data Import | import modules, workbook form, import tests | Merged in PR #1 | Medium | Header, dedupe, and fingerprint contracts documented. |
 | ENG-001 Tariff calculation validation package | Tariff Engine | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Merged in PR #1 | High | Validation issues and revenue recovery accepted for MVP. |
 | UI-001 Layout-only UI package | UI Flow | layout/page/component files | Merged in PR #1 | Medium | Broad responsive layout package integrated. |

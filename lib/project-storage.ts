@@ -938,9 +938,13 @@ export function reconcileAllocationMethodsWithCostPools(
     return existingRow
       ? {
           ...existingRow,
-          costPoolName: costPool.name
+          costPoolName: costPool.name,
+          requiresReview: existingRow.requiresReview ?? false
         }
-      : createAllocationMethodRow(projectId, costPool);
+      : {
+          ...createAllocationMethodRow(projectId, costPool),
+          requiresReview: true
+        };
   });
   return {
     ...allocationMethods,
