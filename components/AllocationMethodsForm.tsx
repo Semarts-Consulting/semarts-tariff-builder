@@ -79,20 +79,30 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
       (total, row) => total + (recoverableCostByPool.get(row.costPoolId) ?? 0),
       0
     );
-    const unbalancedRows = allocationMethods.rows.filter((row) => !isBalanced(row)).length;
+    const rowsNeedingReview = allocationMethods.rows.filter(
+      (row) => row.requiresReview || !isBalanced(row)
+    ).length;
 
     return {
       allocatedCost,
-      unbalancedRows,
+      rowsNeedingReview,
       ruleCount: allocationMethods.rows.length
     };
   }, [allocationMethods.rows, recoverableCostByPool]);
 
-  function updateRow(rowId: string, updates: Partial<AllocationMethodRow>) {
+  function updateRow(rowId: string, updates: Partial<AllocationMethodRow>, clearsReview = true) {
     if (isArchived) return;
     setAllocationMethods((current) => ({
       ...current,
-      rows: current.rows.map((row) => (row.id === rowId ? { ...row, ...updates } : row))
+      rows: current.rows.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              ...updates,
+              requiresReview: clearsReview ? false : row.requiresReview
+            }
+          : row
+      )
     }));
     setSaveState("");
   }
@@ -162,7 +172,7 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
         </div>
         <div className="rounded-md border border-line bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-ink/50">Rows needing review</p>
-          <p className="mt-2 text-2xl font-semibold">{totals.unbalancedRows}</p>
+          <p className="mt-2 text-2xl font-semibold">{totals.rowsNeedingReview}</p>
         </div>
       </div>
 
@@ -175,10 +185,23 @@ export function AllocationMethodsForm({ projectId }: AllocationMethodsFormProps)
             <section key={row.id} className="rounded-md border border-line bg-white shadow-sm">
               <div className="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
                 <div className="min-w-0">
-                  <h2 className="font-semibold">{row.costPoolName}</h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="font-semibold">{row.costPoolName}</h2>
+                    {row.requiresReview ? (
+                      <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
+                        Needs review before approval
+                      </span>
+                    ) : null}
+                  </div>
                   <p className="mt-1 text-sm text-ink/60">
                     Recoverable cost {formatCurrency(recoverableCostByPool.get(row.costPoolId) ?? 0)}
                   </p>
+                  {row.requiresReview ? (
+                    <p className="mt-2 text-sm leading-6 text-amber-800">
+                      This allocation method was created during reconciliation. Review and save the
+                      method when the basis, component, shares, and notes are correct.
+                    </p>
+                  ) : null}
                 </div>
                 <span
                   className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${

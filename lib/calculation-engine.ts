@@ -201,6 +201,17 @@ export function calculateTariffs({
   });
 
   allocationRows.forEach((allocationRow) => {
+    if (allocationRow.requiresReview === true) {
+      validationIssues.push({
+        code: "Allocation method requires review",
+        severity: "Warning",
+        message:
+          "Allocation method was created automatically for a cost pool and should be reviewed before approval.",
+        rowId: allocationRow.id,
+        costPoolId: allocationRow.costPoolId
+      });
+    }
+
     const costPool = costPoolById.get(allocationRow.costPoolId);
     if (!costPool) {
       validationIssues.push({
