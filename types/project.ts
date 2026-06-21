@@ -258,6 +258,62 @@ export type DistributionLossFactorReference = {
   reviewStatus: SupplyReferenceReviewStatus;
 };
 
+export type SupplyReferenceExtractionStatus =
+  | "Pending extraction"
+  | "Extracted"
+  | "Extraction failed"
+  | "Reviewed"
+  | "Rejected";
+
+export type SupplyReferenceCandidateStatus =
+  | "Extracted"
+  | "Approved"
+  | "Rejected"
+  | "Needs review";
+
+export type SupplyReferenceSourceDocument = {
+  id: string;
+  distributorId: string;
+  chargingYear: string;
+  title: string;
+  sourceUrl: string;
+  fileName: string;
+  fileType: "PDF" | "Excel" | "CSV" | "Other";
+  extractionStatus: SupplyReferenceExtractionStatus;
+  extractionNotes: string;
+  uploadedAt: string;
+};
+
+export type SupplyReferenceTouCandidate = {
+  id: string;
+  sourceDocumentId: string;
+  distributorId: string;
+  chargingYear: string;
+  bandName: SupplyTimeOfUseReference;
+  daysOfWeek: SupplyContractDayOfWeek[];
+  appliesOnBankHolidays: boolean;
+  months: SupplyContractMonth[];
+  startTime: string;
+  endTime: string;
+  sourceReference: string;
+  confidence: number;
+  status: SupplyReferenceCandidateStatus;
+};
+
+export type SupplyReferenceLossCandidate = {
+  id: string;
+  sourceDocumentId: string;
+  distributorId: string;
+  chargingYear: string;
+  voltage: SupplyVoltage | "Metering";
+  lossFactorName: string;
+  lossPercent: number;
+  lossMultiplier: number;
+  sourceReference: string;
+  confidence: number;
+  status: SupplyReferenceCandidateStatus;
+};
+
 export type DnoNetworkAreaReference = {
   distributorId: string;
   dnoName: string;

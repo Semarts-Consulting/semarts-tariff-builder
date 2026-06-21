@@ -82,6 +82,14 @@ create index if not exists supply_contract_charges_project_idx on public.supply_
 create index if not exists supply_contract_charges_supply_detail_idx on public.supply_contract_charges(supply_detail_id);
 create index if not exists supply_reference_dno_network_areas_distributor_idx on public.supply_reference_dno_network_areas(distributor_id);
 create index if not exists supply_reference_data_sets_distributor_year_idx on public.supply_reference_data_sets(distributor_id, charging_year);
+create index if not exists supply_reference_source_documents_distributor_year_idx on public.supply_reference_source_documents(distributor_id, charging_year);
+create index if not exists supply_reference_source_documents_status_idx on public.supply_reference_source_documents(extraction_status);
+create index if not exists supply_reference_tou_candidates_document_idx on public.supply_reference_tou_candidates(source_document_id);
+create index if not exists supply_reference_tou_candidates_distributor_year_idx on public.supply_reference_tou_candidates(distributor_id, charging_year);
+create index if not exists supply_reference_tou_candidates_status_idx on public.supply_reference_tou_candidates(status);
+create index if not exists supply_reference_loss_candidates_document_idx on public.supply_reference_loss_candidates(source_document_id);
+create index if not exists supply_reference_loss_candidates_distributor_year_idx on public.supply_reference_loss_candidates(distributor_id, charging_year);
+create index if not exists supply_reference_loss_candidates_status_idx on public.supply_reference_loss_candidates(status);
 
 drop policy if exists "Users can read their projects" on public.projects;
 create policy "Users can read their projects"
@@ -318,3 +326,27 @@ to anon, authenticated
 using (true);
 
 drop policy if exists "Users can manage their supply reference data sets" on public.supply_reference_data_sets;
+
+drop policy if exists "Users can read supply reference source documents" on public.supply_reference_source_documents;
+create policy "Users can read supply reference source documents"
+on public.supply_reference_source_documents for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Users can manage supply reference source documents" on public.supply_reference_source_documents;
+
+drop policy if exists "Users can read supply reference TOU candidates" on public.supply_reference_tou_candidates;
+create policy "Users can read supply reference TOU candidates"
+on public.supply_reference_tou_candidates for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Users can manage supply reference TOU candidates" on public.supply_reference_tou_candidates;
+
+drop policy if exists "Users can read supply reference loss candidates" on public.supply_reference_loss_candidates;
+create policy "Users can read supply reference loss candidates"
+on public.supply_reference_loss_candidates for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Users can manage supply reference loss candidates" on public.supply_reference_loss_candidates;

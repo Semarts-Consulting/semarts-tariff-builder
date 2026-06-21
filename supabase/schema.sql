@@ -318,6 +318,84 @@ create table if not exists public.supply_reference_data_sets (
   constraint supply_reference_data_sets_losses_array_check check (jsonb_typeof(distribution_loss_factors) = 'array')
 );
 
+create table if not exists public.supply_reference_source_documents (
+  id text primary key,
+  distributor_id text not null,
+  charging_year text not null,
+  title text not null,
+  source_url text not null default '',
+  file_name text not null default '',
+  file_type text not null default 'Other',
+  extraction_status text not null default 'Pending extraction',
+  extraction_notes text not null default '',
+  uploaded_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint supply_reference_source_documents_distributor_id_check check (distributor_id ~ '^[0-9]{2}$'),
+  constraint supply_reference_source_documents_file_type_check check (
+    file_type in ('PDF', 'Excel', 'CSV', 'Other')
+  ),
+  constraint supply_reference_source_documents_extraction_status_check check (
+    extraction_status in ('Pending extraction', 'Extracted', 'Extraction failed', 'Reviewed', 'Rejected')
+  ),
+  constraint supply_reference_source_documents_distributor_fkey foreign key (distributor_id)
+    references public.supply_reference_dno_network_areas(distributor_id) on delete restrict
+);
+
+create table if not exists public.supply_reference_tou_candidates (
+  id text primary key,
+  source_document_id text not null references public.supply_reference_source_documents(id) on delete cascade,
+  distributor_id text not null,
+  charging_year text not null,
+  band_name text not null,
+  days_of_week text[] not null default '{}',
+  applies_on_bank_holidays boolean not null default false,
+  months text[] not null default '{}',
+  start_time text not null default '',
+  end_time text not null default '',
+  source_reference text not null default '',
+  confidence numeric not null default 0,
+  status text not null default 'Extracted',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint supply_reference_tou_candidates_distributor_id_check check (distributor_id ~ '^[0-9]{2}$'),
+  constraint supply_reference_tou_candidates_band_check check (
+    band_name in ('Red', 'Amber', 'Green', 'Super Red', 'Day', 'Night')
+  ),
+  constraint supply_reference_tou_candidates_confidence_check check (confidence >= 0 and confidence <= 1),
+  constraint supply_reference_tou_candidates_status_check check (
+    status in ('Extracted', 'Approved', 'Rejected', 'Needs review')
+  ),
+  constraint supply_reference_tou_candidates_distributor_fkey foreign key (distributor_id)
+    references public.supply_reference_dno_network_areas(distributor_id) on delete restrict
+);
+
+create table if not exists public.supply_reference_loss_candidates (
+  id text primary key,
+  source_document_id text not null references public.supply_reference_source_documents(id) on delete cascade,
+  distributor_id text not null,
+  charging_year text not null,
+  voltage text not null,
+  loss_factor_name text not null,
+  loss_percent numeric not null default 0,
+  loss_multiplier numeric not null default 0,
+  source_reference text not null default '',
+  confidence numeric not null default 0,
+  status text not null default 'Extracted',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint supply_reference_loss_candidates_distributor_id_check check (distributor_id ~ '^[0-9]{2}$'),
+  constraint supply_reference_loss_candidates_voltage_check check (
+    voltage in ('EHV', 'HV', 'LV', 'Metering')
+  ),
+  constraint supply_reference_loss_candidates_confidence_check check (confidence >= 0 and confidence <= 1),
+  constraint supply_reference_loss_candidates_status_check check (
+    status in ('Extracted', 'Approved', 'Rejected', 'Needs review')
+  ),
+  constraint supply_reference_loss_candidates_distributor_fkey foreign key (distributor_id)
+    references public.supply_reference_dno_network_areas(distributor_id) on delete restrict
+);
+
 alter table public.supply_reference_data_sets
 drop constraint if exists supply_reference_data_sets_distributor_id_check;
 
@@ -510,6 +588,21 @@ create trigger supply_reference_data_sets_set_updated_at
 before update on public.supply_reference_data_sets
 for each row execute function public.set_updated_at();
 
+drop trigger if exists supply_reference_source_documents_set_updated_at on public.supply_reference_source_documents;
+create trigger supply_reference_source_documents_set_updated_at
+before update on public.supply_reference_source_documents
+for each row execute function public.set_updated_at();
+
+drop trigger if exists supply_reference_tou_candidates_set_updated_at on public.supply_reference_tou_candidates;
+create trigger supply_reference_tou_candidates_set_updated_at
+before update on public.supply_reference_tou_candidates
+for each row execute function public.set_updated_at();
+
+drop trigger if exists supply_reference_loss_candidates_set_updated_at on public.supply_reference_loss_candidates;
+create trigger supply_reference_loss_candidates_set_updated_at
+before update on public.supply_reference_loss_candidates
+for each row execute function public.set_updated_at();
+
 alter table public.projects enable row level security;
 alter table public.project_data_inputs enable row level security;
 alter table public.project_cost_pools enable row level security;
@@ -528,6 +621,9 @@ alter table public.supply_details enable row level security;
 alter table public.supply_contract_charges enable row level security;
 alter table public.supply_reference_dno_network_areas enable row level security;
 alter table public.supply_reference_data_sets enable row level security;
+alter table public.supply_reference_source_documents enable row level security;
+alter table public.supply_reference_tou_candidates enable row level security;
+alter table public.supply_reference_loss_candidates enable row level security;
 
 -- RLS policies should be added with authentication.
 -- Until auth is implemented, keep the app on local browser storage.

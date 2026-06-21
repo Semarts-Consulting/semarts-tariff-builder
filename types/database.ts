@@ -7,9 +7,11 @@ import type {
   EmployeeCostInput,
   IndirectOverheadInput,
   ProjectStatus,
+  SupplyReferenceCandidateStatus,
   SupplyContractChargeInput,
   SupplyDetailsInput,
-  SupplyReferenceData
+  SupplyReferenceData,
+  SupplyReferenceExtractionStatus
 } from "@/types/project";
 
 export type Database = {
@@ -584,6 +586,116 @@ export type Database = {
         };
         Update: Partial<
           Database["public"]["Tables"]["supply_reference_data_sets"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      supply_reference_source_documents: {
+        Row: {
+          id: string;
+          distributor_id: string;
+          charging_year: string;
+          title: string;
+          source_url: string;
+          file_name: string;
+          file_type: "PDF" | "Excel" | "CSV" | "Other";
+          extraction_status: SupplyReferenceExtractionStatus;
+          extraction_notes: string;
+          uploaded_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          distributor_id: string;
+          charging_year: string;
+          title: string;
+          source_url?: string;
+          file_name?: string;
+          file_type?: "PDF" | "Excel" | "CSV" | "Other";
+          extraction_status?: SupplyReferenceExtractionStatus;
+          extraction_notes?: string;
+          uploaded_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["supply_reference_source_documents"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      supply_reference_tou_candidates: {
+        Row: {
+          id: string;
+          source_document_id: string;
+          distributor_id: string;
+          charging_year: string;
+          band_name: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"][number]["id"];
+          days_of_week: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"][number]["daysOfWeek"];
+          applies_on_bank_holidays: boolean;
+          months: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"][number]["months"];
+          start_time: string;
+          end_time: string;
+          source_reference: string;
+          confidence: number;
+          status: SupplyReferenceCandidateStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          source_document_id: string;
+          distributor_id: string;
+          charging_year: string;
+          band_name: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"][number]["id"];
+          days_of_week?: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"][number]["daysOfWeek"];
+          applies_on_bank_holidays?: boolean;
+          months?: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"][number]["months"];
+          start_time?: string;
+          end_time?: string;
+          source_reference?: string;
+          confidence?: number;
+          status?: SupplyReferenceCandidateStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["supply_reference_tou_candidates"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      supply_reference_loss_candidates: {
+        Row: {
+          id: string;
+          source_document_id: string;
+          distributor_id: string;
+          charging_year: string;
+          voltage: SupplyReferenceData["dataSets"][number]["distributionLossFactors"][number]["voltage"];
+          loss_factor_name: string;
+          loss_percent: number;
+          loss_multiplier: number;
+          source_reference: string;
+          confidence: number;
+          status: SupplyReferenceCandidateStatus;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          source_document_id: string;
+          distributor_id: string;
+          charging_year: string;
+          voltage: SupplyReferenceData["dataSets"][number]["distributionLossFactors"][number]["voltage"];
+          loss_factor_name: string;
+          loss_percent?: number;
+          loss_multiplier?: number;
+          source_reference?: string;
+          confidence?: number;
+          status?: SupplyReferenceCandidateStatus;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["supply_reference_loss_candidates"]["Insert"]
         >;
         Relationships: [];
       };

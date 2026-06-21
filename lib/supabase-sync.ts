@@ -11,6 +11,9 @@ import type {
   ProjectAllocationMethods,
   ProjectCostPools,
   ProjectDataInputs,
+  SupplyReferenceLossCandidate,
+  SupplyReferenceSourceDocument,
+  SupplyReferenceTouCandidate,
   SupplyReferenceData,
   SupplyDetailsInput
 } from "@/types/project";
@@ -1529,6 +1532,94 @@ export async function loadSupplyReferenceDataFromSupabase() {
   }
 
   return fromSupplyReferenceRows(dnoRows ?? [], dataSetRows ?? []);
+}
+
+export async function loadSupplyReferenceExtractionFromSupabase() {
+  if (!supabase) {
+    return null;
+  }
+
+  const { data: sourceDocumentRows, error: sourceDocumentError } = await supabase
+    .from("supply_reference_source_documents")
+    .select(
+      "id, distributor_id, charging_year, title, source_url, file_name, file_type, extraction_status, extraction_notes, uploaded_at"
+    )
+    .order("uploaded_at", { ascending: false });
+
+  if (sourceDocumentError) {
+    throw sourceDocumentError;
+  }
+
+  const { data: touRows, error: touError } = await supabase
+    .from("supply_reference_tou_candidates")
+    .select(
+      "id, source_document_id, distributor_id, charging_year, band_name, days_of_week, applies_on_bank_holidays, months, start_time, end_time, source_reference, confidence, status"
+    )
+    .order("created_at", { ascending: false });
+
+  if (touError) {
+    throw touError;
+  }
+
+  const { data: lossRows, error: lossError } = await supabase
+    .from("supply_reference_loss_candidates")
+    .select(
+      "id, source_document_id, distributor_id, charging_year, voltage, loss_factor_name, loss_percent, loss_multiplier, source_reference, confidence, status"
+    )
+    .order("created_at", { ascending: false });
+
+  if (lossError) {
+    throw lossError;
+  }
+
+  return {
+    sourceDocuments: (sourceDocumentRows ?? []).map(
+      (row): SupplyReferenceSourceDocument => ({
+        id: row.id,
+        distributorId: row.distributor_id,
+        chargingYear: row.charging_year,
+        title: row.title,
+        sourceUrl: row.source_url,
+        fileName: row.file_name,
+        fileType: row.file_type,
+        extractionStatus: row.extraction_status,
+        extractionNotes: row.extraction_notes,
+        uploadedAt: row.uploaded_at
+      })
+    ),
+    touCandidates: (touRows ?? []).map(
+      (row): SupplyReferenceTouCandidate => ({
+        id: row.id,
+        sourceDocumentId: row.source_document_id,
+        distributorId: row.distributor_id,
+        chargingYear: row.charging_year,
+        bandName: row.band_name,
+        daysOfWeek: row.days_of_week,
+        appliesOnBankHolidays: row.applies_on_bank_holidays,
+        months: row.months,
+        startTime: row.start_time,
+        endTime: row.end_time,
+        sourceReference: row.source_reference,
+        confidence: row.confidence,
+        status: row.status
+      })
+    ),
+    lossCandidates: (lossRows ?? []).map(
+      (row): SupplyReferenceLossCandidate => ({
+        id: row.id,
+        sourceDocumentId: row.source_document_id,
+        distributorId: row.distributor_id,
+        chargingYear: row.charging_year,
+        voltage: row.voltage,
+        lossFactorName: row.loss_factor_name,
+        lossPercent: row.loss_percent,
+        lossMultiplier: row.loss_multiplier,
+        sourceReference: row.source_reference,
+        confidence: row.confidence,
+        status: row.status
+      })
+    )
+  };
 }
 
 export async function pushBackupToSupabase(backup: LocalProjectBackup) {
