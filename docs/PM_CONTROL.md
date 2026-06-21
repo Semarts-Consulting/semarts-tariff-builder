@@ -1,0 +1,178 @@
+# PM Control Log
+
+## Current Baseline
+
+Date: 2026-06-21
+
+Branch: `main`
+
+Working tree status: broad uncommitted work is present across UI, import, calculation, storage, type, and test files. Do not stage or merge the whole tree as one package.
+
+Latest checks run from the manager thread after the control docs were created:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 11 test files and 54 tests.
+- `npm.cmd run build`: passed.
+
+The current check result is valid as a coordination baseline, but each split package still needs its own focused review before staging.
+
+QA package-readiness review completed after this baseline with no edits, staging, commits, or reverts. QA confirmed:
+
+- 26 tracked modified files.
+- 16 untracked files/directories, including `docs/` and new import/test modules.
+- `tsconfig.tsbuildinfo` absent after checks.
+- Lint, type-check, tests, and build all passed.
+
+## MVP Definition
+
+The MVP is a tariff methodology workflow that can:
+
+1. Create and manage a project with project metadata, customer classes, status, and local/cloud persistence.
+2. Capture source inputs for customer classes, costs, allocations, and workbook-style methodology inputs.
+3. Import structured workbook data with row-level validation and repeatable merge behavior.
+4. Calculate tariff outputs using pure TypeScript services outside React components.
+5. Surface validation issues and revenue recovery status without silently changing business assumptions.
+6. Produce stakeholder-reviewable tariff and methodology report views.
+7. Provide enough automated coverage to protect import parsing, calculation behavior, and storage reconciliation.
+
+UI polish is secondary. Accuracy, auditability, reproducibility, and contract stability are the release gates.
+
+## Workstream Ownership
+
+| Workstream | Owner Thread | Primary Ownership | Files To Avoid Without PM Approval |
+| --- | --- | --- | --- |
+| Data import and validation | `019eeba6-6172-77a0-ade4-4a9ee6ebf1d2` | Import parsers, workbook upload wiring, imported record validation, merge rules | `types/project.ts`, calculation contracts, report DTOs, storage reconciliation |
+| Tariff methodology engine | `019eeb9f-3d4b-7a90-a029-8279db480324` | `lib/calculation-engine.ts`, tariff validation issues, tariff output contract, calculation tests | Import parsers, React forms, report layout, Supabase schema |
+| UI flow and outputs | `019eeba2-2aa0-7122-96f4-1b565edc791b` | Pages, layout, forms, tables, navigation, report presentation | Business logic in `lib/`, shared types, parser logic, save-blocking validation unless approved |
+| Tests and regression checks | `019eeba3-abe8-7bf1-a0c6-d7995e22a634` | Focused regression tests, full check runs, package verification | Production behavior changes unless asked to produce a narrow fix |
+
+## Current Workstream Assessment
+
+### Data Import And Validation
+
+Status: review-ready after isolation.
+
+Observed work:
+
+- New parser modules for direct costs, employee costs, indirect overheads, assets, boundary meter rows, and shared import utilities.
+- `WorkbookMethodologyForms.tsx` now wires workbook upload flows to parser modules.
+- Boundary meter import preserves existing short-row behavior while reporting row-level errors.
+- Focused import tests and full tests passed after isolation.
+
+Review risks:
+
+- `WorkbookMethodologyForms.tsx` has a very large diff and should be reviewed separately from UI layout work.
+- Parser output shapes are shared architecture because they populate `ProjectMethodologyInputs`.
+- Header names, dedupe keys, and row fingerprints must be documented before treating imports as stable.
+
+### Tariff Methodology Engine
+
+Status: review-ready for the first calculation-validation package after contract review.
+
+Observed work:
+
+- `calculateTariffs` remains a pure function in `lib/calculation-engine.ts`.
+- Tariff result now includes validation issues and revenue recovery status.
+- Whitespace-normalised customer-class matching is covered.
+- Calculation tests cover revenue requirement, allocation, denominator validation, duplicate and missing classes, missing cost pools, unbalanced allocations, and negative values.
+- Deferred supply calculation DTO and scaffold work was removed from the active package.
+- Tariff Engine accepted `validationIssues`, reserved `Warning` severity, current issue-code set, and `isRevenueRecovered` tolerance for MVP after documentation alignment.
+
+Review risks:
+
+- Validation issue semantics are now a shared contract consumed by calculation and report UI.
+- Validation issues currently report calculation readiness but do not block calculation.
+- Audit trace structures are not yet implemented.
+
+### UI Flow And Outputs
+
+Status: layout-only package review-ready; calculation/report warning UI is review-ready after narrow wording isolation.
+
+Observed work:
+
+- Responsive layout and navigation updates across app shell, auth, project list, dashboard, settings, and core forms.
+- Mixed form files were re-isolated to keep layout-only changes and remove validation/save-blocking behavior.
+- `ProjectDashboardOverview.tsx` no longer depends on unapproved validation/revenue recovery DTOs.
+- UI review found the held calculation/report warning UI mostly aligned with the approved validation semantics.
+- Narrow wording edit completed so warning copy says outputs remain available and should be reviewed before approval, rather than implying calculation is blocked.
+
+Review risks:
+
+- `TariffCalculationsSummary.tsx` and `ReportsSummary.tsx` still contain broader warning UI and sticky-table dirty changes from earlier work; the latest isolation only changed warning body wording.
+- `DataInputsForm.tsx`, `CostPoolsForm.tsx`, and `AllocationMethodsForm.tsx` should be staged as layout-only if included now.
+
+### Tests And Regression Checks
+
+Status: green baseline reported.
+
+Observed work:
+
+- Tests cover import parsers, allocation reconciliation, supply reference flows, and tariff calculations.
+- Latest full test run reported 11 files and 54 tests.
+
+Review risks:
+
+- No build result has been recorded after the latest split work.
+- Test ownership should remain separate from business-logic ownership except for narrow fixes.
+
+## Likely Dependency Clashes
+
+| Clash | Files | Risk | Decision |
+| --- | --- | --- | --- |
+| Imported record shapes | `types/project.ts`, `lib/*-import.ts`, `components/WorkbookMethodologyForms.tsx` | Medium | Data Import proposes, PM reviews, downstream users confirm before merge. |
+| Tariff calculation result shape | `types/project.ts`, `lib/calculation-engine.ts`, `components/TariffCalculationsSummary.tsx`, `components/ReportsSummary.tsx` | High | Tariff Engine owns semantics; UI can render only after contract approval. |
+| Validation result semantics | `types/project.ts`, form components, calculation engine, reports | High | Do not mix form save-blocking validation with calculation validation in one package. |
+| Allocation reconciliation | `lib/project-storage.ts`, `components/CostPoolsForm.tsx`, `tests/allocation-reconciliation.test.ts` | Medium | Treat as data/storage behavior, not UI behavior. |
+| Supply calculation | `SUPPLY_CALCULATION_DESIGN.md`, `types/project.ts`, potential engine files | High | Design only until open business assumptions are resolved. |
+| Report/export DTOs | `components/ReportsSummary.tsx`, future export code, tariff result types | Medium | PM approval required before adding stakeholder-facing checks or export fields. |
+
+## Merge Order
+
+1. Shared contract documentation and manager control docs.
+2. Data Import parser extraction package, excluding unrelated validation/save-blocking.
+3. Tariff Engine calculation validation package, including tests and type contract.
+4. Storage allocation reconciliation package, if accepted as MVP behavior.
+5. UI layout-only package.
+6. Calculation/report warning UI package, only after tariff result contract approval.
+7. QA final full gate: lint, type-check, tests, and build if feasible.
+
+## Open Decisions
+
+1. Whether allocation reconciliation in `project-storage.ts` is MVP behavior or should be held.
+2. Whether calculation validation issues should block final report approval, while still allowing calculations to run.
+3. Audit trace output contract for stakeholder review.
+4. Which imported workbook headers are contractual and which remain provisional.
+5. Whether `ReportsSummary.tsx` should be considered report UI only or the start of an export DTO contract.
+6. Supply calculation remains deferred until the open questions in `SUPPLY_CALCULATION_DESIGN.md` are answered.
+
+## Accepted Decisions
+
+- Allocation reconciliation in `project-storage.ts` is accepted as MVP storage behavior after data/storage and tariff-engine review.
+- Reconciliation on read is acceptable for calculation because it aligns allocation rows to active cost pool IDs and removes stale allocation rows from calculation inputs.
+- New cost pools receive default allocation methods, but those defaults should be surfaced as needing review in a future validation/report follow-up.
+
+## QA Staging Warnings
+
+The following files are not safe to stage as-is without hunk-level or package review:
+
+- `types/project.ts`: shared tariff and imported-data contract.
+- `components/TariffCalculationsSummary.tsx`: held calculation warning UI.
+- `components/ReportsSummary.tsx`: held report warning UI.
+- `components/DataInputsForm.tsx`: mixed layout and possible validation/save behavior.
+- `components/CostPoolsForm.tsx`: mixed layout and possible validation/storage behavior.
+- `components/AllocationMethodsForm.tsx`: mixed layout and possible validation/save behavior.
+- `components/WorkbookMethodologyForms.tsx`: large import wiring diff; review as Data Import only.
+- `lib/project-storage.ts`: allocation reconciliation is storage/business behavior.
+
+Missing MVP-critical regression coverage:
+
+- End-to-end create project to report flow.
+- Browser/mobile screenshots for layout-only UI changes.
+- Report readiness/export contract tests.
+- Local/cloud storage reconciliation failure cases.
+- Supply calculation tests remain intentionally deferred until business rules are approved.
+
+## Immediate Next Action
+
+Send the Data Import review prompt. It should produce a parser-contract review and confirm whether the import package can be staged without changing shared calculation, report, storage, or UI behavior.
