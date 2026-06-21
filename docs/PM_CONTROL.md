@@ -4,9 +4,9 @@
 
 Date: 2026-06-22
 
-Branch: `codex/mvp-demo-path-check`
+Branch: `codex/mvp-demo-accepted`
 
-Working tree status: manual MVP demo path check package in progress.
+Working tree status: manual MVP demo path accepted; MVP candidate review in progress.
 
 Latest full checks on this branch:
 
@@ -15,9 +15,9 @@ Latest full checks on this branch:
 - `npm.cmd test`: passed, 12 test files and 64 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #7 have been merged to `main`. The current branch documents the manual demo path from inputs to allocation, calculation, audit trace, outputs, and reconciliation.
+PRs #1 through #8 have been merged to `main`. The current branch records user acceptance of the manual demo path and moves the MVP candidate review milestone to in progress.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: manual demo path check.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: MVP candidate review.
 
 ## MVP Definition
 
@@ -108,6 +108,7 @@ Observed work:
 - Tests cover import parsers, allocation reconciliation, supply reference flows, and tariff calculations.
 - Latest full test run reported 12 files and 64 tests.
 - MVP candidate scenario test verifies a representative site reconciles tariff outputs to the recoverable cost base.
+- Manual demo path from inputs to allocation, calculation, audit trace, outputs, and reconciliation has been accepted by the user.
 
 Review risks:
 
@@ -175,8 +176,8 @@ Missing MVP-critical regression coverage:
 - Report rendering, warning visibility, audit trace visibility, and HTML/print action tests.
 - Local/cloud storage reconciliation failure cases.
 - Supply calculation tests remain intentionally deferred until business rules are approved.
-- Manual demo path from inputs to calculation, audit trace, and report view.
+- MVP candidate review decision: accepted, accepted with limitations, or fixes required.
 
 ## Immediate Next Action
 
-Review and commit the manual MVP demo path check package, then open a PR from `codex/mvp-demo-path-check`.
+Review and commit the MVP demo acceptance evidence, then open a PR from `codex/mvp-demo-accepted`.
