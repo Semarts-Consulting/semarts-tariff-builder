@@ -5,9 +5,13 @@ import { calculateTariffs } from "@/lib/calculation-engine";
 import {
   getProjectAllocationMethods,
   getProjectCostPools,
-  getProjectDataInputs
+  getProjectDataInputs,
+  getProjectMethodologyInputs,
+  getSupplyReferenceData
 } from "@/lib/project-storage";
-import type { TariffCalculationResult } from "@/types/project";
+import { loadSupplyReferenceDataFromSupabase } from "@/lib/supabase-sync";
+import { getSupplyReferenceReviewIssues } from "@/lib/supply-reference-review";
+import type { SupplyReferenceData, TariffCalculationResult } from "@/types/project";
 
 type TariffCalculationsSummaryProps = {
   projectId: string;
@@ -42,6 +46,9 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
   const [calculationResult, setCalculationResult] = useState<TariffCalculationResult>(() =>
     emptyResult(projectId)
   );
+  const [supplyReferenceData, setSupplyReferenceData] = useState<SupplyReferenceData>(() =>
+    getSupplyReferenceData()
+  );
 
   useEffect(() => {
     const dataInputs = getProjectDataInputs(projectId);
@@ -58,9 +65,37 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
     );
   }, [projectId]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    loadSupplyReferenceDataFromSupabase()
+      .then((cloudReferenceData) => {
+        if (isMounted && cloudReferenceData) {
+          setSupplyReferenceData(cloudReferenceData);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setSupplyReferenceData(getSupplyReferenceData());
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const hasInputs = useMemo(
     () => calculationResult.classResults.some((row) => row.totalAllocatedCost > 0),
     [calculationResult.classResults]
+  );
+  const supplyReferenceIssues = useMemo(
+    () =>
+      getSupplyReferenceReviewIssues(
+        getProjectMethodologyInputs(projectId).supplyDetails,
+        supplyReferenceData
+      ),
+    [projectId, supplyReferenceData]
   );
 
   return (
@@ -95,6 +130,23 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
       {!hasInputs ? (
         <div className="rounded-md border border-line bg-white p-5 text-sm text-ink/70 shadow-sm">
           Enter data inputs, cost pools, and allocation methods to calculate indicative tariffs.
+        </div>
+      ) : null}
+
+      {supplyReferenceIssues.length > 0 ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 shadow-sm">
+          <h2 className="font-semibold">Supply reference data requires Semarts review</h2>
+          <p className="mt-2">
+            Indicative tariffs are shown, but supply-reference driven calculations should not be
+            treated as approved until the relevant DNO source data is marked Reviewed.
+          </p>
+          <ul className="mt-3 space-y-1">
+            {supplyReferenceIssues.map((issue) => (
+              <li key={`${issue.supplyId}-${issue.distributorId}`}>
+                {issue.message} MPAN {issue.mpan}.
+              </li>
+            ))}
+          </ul>
         </div>
       ) : null}
 

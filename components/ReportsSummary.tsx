@@ -6,13 +6,18 @@ import {
   getProjectAllocationMethods,
   getProjectById,
   getProjectCostPools,
-  getProjectDataInputs
+  getProjectDataInputs,
+  getProjectMethodologyInputs,
+  getSupplyReferenceData
 } from "@/lib/project-storage";
+import { loadSupplyReferenceDataFromSupabase } from "@/lib/supabase-sync";
+import { getSupplyReferenceReviewIssues } from "@/lib/supply-reference-review";
 import type {
   Project,
   ProjectAllocationMethods,
   ProjectCostPools,
   ProjectDataInputs,
+  SupplyReferenceData,
   TariffCalculationResult
 } from "@/types/project";
 
@@ -63,6 +68,9 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
     allocationMethods: null,
     calculation: null
   });
+  const [supplyReferenceData, setSupplyReferenceData] = useState<SupplyReferenceData>(() =>
+    getSupplyReferenceData()
+  );
 
   useEffect(() => {
     const project = getProjectById(projectId);
@@ -84,6 +92,26 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
       calculation
     });
   }, [projectId]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadSupplyReferenceDataFromSupabase()
+      .then((cloudReferenceData) => {
+        if (isMounted && cloudReferenceData) {
+          setSupplyReferenceData(cloudReferenceData);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setSupplyReferenceData(getSupplyReferenceData());
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const project = reportState.project;
   const dataInputs = reportState.dataInputs;
@@ -107,6 +135,14 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
   const grossCost = useMemo(
     () => costPools?.rows.reduce((total, row) => total + row.annualAmount, 0) ?? 0,
     [costPools]
+  );
+  const supplyReferenceIssues = useMemo(
+    () =>
+      getSupplyReferenceReviewIssues(
+        getProjectMethodologyInputs(projectId).supplyDetails,
+        supplyReferenceData
+      ),
+    [projectId, supplyReferenceData]
   );
 
   if (!project || !dataInputs || !costPools || !allocationMethods) {
@@ -192,6 +228,24 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
             Tariff methodology report
           </h1>
         </section>
+
+        {supplyReferenceIssues.length > 0 ? (
+          <section className="rounded-md border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900 shadow-sm">
+            <h2 className="font-semibold">Supply reference data requires Semarts review</h2>
+            <p className="mt-2">
+              This report includes indicative outputs only. Supply-reference driven methodology
+              should not be treated as approved until the relevant DNO source data is marked
+              Reviewed.
+            </p>
+            <ul className="mt-3 space-y-1">
+              {supplyReferenceIssues.map((issue) => (
+                <li key={`${issue.supplyId}-${issue.distributorId}`}>
+                  {issue.message} MPAN {issue.mpan}.
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <section className="rounded-md border border-line bg-white p-6 shadow-sm">
         <div className="grid gap-5 md:grid-cols-2">

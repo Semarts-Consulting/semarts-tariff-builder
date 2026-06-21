@@ -8,67 +8,45 @@ import {
 import { loadSupplyReferenceDataFromSupabase } from "@/lib/supabase-sync";
 import type {
   DnoNetworkAreaReference,
-  SupplyContractDayOfWeek,
-  SupplyContractMonth,
   SupplyReferenceData,
-  SupplyReferenceDataSet,
-  SupplyTimeOfUseDefinition
+  SupplyReferenceDataSet
 } from "@/types/project";
 
-const daysOfWeek: SupplyContractDayOfWeek[] = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday"
-];
-const months: SupplyContractMonth[] = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December"
-];
+const statusStyles: Record<SupplyReferenceDataSet["reviewStatus"], string> = {
+  "Source required": "border-red-200 bg-red-50 text-red-800",
+  "Pending review": "border-amber-200 bg-amber-50 text-amber-800",
+  Reviewed: "border-green-200 bg-green-50 text-green-800"
+};
 
-function updateDnoNetworkArea(
-  rows: DnoNetworkAreaReference[],
-  distributorId: string,
-  updates: Partial<DnoNetworkAreaReference>
-) {
-  return rows.map((row) => (row.distributorId === distributorId ? { ...row, ...updates } : row));
-}
-
-function updateReferenceDataSet(
-  rows: SupplyReferenceDataSet[],
-  rowId: string,
-  updates: Partial<SupplyReferenceDataSet>
-) {
-  return rows.map((row) => (row.id === rowId ? { ...row, ...updates } : row));
-}
-
-function toggleValue<T extends string>(values: T[], value: T) {
-  return values.includes(value)
-    ? values.filter((existingValue) => existingValue !== value)
-    : [...values, value];
-}
-
-function updateTimeOfUseDefinition(
+function getNetworkAreaLabel(
   dataSet: SupplyReferenceDataSet,
-  definitionId: SupplyTimeOfUseDefinition["id"],
-  updates: Partial<SupplyTimeOfUseDefinition>
+  networkAreas: DnoNetworkAreaReference[]
 ) {
-  return dataSet.timeOfUseDefinitions.map((definition) =>
-    definition.id === definitionId ? { ...definition, ...updates } : definition
+  const networkArea = networkAreas.find(
+    (row) => row.distributorId === dataSet.distributorId
   );
+
+  if (!networkArea) {
+    return `Distributor ${dataSet.distributorId}`;
+  }
+
+  return `${networkArea.distributorId} - ${networkArea.networkArea}`;
+}
+
+function getReviewedLabel(sourceReviewedAt: string) {
+  return sourceReviewedAt ? sourceReviewedAt : "Not reviewed";
+}
+
+function getTimeBandSummary(dataSet: SupplyReferenceDataSet) {
+  const populatedBands = dataSet.timeOfUseDefinitions.filter(
+    (definition) => definition.startTime && definition.endTime
+  );
+
+  if (populatedBands.length === 0) {
+    return "No reviewed time bands recorded";
+  }
+
+  return `${populatedBands.length} time band${populatedBands.length === 1 ? "" : "s"} recorded`;
 }
 
 export function SupplyReferenceDataForm() {
@@ -76,12 +54,37 @@ export function SupplyReferenceDataForm() {
     createDefaultSupplyReferenceData()
   );
   const [statusMessage, setStatusMessage] = useState("");
+
   const sortedNetworkAreas = useMemo(
     () =>
       [...referenceData.dnoNetworkAreas].sort((first, second) =>
         first.distributorId.localeCompare(second.distributorId)
       ),
     [referenceData.dnoNetworkAreas]
+  );
+
+  const sortedDataSets = useMemo(
+    () =>
+      [...referenceData.dataSets].sort((first, second) =>
+        first.distributorId.localeCompare(second.distributorId)
+      ),
+    [referenceData.dataSets]
+  );
+
+  const reviewSummary = useMemo(
+    () =>
+      sortedDataSets.reduce(
+        (summary, dataSet) => ({
+          ...summary,
+          [dataSet.reviewStatus]: summary[dataSet.reviewStatus] + 1
+        }),
+        {
+          "Source required": 0,
+          "Pending review": 0,
+          Reviewed: 0
+        } satisfies Record<SupplyReferenceDataSet["reviewStatus"], number>
+      ),
+    [sortedDataSets]
   );
 
   useEffect(() => {
@@ -95,6 +98,7 @@ export function SupplyReferenceDataForm() {
     const cloudReferenceData = await loadSupplyReferenceDataFromSupabase();
 
     if (!cloudReferenceData) {
+      setReferenceData(getSupplyReferenceData());
       setStatusMessage("No cloud reference data found. Showing built-in fallback data.");
       return;
     }
@@ -108,9 +112,10 @@ export function SupplyReferenceDataForm() {
       <section className="rounded-md border border-line bg-white p-6 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="font-semibold">MPAN to DNO mapping</h2>
+            <h2 className="font-semibold">Review status</h2>
             <p className="mt-1 text-sm text-ink/70">
-              The app uses the first two digits of the MPAN core to derive the DNO/network area.
+              This reference data is universal and read-only for normal users. Semarts admin review
+              is required before source data is used in calculations.
             </p>
           </div>
           <button
@@ -129,373 +134,113 @@ export function SupplyReferenceDataForm() {
             Refresh from cloud
           </button>
         </div>
+
         {statusMessage ? (
           <p className="mt-3 text-sm font-medium text-semarts-dark">{statusMessage}</p>
         ) : null}
-        <fieldset disabled className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[960px] border-collapse text-sm">
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          {Object.entries(reviewSummary).map(([status, count]) => (
+            <div key={status} className="rounded-md border border-line bg-field p-4">
+              <p className="text-sm text-ink/60">{status}</p>
+              <p className="mt-1 text-2xl font-semibold">{count}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-md border border-line bg-white p-6 shadow-sm">
+        <div>
+          <h2 className="font-semibold">DNO source register</h2>
+          <p className="mt-1 text-sm text-ink/70">
+            Source locations are tracked separately from reviewed charging parameters.
+          </p>
+        </div>
+
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[1080px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
               <tr>
-                <th className="px-3 py-2 font-semibold">Distributor ID</th>
-                <th className="px-3 py-2 font-semibold">DNO</th>
-                <th className="px-3 py-2 font-semibold">Network Area</th>
-                <th className="px-3 py-2 font-semibold">Operator Code</th>
-                <th className="px-3 py-2 font-semibold">Notes</th>
+                <th className="px-3 py-2 font-semibold">Network area</th>
+                <th className="px-3 py-2 font-semibold">Charging year</th>
+                <th className="px-3 py-2 font-semibold">Status</th>
+                <th className="px-3 py-2 font-semibold">Source</th>
+                <th className="px-3 py-2 font-semibold">Reviewed</th>
+                <th className="px-3 py-2 font-semibold">Time bands</th>
               </tr>
             </thead>
             <tbody>
-              {sortedNetworkAreas.map((row) => (
-                <tr key={row.distributorId} className="border-t border-line">
-                  <td className="px-3 py-2 font-semibold">{row.distributorId}</td>
-                  <td className="px-3 py-2">
-                    <input
-                      value={row.dnoName}
-                      onChange={(event) =>
-                        setReferenceData({
-                          ...referenceData,
-                          dnoNetworkAreas: updateDnoNetworkArea(
-                            referenceData.dnoNetworkAreas,
-                            row.distributorId,
-                            { dnoName: event.target.value }
-                          )
-                        })
-                      }
-                      className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
-                    />
+              {sortedDataSets.map((dataSet) => (
+                <tr key={dataSet.id} className="border-t border-line align-top">
+                  <td className="px-3 py-3 font-semibold">
+                    {getNetworkAreaLabel(dataSet, sortedNetworkAreas)}
                   </td>
-                  <td className="px-3 py-2">
-                    <input
-                      value={row.networkArea}
-                      onChange={(event) =>
-                        setReferenceData({
-                          ...referenceData,
-                          dnoNetworkAreas: updateDnoNetworkArea(
-                            referenceData.dnoNetworkAreas,
-                            row.distributorId,
-                            { networkArea: event.target.value }
-                          )
-                        })
-                      }
-                      className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
-                    />
+                  <td className="px-3 py-3">{dataSet.chargingYear}</td>
+                  <td className="px-3 py-3">
+                    <span
+                      className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusStyles[dataSet.reviewStatus]}`}
+                    >
+                      {dataSet.reviewStatus}
+                    </span>
                   </td>
-                  <td className="px-3 py-2">
-                    <input
-                      value={row.operatorCode}
-                      onChange={(event) =>
-                        setReferenceData({
-                          ...referenceData,
-                          dnoNetworkAreas: updateDnoNetworkArea(
-                            referenceData.dnoNetworkAreas,
-                            row.distributorId,
-                            { operatorCode: event.target.value }
-                          )
-                        })
-                      }
-                      className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
-                    />
+                  <td className="px-3 py-3">
+                    {dataSet.sourceDocumentUrl ? (
+                      <a
+                        href={dataSet.sourceDocumentUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-semibold text-semarts-dark underline-offset-4 hover:underline"
+                      >
+                        {dataSet.sourceDocumentTitle}
+                      </a>
+                    ) : (
+                      <span className="text-ink/60">{dataSet.sourceDocumentTitle}</span>
+                    )}
+                    {dataSet.sourceNotes ? (
+                      <p className="mt-1 max-w-xl text-xs leading-5 text-ink/60">
+                        {dataSet.sourceNotes}
+                      </p>
+                    ) : null}
                   </td>
-                  <td className="px-3 py-2">
-                    <input
-                      value={row.notes}
-                      onChange={(event) =>
-                        setReferenceData({
-                          ...referenceData,
-                          dnoNetworkAreas: updateDnoNetworkArea(
-                            referenceData.dnoNetworkAreas,
-                            row.distributorId,
-                            { notes: event.target.value }
-                          )
-                        })
-                      }
-                      className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
-                    />
-                  </td>
+                  <td className="px-3 py-3">{getReviewedLabel(dataSet.sourceReviewedAt)}</td>
+                  <td className="px-3 py-3">{getTimeBandSummary(dataSet)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </fieldset>
+        </div>
+
+        {sortedDataSets.length === 0 ? (
+          <div className="mt-5 rounded-md border border-line bg-field p-4 text-sm text-ink/60">
+            No source records are available.
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-md border border-line bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 className="font-semibold">LC14 source files</h2>
-            <p className="mt-1 text-sm text-ink/70">
-              Store the document location and review status for each DNO and charging year.
-            </p>
-          </div>
+        <div>
+          <h2 className="font-semibold">MPAN distributor mapping</h2>
+          <p className="mt-1 text-sm text-ink/70">
+            The first two digits of the MPAN core determine the DNO/network area.
+          </p>
         </div>
-        <fieldset disabled className="mt-5 space-y-4">
-          {referenceData.dataSets.map((row) => (
-            <div key={row.id} className="rounded-md border border-line bg-field p-4">
-              <div className="grid gap-4 lg:grid-cols-3">
-                <label className="block">
-                  <span className="text-sm font-medium">DNO / Network Area</span>
-                  <select
-                    value={row.distributorId}
-                    onChange={(event) =>
-                      setReferenceData({
-                        ...referenceData,
-                        dataSets: updateReferenceDataSet(referenceData.dataSets, row.id, {
-                          distributorId: event.target.value
-                        })
-                      })
-                    }
-                    className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
-                  >
-                    <option value="">Select</option>
-                    {sortedNetworkAreas.map((networkArea) => (
-                      <option key={networkArea.distributorId} value={networkArea.distributorId}>
-                        {networkArea.distributorId} - {networkArea.networkArea}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium">Charging year</span>
-                  <input
-                    value={row.chargingYear}
-                    onChange={(event) =>
-                      setReferenceData({
-                        ...referenceData,
-                        dataSets: updateReferenceDataSet(referenceData.dataSets, row.id, {
-                          chargingYear: event.target.value
-                        })
-                      })
-                    }
-                    placeholder="2026/27"
-                    className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium">Review status</span>
-                  <input
-                    value={row.reviewStatus}
-                    readOnly
-                    className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium">Reviewed date</span>
-                  <input
-                    type="date"
-                    value={row.sourceReviewedAt}
-                    onChange={(event) =>
-                      setReferenceData({
-                        ...referenceData,
-                        dataSets: updateReferenceDataSet(referenceData.dataSets, row.id, {
-                          sourceReviewedAt: event.target.value
-                        })
-                      })
-                    }
-                    className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
-                  />
-                </label>
-                <label className="block lg:col-span-2">
-                  <span className="text-sm font-medium">Source document title</span>
-                  <input
-                    value={row.sourceDocumentTitle}
-                    onChange={(event) =>
-                      setReferenceData({
-                        ...referenceData,
-                        dataSets: updateReferenceDataSet(referenceData.dataSets, row.id, {
-                          sourceDocumentTitle: event.target.value
-                        })
-                      })
-                    }
-                    className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium">Source URL or file path</span>
-                  <input
-                    value={row.sourceDocumentUrl}
-                    onChange={(event) =>
-                      setReferenceData({
-                        ...referenceData,
-                        dataSets: updateReferenceDataSet(referenceData.dataSets, row.id, {
-                          sourceDocumentUrl: event.target.value
-                        })
-                      })
-                    }
-                    className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
-                  />
-                </label>
-                <label className="block lg:col-span-3">
-                  <span className="text-sm font-medium">Notes</span>
-                  <textarea
-                    value={row.sourceNotes}
-                    onChange={(event) =>
-                      setReferenceData({
-                        ...referenceData,
-                        dataSets: updateReferenceDataSet(referenceData.dataSets, row.id, {
-                          sourceNotes: event.target.value
-                        })
-                      })
-                    }
-                    rows={3}
-                    className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
-                  />
-                </label>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {sortedNetworkAreas.map((networkArea) => (
+            <div key={networkArea.distributorId} className="rounded-md border border-line p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase text-ink/50">Distributor ID</p>
+                  <p className="text-lg font-semibold">{networkArea.distributorId}</p>
+                </div>
+                <span className="rounded-md bg-field px-2 py-1 text-xs font-semibold">
+                  {networkArea.operatorCode}
+                </span>
               </div>
-              <div className="mt-5 space-y-4">
-                {row.timeOfUseDefinitions.map((definition) => (
-                  <div key={definition.id} className="rounded-md border border-line bg-white p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <h3 className="font-semibold">{definition.label}</h3>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <label className="block">
-                          <span className="text-sm font-medium">Start time</span>
-                          <input
-                            type="time"
-                            value={definition.startTime}
-                            onChange={(event) =>
-                              setReferenceData({
-                                ...referenceData,
-                                dataSets: updateReferenceDataSet(referenceData.dataSets, row.id, {
-                                  timeOfUseDefinitions: updateTimeOfUseDefinition(
-                                    row,
-                                    definition.id,
-                                    { startTime: event.target.value }
-                                  )
-                                })
-                              })
-                            }
-                            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="text-sm font-medium">End time</span>
-                          <input
-                            type="time"
-                            value={definition.endTime}
-                            onChange={(event) =>
-                              setReferenceData({
-                                ...referenceData,
-                                dataSets: updateReferenceDataSet(referenceData.dataSets, row.id, {
-                                  timeOfUseDefinitions: updateTimeOfUseDefinition(
-                                    row,
-                                    definition.id,
-                                    { endTime: event.target.value }
-                                  )
-                                })
-                              })
-                            }
-                            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
-                          />
-                        </label>
-                      </div>
-                    </div>
-                    <div className="mt-4 grid gap-4 xl:grid-cols-2">
-                      <div>
-                        <p className="text-sm font-medium">Days of week</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {daysOfWeek.map((day) => (
-                            <label
-                              key={day}
-                              className="flex items-center gap-2 rounded-md border border-line bg-field px-3 py-2 text-sm"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={definition.daysOfWeek.includes(day)}
-                                onChange={() =>
-                                  setReferenceData({
-                                    ...referenceData,
-                                    dataSets: updateReferenceDataSet(
-                                      referenceData.dataSets,
-                                      row.id,
-                                      {
-                                        timeOfUseDefinitions: updateTimeOfUseDefinition(
-                                          row,
-                                          definition.id,
-                                          {
-                                            daysOfWeek: toggleValue(
-                                              definition.daysOfWeek,
-                                              day
-                                            )
-                                          }
-                                        )
-                                      }
-                                    )
-                                  })
-                                }
-                              />
-                              {day}
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Months</p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {months.map((month) => (
-                            <label
-                              key={month}
-                              className="flex items-center gap-2 rounded-md border border-line bg-field px-3 py-2 text-sm"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={definition.months.includes(month)}
-                                onChange={() =>
-                                  setReferenceData({
-                                    ...referenceData,
-                                    dataSets: updateReferenceDataSet(
-                                      referenceData.dataSets,
-                                      row.id,
-                                      {
-                                        timeOfUseDefinitions: updateTimeOfUseDefinition(
-                                          row,
-                                          definition.id,
-                                          {
-                                            months: toggleValue(definition.months, month)
-                                          }
-                                        )
-                                      }
-                                    )
-                                  })
-                                }
-                              />
-                              {month}
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Bank holidays</p>
-                        <label className="mt-2 flex items-center gap-2 rounded-md border border-line bg-field px-3 py-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={definition.appliesOnBankHolidays}
-                            onChange={(event) =>
-                              setReferenceData({
-                                ...referenceData,
-                                dataSets: updateReferenceDataSet(referenceData.dataSets, row.id, {
-                                  timeOfUseDefinitions: updateTimeOfUseDefinition(
-                                    row,
-                                    definition.id,
-                                    { appliesOnBankHolidays: event.target.checked }
-                                  )
-                                })
-                              })
-                            }
-                          />
-                          Included
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p className="mt-3 font-semibold">{networkArea.networkArea}</p>
+              <p className="text-sm text-ink/70">{networkArea.dnoName}</p>
             </div>
           ))}
-          {referenceData.dataSets.length === 0 ? (
-            <div className="rounded-md border border-line bg-field p-4 text-sm text-ink/60">
-              No LC14 source files recorded yet.
-            </div>
-          ) : null}
-        </fieldset>
+        </div>
       </section>
     </div>
   );
