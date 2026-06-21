@@ -2,11 +2,11 @@
 
 ## Current Baseline
 
-Date: 2026-06-21
+Date: 2026-06-22
 
-Branch: `codex/default-allocation-review`
+Branch: `codex/report-export-contract`
 
-Working tree status: current package implemented and awaiting staging/commit/PR.
+Working tree status: docs-only report/export readiness contract package in progress.
 
 Latest full checks on this branch:
 
@@ -15,7 +15,7 @@ Latest full checks on this branch:
 - `npm.cmd test`: passed, 11 test files and 63 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #4 have been merged to `main`. The current branch adds the default-created allocation review indicator across storage, calculation warning, and allocation-method UI.
+PRs #1 through #5 have been merged to `main`. The current branch documents MVP report/export readiness and keeps formal export DTO design as future work.
 
 ## MVP Definition
 
@@ -61,7 +61,7 @@ Review risks:
 
 ### Tariff Methodology Engine
 
-Status: validation package merged in PR #1, audit trace merged through PR #4, and default allocation review warning implemented on the current branch.
+Status: validation package merged in PR #1, audit trace merged through PR #4, and default allocation review warning merged in PR #5.
 
 Observed work:
 
@@ -71,7 +71,7 @@ Observed work:
 - Calculation tests cover revenue requirement, allocation, denominator validation, duplicate and missing classes, missing cost pools, unbalanced allocations, and negative values.
 - Deferred supply calculation DTO and scaffold work was removed from the active package.
 - Tariff Engine accepts `validationIssues`, `Warning` severity, the current issue-code set, and `isRevenueRecovered` tolerance for MVP after documentation alignment.
-- Calculation warnings now include default-created allocation methods requiring review, without changing tariff outputs or audit trace values.
+- Calculation warnings include default-created allocation methods requiring review, without changing tariff outputs or audit trace values.
 
 Review risks:
 
@@ -81,7 +81,7 @@ Review risks:
 
 ### UI Flow And Outputs
 
-Status: layout and warning UI merged in PR #1; audit trace display merged in PR #4; default allocation review indicator implemented on the current branch.
+Status: layout and warning UI merged in PR #1; audit trace display merged in PR #4; default allocation review indicator merged in PR #5.
 
 Observed work:
 
@@ -90,7 +90,7 @@ Observed work:
 - `ProjectDashboardOverview.tsx` no longer depends on unapproved validation/revenue recovery DTOs.
 - UI review found the held calculation/report warning UI mostly aligned with the approved validation semantics.
 - Narrow wording edit completed so warning copy says outputs remain available and should be reviewed before approval, rather than implying calculation is blocked.
-- Allocation methods now show a non-blocking review indicator for storage-created default rows and clear it when the row is edited.
+- Allocation methods show a non-blocking review indicator for storage-created default rows and clear it when the row is edited.
 
 Review risks:
 
@@ -136,7 +136,7 @@ Review risks:
 
 1. Whether allocation reconciliation in `project-storage.ts` is MVP behavior or should be held.
 2. Whether calculation validation issues should block final report approval, while still allowing calculations to run.
-3. Export/report treatment of calculation warnings beyond current UI display.
+3. Whether a future machine-readable export DTO is required for first commercial release after MVP rendered report output.
 4. Which imported workbook headers are contractual and which remain provisional.
 5. Whether `ReportsSummary.tsx` should be considered report UI only or the start of an export DTO contract.
 6. Supply calculation remains deferred until the open questions in `SUPPLY_CALCULATION_DESIGN.md` are answered.
@@ -147,6 +147,9 @@ Review risks:
 - Reconciliation on read is acceptable for calculation because it aligns allocation rows to active cost pool IDs and removes stale allocation rows from calculation inputs.
 - New cost pools receive default allocation methods with `requiresReview: true`.
 - Default-created allocation methods produce a non-blocking calculation warning and visible allocation-method UI review indicator.
+- Browser print/PDF and rendered HTML download are acceptable MVP stakeholder report outputs.
+- `ReportsSummary.tsx` is report UI, not a stable machine-readable export DTO.
+- Report readiness mapping is: `Needs correction` for validation errors, `Needs review` for warnings only, `Revenue variance` for unrecovered revenue without validation issues, and `Ready for review` when validation is clear and revenue is recovered.
 
 ## QA Staging Warnings
 
@@ -166,9 +169,10 @@ Missing MVP-critical regression coverage:
 - End-to-end create project to report flow.
 - Browser/mobile screenshots for layout-only UI changes.
 - Report readiness/export contract tests.
+- Report rendering, warning visibility, audit trace visibility, and HTML/print action tests.
 - Local/cloud storage reconciliation failure cases.
 - Supply calculation tests remain intentionally deferred until business rules are approved.
 
 ## Immediate Next Action
 
-Review and commit the default allocation review indicator package, then open a PR from `codex/default-allocation-review`.
+Review and commit the report/export readiness contract documentation, then open a PR from `codex/report-export-contract`.
