@@ -4,9 +4,9 @@
 
 Date: 2026-06-22
 
-Branch: `codex/mvp-candidate-validation`
+Branch: `codex/mvp-demo-path-check`
 
-Working tree status: MVP candidate validation package in progress.
+Working tree status: manual MVP demo path check package in progress.
 
 Latest full checks on this branch:
 
@@ -15,9 +15,9 @@ Latest full checks on this branch:
 - `npm.cmd test`: passed, 12 test files and 64 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #6 have been merged to `main`. The current branch adds a representative MVP scenario, reconciliation test, and sign-off pack.
+PRs #1 through #7 have been merged to `main`. The current branch documents the manual demo path from inputs to allocation, calculation, audit trace, outputs, and reconciliation.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: manual demo path check.
 
 ## MVP Definition
 
@@ -179,4 +179,4 @@ Missing MVP-critical regression coverage:
 
 ## Immediate Next Action
 
-Review and commit the MVP candidate validation package, then open a PR from `codex/mvp-candidate-validation`.
+Review and commit the manual MVP demo path check package, then open a PR from `codex/mvp-demo-path-check`.
