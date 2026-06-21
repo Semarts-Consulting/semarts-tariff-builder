@@ -9,7 +9,10 @@ import {
   getStoredMethodologyInputs,
   getSupplyReferenceData
 } from "@/lib/project-storage";
-import { getSupplyReferenceRequirementQueue } from "@/lib/supply-reference-requirements";
+import {
+  getSupplyReferenceExtractionTaskId,
+  getSupplyReferenceRequirementQueue
+} from "@/lib/supply-reference-requirements";
 import {
   getSupplyReferenceExtractionSummary,
   parseSupplyReferenceExtractionWorkbook,
@@ -17,6 +20,7 @@ import {
   supplyReferenceTouCandidateHeaders
 } from "@/lib/supply-reference-extraction";
 import {
+  createSupplyReferenceExtractionTaskInSupabase,
   isCurrentUserSemartsAdmin,
   loadSupplyReferenceDataFromSupabase,
   loadSupplyReferenceExtractionFromSupabase,
@@ -71,6 +75,18 @@ function formatPercent(value: number) {
 
 function joinValues(values: string[]) {
   return values.length > 0 ? values.join(", ") : "Not extracted";
+}
+
+function getRequirementTaskTitle({
+  distributorId,
+  networkArea,
+  chargingYear
+}: {
+  distributorId: string;
+  networkArea: string;
+  chargingYear: string;
+}) {
+  return `${distributorId} ${networkArea} ${chargingYear} reference extraction`;
 }
 
 export function SupplyReferenceExtractionReview() {
@@ -201,6 +217,40 @@ export function SupplyReferenceExtractionReview() {
     event.target.value = "";
   }
 
+  async function createExtractionTask(requirement: {
+    distributorId: string;
+    networkArea: string;
+    chargingYear: string;
+  }) {
+    if (!isAdmin) {
+      setStatusMessage("Only Semarts admin users can create extraction tasks.");
+      return;
+    }
+
+    const sourceDocument: SupplyReferenceSourceDocument = {
+      id: getSupplyReferenceExtractionTaskId(requirement),
+      distributorId: requirement.distributorId,
+      chargingYear: requirement.chargingYear,
+      title: getRequirementTaskTitle(requirement),
+      sourceUrl: "",
+      fileName: "",
+      fileType: "Other",
+      extractionStatus: "Pending extraction",
+      extractionNotes: "Created from project MPAN reference requirement.",
+      uploadedAt: new Date().toISOString()
+    };
+
+    const created = await createSupplyReferenceExtractionTaskInSupabase(sourceDocument);
+
+    setStatusMessage(
+      created
+        ? `Extraction task created for ${requirement.networkArea} ${requirement.chargingYear}.`
+        : "Supabase is not configured. Extraction task was not saved."
+    );
+
+    await loadExtractionData();
+  }
+
   return (
     <div className="space-y-6">
       <section className="rounded-md border border-line bg-white p-6 shadow-sm">
@@ -309,7 +359,7 @@ export function SupplyReferenceExtractionReview() {
           Requirements are generated from project MPANs and grouped by DNO/network area.
         </p>
         <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse text-sm">
+          <table className="w-full min-w-[1080px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
               <tr>
                 <th className="px-3 py-2 font-semibold">DNO</th>
@@ -318,29 +368,64 @@ export function SupplyReferenceExtractionReview() {
                 <th className="px-3 py-2 font-semibold">Required review</th>
                 <th className="px-3 py-2 font-semibold">MPANs</th>
                 <th className="px-3 py-2 font-semibold">Projects</th>
+                <th className="px-3 py-2 font-semibold">Task</th>
               </tr>
             </thead>
             <tbody>
-              {requirementQueue.map((requirement) => (
-                <tr key={requirement.id} className="border-t border-line align-top">
-                  <td className="px-3 py-3 font-semibold">{requirement.distributorId}</td>
-                  <td className="px-3 py-3">{requirement.networkArea}</td>
-                  <td className="px-3 py-3">{requirement.chargingYear || "Unknown"}</td>
-                  <td className="px-3 py-3">
-                    {[
-                      requirement.requiresTimeOfUseReview ? "TOU bands" : "",
-                      requirement.requiresLossesReview ? "Distribution losses" : ""
-                    ]
-                      .filter(Boolean)
-                      .join(", ")}
-                  </td>
-                  <td className="px-3 py-3">{requirement.mpans.join(", ")}</td>
-                  <td className="px-3 py-3">{requirement.projectNames.join(", ")}</td>
-                </tr>
-              ))}
+              {requirementQueue.map((requirement) => {
+                const taskId = getSupplyReferenceExtractionTaskId(requirement);
+                const existingTask = extractionState.sourceDocuments.find(
+                  (document) => document.id === taskId
+                );
+
+                return (
+                  <tr key={requirement.id} className="border-t border-line align-top">
+                    <td className="px-3 py-3 font-semibold">{requirement.distributorId}</td>
+                    <td className="px-3 py-3">{requirement.networkArea}</td>
+                    <td className="px-3 py-3">{requirement.chargingYear || "Unknown"}</td>
+                    <td className="px-3 py-3">
+                      {[
+                        requirement.requiresTimeOfUseReview ? "TOU bands" : "",
+                        requirement.requiresLossesReview ? "Distribution losses" : ""
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </td>
+                    <td className="px-3 py-3">{requirement.mpans.join(", ")}</td>
+                    <td className="px-3 py-3">{requirement.projectNames.join(", ")}</td>
+                    <td className="px-3 py-3">
+                      {existingTask ? (
+                        <span
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${extractionStatusStyles[existingTask.extractionStatus]}`}
+                        >
+                          {existingTask.extractionStatus}
+                        </span>
+                      ) : isAdmin ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            createExtractionTask(requirement).catch((error: unknown) => {
+                              setStatusMessage(
+                                error instanceof Error
+                                  ? `Task creation failed: ${error.message}`
+                                  : "Task creation failed."
+                              );
+                            });
+                          }}
+                          className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+                        >
+                          Create extraction task
+                        </button>
+                      ) : (
+                        <span className="text-ink/60">No task</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {requirementQueue.length === 0 ? (
                 <tr className="border-t border-line">
-                  <td colSpan={6} className="px-3 py-4 text-center text-ink/60">
+                  <td colSpan={7} className="px-3 py-4 text-center text-ink/60">
                     No project MPANs currently require Semarts reference review.
                   </td>
                 </tr>

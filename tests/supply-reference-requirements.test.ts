@@ -4,7 +4,10 @@ import {
   createDefaultSupplyReferenceData,
   createSupplyDetailsInput
 } from "@/lib/project-storage";
-import { getSupplyReferenceRequirementQueue } from "@/lib/supply-reference-requirements";
+import {
+  getSupplyReferenceExtractionTaskId,
+  getSupplyReferenceRequirementQueue
+} from "@/lib/supply-reference-requirements";
 import type { Project, SupplyReferenceData } from "@/types/project";
 
 const project: Project = {
@@ -71,5 +74,16 @@ describe("getSupplyReferenceRequirementQueue", () => {
       projectNames: ["Test project"]
     });
     expect(queue[0].mpans).toEqual(["1000000000000", "1000000000001"]);
+  });
+});
+
+describe("getSupplyReferenceExtractionTaskId", () => {
+  it("creates deterministic IDs for DNO and charging year", () => {
+    expect(
+      getSupplyReferenceExtractionTaskId({
+        distributorId: "10",
+        chargingYear: "2026/27"
+      })
+    ).toBe("required-reference-10-2026-27");
   });
 });

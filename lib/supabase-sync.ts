@@ -1722,6 +1722,38 @@ export async function saveSupplyReferenceExtractionToSupabase({
   return true;
 }
 
+export async function createSupplyReferenceExtractionTaskInSupabase(
+  sourceDocument: SupplyReferenceSourceDocument
+) {
+  if (!supabase) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("supply_reference_source_documents")
+    .upsert(
+      {
+        id: sourceDocument.id,
+        distributor_id: sourceDocument.distributorId,
+        charging_year: sourceDocument.chargingYear,
+        title: sourceDocument.title,
+        source_url: sourceDocument.sourceUrl,
+        file_name: sourceDocument.fileName,
+        file_type: sourceDocument.fileType,
+        extraction_status: sourceDocument.extractionStatus,
+        extraction_notes: sourceDocument.extractionNotes,
+        uploaded_at: sourceDocument.uploadedAt
+      },
+      { onConflict: "id" }
+    );
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
 export async function pushBackupToSupabase(backup: LocalProjectBackup) {
   if (!supabase) {
     throw new Error("Supabase is not configured.");

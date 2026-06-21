@@ -19,6 +19,16 @@ export type SupplyReferenceRequirementQueueItem = {
   projectNames: string[];
 };
 
+export function getSupplyReferenceExtractionTaskId({
+  distributorId,
+  chargingYear
+}: {
+  distributorId: string;
+  chargingYear: string;
+}) {
+  return `required-reference-${distributorId}-${chargingYear.replace(/[^a-zA-Z0-9]+/g, "-")}`;
+}
+
 function getQueueKey(requirement: SupplyReferenceRequirement) {
   return [
     requirement.distributorId,
