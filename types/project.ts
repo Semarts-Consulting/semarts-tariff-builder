@@ -484,6 +484,44 @@ export type TariffCalculationValidationIssue = {
   costPoolId?: string;
 };
 
+export type TariffCalculationTraceStage =
+  | "Revenue requirement"
+  | "Cost allocation"
+  | "Class total"
+  | "Rate derivation"
+  | "Revenue recovery";
+
+export type TariffCalculationTraceUnit =
+  | "GBP"
+  | "Percent"
+  | "Customers"
+  | "kWh"
+  | "kW"
+  | "GBP per customer"
+  | "GBP per kWh"
+  | "GBP per kW";
+
+export type TariffCalculationTraceValue = {
+  label: string;
+  value: number;
+  unit: TariffCalculationTraceUnit;
+};
+
+export type TariffCalculationTraceEntry = {
+  id: string;
+  stage: TariffCalculationTraceStage;
+  label: string;
+  formula: string;
+  inputs: TariffCalculationTraceValue[];
+  result: TariffCalculationTraceValue;
+  sourceRowIds: string[];
+  costPoolId?: string;
+  allocationMethodId?: string;
+  dataInputRowId?: string;
+  customerClass?: string;
+  tariffComponent?: TariffComponent;
+};
+
 export type TariffCalculationResult = {
   projectId: string;
   revenueRequirement: number;
@@ -492,6 +530,7 @@ export type TariffCalculationResult = {
   unbalancedAllocationCount: number;
   isRevenueRecovered: boolean;
   validationIssues: TariffCalculationValidationIssue[];
+  auditTrace?: TariffCalculationTraceEntry[];
   classResults: TariffCalculationClassResult[];
 };
 

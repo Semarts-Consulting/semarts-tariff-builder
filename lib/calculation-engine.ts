@@ -4,6 +4,9 @@ import type {
   DataInputRow,
   TariffCalculationClassResult,
   TariffCalculationResult,
+  TariffCalculationTraceEntry,
+  TariffCalculationTraceUnit,
+  TariffCalculationTraceValue,
   TariffCalculationValidationIssue
 } from "@/types/project";
 
@@ -26,6 +29,18 @@ function safeDivide(numerator: number, denominator: number) {
 
 function shareTotal(row: AllocationMethodRow) {
   return row.classShares.reduce((total, share) => total + share.percent, 0);
+}
+
+function traceValue(
+  label: string,
+  value: number,
+  unit: TariffCalculationTraceUnit
+): TariffCalculationTraceValue {
+  return { label, value, unit };
+}
+
+function sourceRowIds(...rowIds: string[]) {
+  return Array.from(new Set(rowIds.filter(Boolean)));
 }
 
 function hasNegativeDataInput(row: DataInputRow) {
@@ -147,6 +162,13 @@ export function calculateTariffs({
 }: CalculationInputs): TariffCalculationResult {
   const costPoolById = new Map(costPoolRows.map((row) => [row.id, row]));
   const classResults = createClassResultMap(dataInputRows);
+  const dataInputRowByCustomerClass = new Map(
+    dataInputRows
+      .filter((row) => row.customerClass.trim())
+      .map((row) => [row.customerClass.trim(), row])
+  );
+  const classSourceRowIds = new Map<string, Set<string>>();
+  const auditTrace: TariffCalculationTraceEntry[] = [];
   const revenueRequirement = costPoolRows.reduce(
     (total, row) => total + recoverableAmount(row),
     0
@@ -159,6 +181,24 @@ export function calculateTariffs({
     dataInputRows,
     costPoolRows
   );
+
+  costPoolRows.forEach((costPool) => {
+    const recoverableCost = recoverableAmount(costPool);
+
+    auditTrace.push({
+      id: `revenue-requirement:${costPool.id}`,
+      stage: "Revenue requirement",
+      label: `${costPool.name || costPool.id} recoverable cost`,
+      formula: "annualAmount * recoverablePercent / 100",
+      inputs: [
+        traceValue("Annual amount", costPool.annualAmount, "GBP"),
+        traceValue("Recoverable percent", costPool.recoverablePercent, "Percent")
+      ],
+      result: traceValue("Recoverable cost", recoverableCost, "GBP"),
+      sourceRowIds: [costPool.id],
+      costPoolId: costPool.id
+    });
+  });
 
   allocationRows.forEach((allocationRow) => {
     const costPool = costPoolById.get(allocationRow.costPoolId);
@@ -264,6 +304,29 @@ export function calculateTariffs({
 
       const allocatedShare = recoverableCost * (share.percent / 100);
       allocatedCost += allocatedShare;
+      const existingSourceRowIds =
+        classSourceRowIds.get(result.customerClass) ?? new Set<string>();
+
+      existingSourceRowIds.add(costPool.id);
+      existingSourceRowIds.add(allocationRow.id);
+      classSourceRowIds.set(result.customerClass, existingSourceRowIds);
+
+      auditTrace.push({
+        id: `allocation:${allocationRow.id}:${result.customerClass}:${auditTrace.length}`,
+        stage: "Cost allocation",
+        label: `${costPool.name || costPool.id} allocated to ${result.customerClass}`,
+        formula: "recoverableCost * allocationPercent / 100",
+        inputs: [
+          traceValue("Recoverable cost", recoverableCost, "GBP"),
+          traceValue("Allocation percent", share.percent, "Percent")
+        ],
+        result: traceValue("Allocated cost", allocatedShare, "GBP"),
+        sourceRowIds: sourceRowIds(costPool.id, allocationRow.id),
+        costPoolId: costPool.id,
+        allocationMethodId: allocationRow.id,
+        customerClass: result.customerClass,
+        tariffComponent: allocationRow.tariffComponent
+      });
 
       if (allocationRow.tariffComponent === "Fixed") {
         result.fixedCost += allocatedShare;
@@ -294,6 +357,11 @@ export function calculateTariffs({
   const finalClassResults = Array.from(classResults.values()).map((result) => {
     const totalAllocatedCost =
       result.fixedCost + result.energyCost + result.demandCost + result.passThroughCost;
+    const dataInputRow = dataInputRowByCustomerClass.get(result.customerClass);
+    const classTraceSourceRowIds = sourceRowIds(
+      dataInputRow?.id ?? "",
+      ...(Array.from(classSourceRowIds.get(result.customerClass) ?? []))
+    );
 
     if (result.fixedCost > 0 && result.customerCount <= 0) {
       validationIssues.push({
@@ -322,15 +390,112 @@ export function calculateTariffs({
       });
     }
 
-    return {
+    const finalResult = {
       ...result,
       totalAllocatedCost,
       fixedChargePerCustomer: safeDivide(result.fixedCost, result.customerCount),
       energyChargePerKwh: safeDivide(result.energyCost + result.passThroughCost, result.annualKwh),
       demandChargePerKw: safeDivide(result.demandCost, result.peakDemandKw)
     };
+
+    auditTrace.push({
+      id: `class-total:${result.customerClass}`,
+      stage: "Class total",
+      label: `${result.customerClass} total allocated cost`,
+      formula: "fixedCost + energyCost + demandCost + passThroughCost",
+      inputs: [
+        traceValue("Fixed cost", result.fixedCost, "GBP"),
+        traceValue("Energy cost", result.energyCost, "GBP"),
+        traceValue("Demand cost", result.demandCost, "GBP"),
+        traceValue("Pass-through cost", result.passThroughCost, "GBP")
+      ],
+      result: traceValue("Total allocated cost", finalResult.totalAllocatedCost, "GBP"),
+      sourceRowIds: classTraceSourceRowIds,
+      dataInputRowId: dataInputRow?.id,
+      customerClass: result.customerClass
+    });
+
+    auditTrace.push(
+      {
+        id: `rate:${result.customerClass}:fixed`,
+        stage: "Rate derivation",
+        label: `${result.customerClass} fixed charge per customer`,
+        formula: "fixedCost / customerCount",
+        inputs: [
+          traceValue("Fixed cost", result.fixedCost, "GBP"),
+          traceValue("Customer count", result.customerCount, "Customers")
+        ],
+        result: traceValue(
+          "Fixed charge per customer",
+          finalResult.fixedChargePerCustomer,
+          "GBP per customer"
+        ),
+        sourceRowIds: classTraceSourceRowIds,
+        dataInputRowId: dataInputRow?.id,
+        customerClass: result.customerClass,
+        tariffComponent: "Fixed"
+      },
+      {
+        id: `rate:${result.customerClass}:energy`,
+        stage: "Rate derivation",
+        label: `${result.customerClass} energy charge per kWh`,
+        formula: "(energyCost + passThroughCost) / annualKwh",
+        inputs: [
+          traceValue("Energy cost", result.energyCost, "GBP"),
+          traceValue("Pass-through cost", result.passThroughCost, "GBP"),
+          traceValue("Annual kWh", result.annualKwh, "kWh")
+        ],
+        result: traceValue(
+          "Energy charge per kWh",
+          finalResult.energyChargePerKwh,
+          "GBP per kWh"
+        ),
+        sourceRowIds: classTraceSourceRowIds,
+        dataInputRowId: dataInputRow?.id,
+        customerClass: result.customerClass,
+        tariffComponent: "Energy"
+      },
+      {
+        id: `rate:${result.customerClass}:demand`,
+        stage: "Rate derivation",
+        label: `${result.customerClass} demand charge per kW`,
+        formula: "demandCost / peakDemandKw",
+        inputs: [
+          traceValue("Demand cost", result.demandCost, "GBP"),
+          traceValue("Peak demand kW", result.peakDemandKw, "kW")
+        ],
+        result: traceValue(
+          "Demand charge per kW",
+          finalResult.demandChargePerKw,
+          "GBP per kW"
+        ),
+        sourceRowIds: classTraceSourceRowIds,
+        dataInputRowId: dataInputRow?.id,
+        customerClass: result.customerClass,
+        tariffComponent: "Demand"
+      }
+    );
+
+    return finalResult;
   });
   const unallocatedCost = revenueRequirement - allocatedCost;
+
+  auditTrace.push({
+    id: `revenue-recovery:${projectId}`,
+    stage: "Revenue recovery",
+    label: "Revenue recovery reconciliation",
+    formula: "revenueRequirement - allocatedCost",
+    inputs: [
+      traceValue("Revenue requirement", revenueRequirement, "GBP"),
+      traceValue("Allocated cost", allocatedCost, "GBP"),
+      traceValue("Revenue recovery tolerance", revenueRecoveryTolerance, "GBP")
+    ],
+    result: traceValue("Unallocated cost", unallocatedCost, "GBP"),
+    sourceRowIds: sourceRowIds(
+      ...costPoolRows.map((row) => row.id),
+      ...allocationRows.map((row) => row.id)
+    )
+  });
 
   return {
     projectId,
@@ -340,6 +505,7 @@ export function calculateTariffs({
     unbalancedAllocationCount,
     isRevenueRecovered: Math.abs(unallocatedCost) <= revenueRecoveryTolerance,
     validationIssues,
+    auditTrace,
     classResults: finalClassResults
   };
 }
