@@ -14,7 +14,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| MVP-001 Internal MVP candidate validation | PM plus Tariff Engine/QA review | `tests/mvp-candidate-scenario.test.ts`, `tests/fixtures/mvp-candidate-scenario.ts`, `docs/MVP_CANDIDATE_SIGNOFF.md`, manager docs | PR #6 baseline | High | Representative scenario, cost-base reconciliation, audit-trace evidence, and sign-off pack. |
+| MVP-001 Internal MVP candidate validation | PM plus Tariff Engine/QA review | `tests/mvp-candidate-scenario.test.ts`, `tests/fixtures/mvp-candidate-scenario.ts`, `docs/MVP_CANDIDATE_SIGNOFF.md`, `docs/MVP_TIMELINE_TRACKER.md`, manager docs | PR #6 baseline | High | Representative scenario, cost-base reconciliation, audit-trace evidence, sign-off pack, and timeline tracking. |
 
 ## Review
 

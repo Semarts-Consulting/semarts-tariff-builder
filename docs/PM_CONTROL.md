@@ -17,6 +17,8 @@ Latest full checks on this branch:
 
 PRs #1 through #6 have been merged to `main`. The current branch adds a representative MVP scenario, reconciliation test, and sign-off pack.
 
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs.
+
 ## MVP Definition
 
 The MVP is a tariff methodology workflow that can:
