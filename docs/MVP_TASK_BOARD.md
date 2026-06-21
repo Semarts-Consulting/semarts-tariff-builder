@@ -4,10 +4,8 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| DATA-002 Document import template contracts | Data Import | `lib/*-import.ts`, `components/WorkbookMethodologyForms.tsx`, `types/project.ts` | Current parser package | Medium | Define header names, dedupe keys, row fingerprint rules, and import error shape. |
-| ENG-002 Add tariff audit trace | Tariff Engine | `lib/calculation-engine.ts`, `types/project.ts`, tests | Current calculation validation contract | High | Needed for auditability. Do not add until output contract is reviewed. |
-| UI-002 Calculation/report warning UI | UI Flow | `components/TariffCalculationsSummary.tsx`, `components/ReportsSummary.tsx` | ENG-004 contract review | Medium | Next review item. Must render approved validation semantics only. |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
+| ENG-006 Implement tariff audit trace | Tariff Engine | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Audit trace contract proposal | High | Add deterministic trace entries to `TariffCalculationResult`. |
 | ENG-003 Supply calculation design closure | PM plus Tariff Engine | `SUPPLY_CALCULATION_DESIGN.md`, future service/types | Business answers required | High | No production DTO or engine until assumptions are resolved. |
 | OUT-001 Export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages. |
 
@@ -15,17 +13,13 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| PM-002 Git/staging plan | PM | full working tree | Completed package reviews | Medium | Prepare package-level staging order and identify first git action. |
+| PM-003 Audit trace contract documentation | PM | `docs/APP_CONTRACTS.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Tariff Engine audit trace proposal | Medium | Document the proposed trace contract before implementation. |
 
 ## Review
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| DATA-001 Import parser extraction and workbook wiring | Data Import | `lib/import-utils.ts`, `lib/direct-cost-import.ts`, `lib/employee-cost-import.ts`, `lib/indirect-overhead-import.ts`, `lib/asset-import.ts`, `lib/boundary-meter-import.ts`, `components/WorkbookMethodologyForms.tsx`, import tests | Shared imported input types | Medium | Review large workbook form diff carefully. |
-| ENG-001 Tariff calculation validation package | Tariff Engine | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Tariff result contract | High | Pure function retained. Validation issues and revenue recovery are shared contract additions. |
-| UI-001 Layout-only UI package | UI Flow | `app/layout.tsx`, `app/page.tsx`, `app/projects/page.tsx`, `app/auth/page.tsx`, `app/reference-data/supply/page.tsx`, approved layout components | No business-logic changes | Medium | Mixed form files must be staged only for layout/card/sticky-save changes. |
-| DATA-004 Allocation reconciliation storage package | Data/storage plus Tariff Engine review | `lib/project-storage.ts`, `tests/allocation-reconciliation.test.ts` | Allocation method behavior decision | Medium | Do not merge as UI work. Confirm desired auto-reconciliation behavior. |
-| UI-003 Held calculation/report warning changes | UI Flow plus Tariff Engine review | `components/TariffCalculationsSummary.tsx`, `components/ReportsSummary.tsx` | ENG-001 approval | Medium | Review after tariff result contract is accepted. |
+| ENG-007 Audit trace implementation review | Tariff Engine plus PM | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | PM-003 | High | Not started. Requires manager approval after docs-only contract update. |
 
 ## Blocked
 
@@ -38,6 +32,12 @@
 
 | Task | Owner | Files | Evidence | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
+| PR-001 MVP package integration | PM plus all delivery chats | merged PR #1 | Branch `codex-mvp-package-integration` merged to `main` | Medium | Import, tariff validation, storage reconciliation, UI layout, and warning UI integrated. |
+| DATA-001 Import parser extraction and workbook wiring | Data Import | import modules, workbook form, import tests | Merged in PR #1 | Medium | Header, dedupe, and fingerprint contracts documented. |
+| ENG-001 Tariff calculation validation package | Tariff Engine | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Merged in PR #1 | High | Validation issues and revenue recovery accepted for MVP. |
+| UI-001 Layout-only UI package | UI Flow | layout/page/component files | Merged in PR #1 | Medium | Broad responsive layout package integrated. |
+| DATA-004 Allocation reconciliation storage package | Data/storage plus Tariff Engine | `lib/project-storage.ts`, `tests/allocation-reconciliation.test.ts` | Merged in PR #1 | Medium | Accepted as MVP storage behavior. |
+| UI-003 Calculation/report warning UI | UI Flow plus Tariff Engine | `components/TariffCalculationsSummary.tsx`, `components/ReportsSummary.tsx` | Merged in PR #1 | Medium | Warning copy avoids implying calculations are blocked. |
 | DATA-005 Import package contract review | Data Import | import modules, `components/WorkbookMethodologyForms.tsx`, import tests | Data Import review note and `APP_CONTRACTS.md` update | Medium | Parser headers, merge keys, row fingerprints, and assumptions are now recorded. |
 | ENG-004 Tariff validation contract review | Tariff Engine | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Tariff Engine review note and `APP_CONTRACTS.md` update | High | Validation issues accepted for MVP; audit trace remains a separate future contract. |
 | UI-004 Report warning UI review | UI Flow | `components/TariffCalculationsSummary.tsx`, `components/ReportsSummary.tsx` | UI review note | Medium | Mostly aligned; wording isolation required before staging. |
@@ -46,10 +46,7 @@
 | ENG-005 Allocation reconciliation calculation impact review | Tariff Engine | `lib/project-storage.ts`, `tests/allocation-reconciliation.test.ts`, calculation inputs | Tariff Engine review note | Medium | Accepted for MVP. Future follow-up: surface default-created allocation methods as needing review. |
 | QA-001 Post-control green baseline | PM manager thread | full tree | Lint, type-check, tests, and build passed after docs | Low | Use as current baseline before package-specific staging review. |
 | QA-002 Package split-readiness review | QA | full working tree | QA reported workstream grouping, staging warnings, and missing coverage | Low | Confirmed checks passed and identified files requiring hunk-level/package review. |
-
-## Next Git Decision
-
-Git is now required for integration if the user wants to preserve reviewed packages. The first recommended git action is to create/switch to a working branch, then stage package-by-package rather than staging the whole tree.
+| PM-002 Git/staging plan | PM | full working tree | Package commits merged through PR #1 | Medium | Completed with package-level commits and final verification. |
 | PM-001 Create manager control pack | PM | `docs/PM_CONTROL.md`, `docs/MVP_TASK_BOARD.md`, `docs/APP_CONTRACTS.md`, `docs/DEVELOPER_CHAT_PROMPTS.md` | Control docs created | Low | Establishes coordination baseline before more delivery work. |
 | PM-000 Delivery pause and split decision | PM | thread coordination | All delivery chats paused for control-doc update | Low | Prevented mixed merge of import, calculation, UI, and storage behavior. |
 

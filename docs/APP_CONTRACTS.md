@@ -122,15 +122,80 @@ Current implementation only emits `Error` issues.
 
 `Warning` is reserved for future non-blocking calculation-readiness issues. MVP report/UI code should treat validation issues as readiness information and should not prevent the calculation function from returning outputs.
 
-Minimum audit trace still required before stakeholder review:
+## Tariff Audit Trace Contract Proposal
 
-- Recoverable cost by cost pool.
-- Allocation applied by cost pool, customer class, and tariff component.
-- Customer-class totals.
-- Charge-rate denominator and formula.
-- Revenue recovery reconciliation.
+Status: proposed for MVP implementation; not yet implemented.
 
-Do not add the audit trace until its output contract is reviewed, because it affects reports, exports, and auditability expectations.
+The audit trace should be generated inside `calculateTariffs` and returned as part of `TariffCalculationResult` as `auditTrace: TariffCalculationTraceEntry[]`.
+
+Reason: trace entries explain the calculation result and should not drift from the values returned by the pure calculation function.
+
+Proposed trace stages:
+
+- `Revenue requirement`
+- `Cost allocation`
+- `Class total`
+- `Rate derivation`
+- `Revenue recovery`
+
+Proposed trace units:
+
+- `GBP`
+- `Percent`
+- `Customers`
+- `kWh`
+- `kW`
+- `GBP per customer`
+- `GBP per kWh`
+- `GBP per kW`
+
+Proposed trace value shape:
+
+- `label`
+- `value`
+- `unit`
+
+Proposed trace entry shape:
+
+- `id`
+- `stage`
+- `label`
+- `formula`
+- `inputs`
+- `result`
+- `sourceRowIds`
+- `costPoolId`
+- `allocationMethodId`
+- `dataInputRowId`
+- `customerClass`
+- `tariffComponent`
+
+Minimum MVP trace coverage:
+
+- One revenue requirement trace entry per cost pool using `annualAmount * recoverablePercent / 100`.
+- One allocation trace entry per applied allocation share using `recoverableCost * allocationPercent / 100`.
+- One rate-derivation trace entry per customer class and charge type:
+  - Fixed: `fixedCost / customerCount`.
+  - Energy: `(energyCost + passThroughCost) / annualKwh`.
+  - Demand: `demandCost / peakDemandKw`.
+- Zero denominator cases should still trace the inputs and result `0`; validation issues explain why the value needs review.
+- One revenue recovery trace entry using `revenueRequirement - allocatedCost`, including the `0.01` GBP tolerance.
+
+Required audit trace tests:
+
+- Recoverable cost trace includes one entry per cost pool and sums to `revenueRequirement`.
+- Allocation trace includes cost pool, allocation method, customer class, percentage, tariff component, and allocated GBP.
+- Rate trace explains fixed, energy including pass-through, and demand charges.
+- Zero denominator trace returns `0` and pairs with an existing validation issue.
+- Revenue recovery trace explains balanced and unbalanced cases.
+- Missing or unknown cost pool allocation rows do not create misleading allocation trace entries.
+
+Trace implementation risks:
+
+- Trace volume grows with cost pools multiplied by class shares.
+- Rounding policy remains raw values unless manager approval introduces output rounding.
+- Default-created allocation methods from storage are not distinguishable in current input types.
+- Audit trace explains calculations but does not replace validation issues.
 
 ## Imported Methodology Input Contract
 
