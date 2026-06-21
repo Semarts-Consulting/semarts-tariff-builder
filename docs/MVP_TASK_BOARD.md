@@ -14,13 +14,13 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| _None_ |  |  |  |  |  |
+| MVP-001 Internal MVP candidate validation | PM plus Tariff Engine/QA review | `tests/mvp-candidate-scenario.test.ts`, `tests/fixtures/mvp-candidate-scenario.ts`, `docs/MVP_CANDIDATE_SIGNOFF.md`, manager docs | PR #6 baseline | High | Representative scenario, cost-base reconciliation, audit-trace evidence, and sign-off pack. |
 
 ## Review
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| OUT-001 Report/export readiness contract | PM plus UI/Engine/QA review | `docs/APP_CONTRACTS.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #5 baseline | Medium | Defines MVP rendered report output and keeps formal export DTO as future work. |
+| _None_ |  |  |  |  |  |
 
 ## Blocked
 
@@ -38,6 +38,7 @@
 | PR-003 Audit trace implementation | Tariff Engine plus PM | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Merged PR #3 | High | Calculation audit trace implemented and tested. |
 | PR-004 Audit trace UI display | UI Flow plus PM | tariff calculations UI | Merged PR #4 | Medium | Tariff audit trace display merged to `main`. |
 | PR-005 Default allocation review indicator | Data/storage, Tariff Engine, UI, PM | allocation row contract, reconciliation, engine warning, allocation UI | Merged PR #5 | Medium | Default-created allocation methods are flagged, surfaced, and cleared on user review. |
+| PR-006 Report/export readiness contract | PM plus UI/Engine/QA review | `docs/APP_CONTRACTS.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Merged PR #6 | Medium | Defines MVP rendered report output and keeps formal export DTO as future work. |
 | DATA-001 Import parser extraction and workbook wiring | Data Import | import modules, workbook form, import tests | Merged in PR #1 | Medium | Header, dedupe, and fingerprint contracts documented. |
 | ENG-001 Tariff calculation validation package | Tariff Engine | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Merged in PR #1 | High | Validation issues and revenue recovery accepted for MVP. |
 | UI-001 Layout-only UI package | UI Flow | layout/page/component files | Merged in PR #1 | Medium | Broad responsive layout package integrated. |
