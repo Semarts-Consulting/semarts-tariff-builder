@@ -4,25 +4,18 @@
 
 Date: 2026-06-21
 
-Branch: `main`
+Branch: `codex/audit-trace-contract`
 
-Working tree status: broad uncommitted work is present across UI, import, calculation, storage, type, and test files. Do not stage or merge the whole tree as one package.
+Working tree status: clean branch created from merged `main` for audit trace contract planning.
 
-Latest checks run from the manager thread after the control docs were created:
+Latest full checks before PR #1 merge:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 11 test files and 54 tests.
 - `npm.cmd run build`: passed.
 
-The current check result is valid as a coordination baseline, but each split package still needs its own focused review before staging.
-
-QA package-readiness review completed after this baseline with no edits, staging, commits, or reverts. QA confirmed:
-
-- 26 tracked modified files.
-- 16 untracked files/directories, including `docs/` and new import/test modules.
-- `tsconfig.tsbuildinfo` absent after checks.
-- Lint, type-check, tests, and build all passed.
+PR #1 has been merged to `main`. The current branch is for the next docs-first package: tariff audit trace contract.
 
 ## MVP Definition
 
@@ -51,7 +44,7 @@ UI polish is secondary. Accuracy, auditability, reproducibility, and contract st
 
 ### Data Import And Validation
 
-Status: review-ready after isolation.
+Status: merged in PR #1.
 
 Observed work:
 
@@ -68,7 +61,7 @@ Review risks:
 
 ### Tariff Methodology Engine
 
-Status: review-ready for the first calculation-validation package after contract review.
+Status: validation package merged in PR #1. Audit trace contract is the next active engine package.
 
 Observed work:
 
@@ -83,11 +76,11 @@ Review risks:
 
 - Validation issue semantics are now a shared contract consumed by calculation and report UI.
 - Validation issues currently report calculation readiness but do not block calculation.
-- Audit trace structures are not yet implemented.
+- Audit trace structures are not yet implemented. A docs-first contract proposal is now recorded in `APP_CONTRACTS.md`.
 
 ### UI Flow And Outputs
 
-Status: layout-only package review-ready; calculation/report warning UI is review-ready after narrow wording isolation.
+Status: layout and warning UI merged in PR #1.
 
 Observed work:
 
@@ -104,7 +97,7 @@ Review risks:
 
 ### Tests And Regression Checks
 
-Status: green baseline reported.
+Status: green baseline reported before PR #1 merge.
 
 Observed work:
 
@@ -175,4 +168,4 @@ Missing MVP-critical regression coverage:
 
 ## Immediate Next Action
 
-Send the Data Import review prompt. It should produce a parser-contract review and confirm whether the import package can be staged without changing shared calculation, report, storage, or UI behavior.
+Review and commit the audit trace contract documentation. If accepted, approve a narrow Tariff Engine implementation package for `types/project.ts`, `lib/calculation-engine.ts`, and `tests/calculation-engine.test.ts`.
