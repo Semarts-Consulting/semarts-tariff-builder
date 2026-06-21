@@ -4,18 +4,20 @@
 
 Date: 2026-06-22
 
-Branch: `codex/report-export-contract`
+Branch: `codex/mvp-candidate-validation`
 
-Working tree status: docs-only report/export readiness contract package in progress.
+Working tree status: MVP candidate validation package in progress.
 
 Latest full checks on this branch:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test`: passed, 11 test files and 63 tests.
+- `npm.cmd test`: passed, 12 test files and 64 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #5 have been merged to `main`. The current branch documents MVP report/export readiness and keeps formal export DTO design as future work.
+PRs #1 through #6 have been merged to `main`. The current branch adds a representative MVP scenario, reconciliation test, and sign-off pack.
+
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs.
 
 ## MVP Definition
 
@@ -104,7 +106,8 @@ Status: green baseline on current branch.
 Observed work:
 
 - Tests cover import parsers, allocation reconciliation, supply reference flows, and tariff calculations.
-- Latest full test run reported 11 files and 63 tests.
+- Latest full test run reported 12 files and 64 tests.
+- MVP candidate scenario test verifies a representative site reconciles tariff outputs to the recoverable cost base.
 
 Review risks:
 
@@ -172,7 +175,8 @@ Missing MVP-critical regression coverage:
 - Report rendering, warning visibility, audit trace visibility, and HTML/print action tests.
 - Local/cloud storage reconciliation failure cases.
 - Supply calculation tests remain intentionally deferred until business rules are approved.
+- Manual demo path from inputs to calculation, audit trace, and report view.
 
 ## Immediate Next Action
 
-Review and commit the report/export readiness contract documentation, then open a PR from `codex/report-export-contract`.
+Review and commit the MVP candidate validation package, then open a PR from `codex/mvp-candidate-validation`.
