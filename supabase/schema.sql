@@ -287,21 +287,35 @@ create table if not exists public.supply_reference_data_sets (
   distributor_id text not null,
   charging_year text not null,
   review_status text not null default 'Source required',
+  extraction_status text not null default 'Not extracted',
+  time_of_use_review_status text not null default 'Source required',
+  losses_review_status text not null default 'Source required',
   source_document_title text not null,
   source_document_url text not null default '',
   source_reviewed_at date,
   source_notes text not null default '',
   time_of_use_definitions jsonb not null default '[]'::jsonb,
+  distribution_loss_factors jsonb not null default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint supply_reference_data_sets_distributor_id_check check (distributor_id ~ '^[0-9]{2}$'),
   constraint supply_reference_data_sets_review_status_check check (
-    review_status in ('Source required', 'Pending review', 'Reviewed')
+    review_status in ('Source required', 'Pending review', 'Extracted', 'Partially reviewed', 'Reviewed')
+  ),
+  constraint supply_reference_data_sets_extraction_status_check check (
+    extraction_status in ('Not extracted', 'Extracted', 'Extraction failed')
+  ),
+  constraint supply_reference_data_sets_tou_review_status_check check (
+    time_of_use_review_status in ('Source required', 'Pending review', 'Extracted', 'Partially reviewed', 'Reviewed')
+  ),
+  constraint supply_reference_data_sets_losses_review_status_check check (
+    losses_review_status in ('Source required', 'Pending review', 'Extracted', 'Partially reviewed', 'Reviewed')
   ),
   constraint supply_reference_data_sets_distributor_fkey foreign key (distributor_id)
     references public.supply_reference_dno_network_areas(distributor_id) on delete restrict,
   constraint supply_reference_data_sets_distributor_year_unique unique (distributor_id, charging_year),
-  constraint supply_reference_data_sets_tou_array_check check (jsonb_typeof(time_of_use_definitions) = 'array')
+  constraint supply_reference_data_sets_tou_array_check check (jsonb_typeof(time_of_use_definitions) = 'array'),
+  constraint supply_reference_data_sets_losses_array_check check (jsonb_typeof(distribution_loss_factors) = 'array')
 );
 
 alter table public.supply_reference_data_sets
@@ -313,8 +327,35 @@ add constraint supply_reference_data_sets_distributor_id_check check (distributo
 alter table public.supply_reference_data_sets
 add column if not exists review_status text not null default 'Source required';
 
+alter table public.supply_reference_data_sets
+add column if not exists extraction_status text not null default 'Not extracted';
+
+alter table public.supply_reference_data_sets
+add column if not exists time_of_use_review_status text not null default 'Source required';
+
+alter table public.supply_reference_data_sets
+add column if not exists losses_review_status text not null default 'Source required';
+
+alter table public.supply_reference_data_sets
+add column if not exists distribution_loss_factors jsonb not null default '[]'::jsonb;
+
 do $$
 begin
+  alter table public.supply_reference_data_sets
+  drop constraint if exists supply_reference_data_sets_review_status_check;
+
+  alter table public.supply_reference_data_sets
+  drop constraint if exists supply_reference_data_sets_extraction_status_check;
+
+  alter table public.supply_reference_data_sets
+  drop constraint if exists supply_reference_data_sets_tou_review_status_check;
+
+  alter table public.supply_reference_data_sets
+  drop constraint if exists supply_reference_data_sets_losses_review_status_check;
+
+  alter table public.supply_reference_data_sets
+  drop constraint if exists supply_reference_data_sets_losses_array_check;
+
   if not exists (
     select 1
     from pg_constraint
@@ -323,9 +364,29 @@ begin
   ) then
     alter table public.supply_reference_data_sets
     add constraint supply_reference_data_sets_review_status_check check (
-      review_status in ('Source required', 'Pending review', 'Reviewed')
+      review_status in ('Source required', 'Pending review', 'Extracted', 'Partially reviewed', 'Reviewed')
     );
   end if;
+
+  alter table public.supply_reference_data_sets
+  add constraint supply_reference_data_sets_extraction_status_check check (
+    extraction_status in ('Not extracted', 'Extracted', 'Extraction failed')
+  );
+
+  alter table public.supply_reference_data_sets
+  add constraint supply_reference_data_sets_tou_review_status_check check (
+    time_of_use_review_status in ('Source required', 'Pending review', 'Extracted', 'Partially reviewed', 'Reviewed')
+  );
+
+  alter table public.supply_reference_data_sets
+  add constraint supply_reference_data_sets_losses_review_status_check check (
+    losses_review_status in ('Source required', 'Pending review', 'Extracted', 'Partially reviewed', 'Reviewed')
+  );
+
+  alter table public.supply_reference_data_sets
+  add constraint supply_reference_data_sets_losses_array_check check (
+    jsonb_typeof(distribution_loss_factors) = 'array'
+  );
 end $$;
 
 alter table public.supply_contract_charges

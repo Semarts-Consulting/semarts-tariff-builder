@@ -561,11 +561,15 @@ function fromSupplyReferenceRows(
     distributor_id: string;
     charging_year: string;
     review_status: SupplyReferenceData["dataSets"][number]["reviewStatus"];
+    extraction_status: SupplyReferenceData["dataSets"][number]["extractionStatus"];
+    time_of_use_review_status: SupplyReferenceData["dataSets"][number]["timeOfUseReviewStatus"];
+    losses_review_status: SupplyReferenceData["dataSets"][number]["lossesReviewStatus"];
     source_document_title: string;
     source_document_url: string;
     source_reviewed_at: string | null;
     source_notes: string;
     time_of_use_definitions: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"];
+    distribution_loss_factors: SupplyReferenceData["dataSets"][number]["distributionLossFactors"];
   }[]
 ): SupplyReferenceData {
   return {
@@ -581,11 +585,15 @@ function fromSupplyReferenceRows(
       distributorId: row.distributor_id,
       chargingYear: row.charging_year,
       reviewStatus: row.review_status,
+      extractionStatus: row.extraction_status,
+      timeOfUseReviewStatus: row.time_of_use_review_status,
+      lossesReviewStatus: row.losses_review_status,
       sourceDocumentTitle: row.source_document_title,
       sourceDocumentUrl: row.source_document_url,
       sourceReviewedAt: row.source_reviewed_at ?? "",
       sourceNotes: row.source_notes,
-      timeOfUseDefinitions: row.time_of_use_definitions
+      timeOfUseDefinitions: row.time_of_use_definitions,
+      distributionLossFactors: row.distribution_loss_factors
     })),
     lastUpdated: new Intl.DateTimeFormat("en-GB", {
       day: "numeric",
@@ -1507,7 +1515,7 @@ export async function loadSupplyReferenceDataFromSupabase() {
   const { data: dataSetRows, error: dataSetError } = await supabase
     .from("supply_reference_data_sets")
     .select(
-      "id, distributor_id, charging_year, review_status, source_document_title, source_document_url, source_reviewed_at, source_notes, time_of_use_definitions"
+      "id, distributor_id, charging_year, review_status, extraction_status, time_of_use_review_status, losses_review_status, source_document_title, source_document_url, source_reviewed_at, source_notes, time_of_use_definitions, distribution_loss_factors"
     )
     .order("distributor_id", { ascending: true })
     .order("charging_year", { ascending: false });

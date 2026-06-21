@@ -238,6 +238,24 @@ export type SupplyTimeOfUseDefinition = {
   months: SupplyContractMonth[];
   startTime: string;
   endTime: string;
+  sourceReference: string;
+};
+
+export type SupplyReferenceReviewStatus =
+  | "Source required"
+  | "Pending review"
+  | "Extracted"
+  | "Partially reviewed"
+  | "Reviewed";
+
+export type DistributionLossFactorReference = {
+  id: string;
+  voltage: SupplyVoltage | "Metering";
+  lossFactorName: string;
+  lossPercent: number;
+  lossMultiplier: number;
+  sourceReference: string;
+  reviewStatus: SupplyReferenceReviewStatus;
 };
 
 export type DnoNetworkAreaReference = {
@@ -252,12 +270,16 @@ export type SupplyReferenceDataSet = {
   id: string;
   distributorId: string;
   chargingYear: string;
-  reviewStatus: "Source required" | "Pending review" | "Reviewed";
+  reviewStatus: SupplyReferenceReviewStatus;
+  extractionStatus: "Not extracted" | "Extracted" | "Extraction failed";
+  timeOfUseReviewStatus: SupplyReferenceReviewStatus;
+  lossesReviewStatus: SupplyReferenceReviewStatus;
   sourceDocumentTitle: string;
   sourceDocumentUrl: string;
   sourceReviewedAt: string;
   sourceNotes: string;
   timeOfUseDefinitions: SupplyTimeOfUseDefinition[];
+  distributionLossFactors: DistributionLossFactorReference[];
 };
 
 export type SupplyReferenceData = {

@@ -23,11 +23,15 @@ function withReviewedDistributor(
     distributorId,
     chargingYear: "2026/27",
     reviewStatus: "Reviewed" as const,
+    extractionStatus: "Extracted" as const,
+    timeOfUseReviewStatus: "Reviewed" as const,
+    lossesReviewStatus: "Reviewed" as const,
     sourceDocumentTitle: "Reviewed source",
     sourceDocumentUrl: "https://example.com/reviewed",
     sourceReviewedAt: "2026-06-21",
     sourceNotes: "Reviewed test source.",
-    timeOfUseDefinitions: []
+    timeOfUseDefinitions: [],
+    distributionLossFactors: []
   };
 
   return {
@@ -51,12 +55,16 @@ function withPendingDistributor(
         id: `lc14-${distributorId}-2026-27`,
         distributorId,
         chargingYear: "2026/27",
-        reviewStatus: "Pending review",
+        reviewStatus: "Partially reviewed",
+        extractionStatus: "Not extracted",
+        timeOfUseReviewStatus: "Pending review",
+        lossesReviewStatus: "Pending review",
         sourceDocumentTitle: "Pending source",
         sourceDocumentUrl: "https://example.com/pending",
         sourceReviewedAt: "",
         sourceNotes: "Pending test source.",
-        timeOfUseDefinitions: []
+        timeOfUseDefinitions: [],
+        distributionLossFactors: []
       }
     ]
   };
@@ -79,7 +87,7 @@ describe("getSupplyReferenceReviewIssues", () => {
     expect(issues).toHaveLength(1);
     expect(issues[0]).toMatchObject({
       distributorId: "10",
-      status: "Pending review"
+      status: "Partially reviewed"
     });
   });
 

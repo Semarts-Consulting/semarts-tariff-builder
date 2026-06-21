@@ -454,7 +454,8 @@ export function createDefaultSupplyTimeOfUseDefinitions(): SupplyReferenceData["
       appliesOnBankHolidays: false,
       months: allMonths,
       startTime: "16:00",
-      endTime: "19:00"
+      endTime: "19:00",
+      sourceReference: ""
     },
     {
       id: "Amber",
@@ -463,7 +464,8 @@ export function createDefaultSupplyTimeOfUseDefinitions(): SupplyReferenceData["
       appliesOnBankHolidays: false,
       months: allMonths,
       startTime: "07:00",
-      endTime: "16:00"
+      endTime: "16:00",
+      sourceReference: ""
     },
     {
       id: "Green",
@@ -472,7 +474,8 @@ export function createDefaultSupplyTimeOfUseDefinitions(): SupplyReferenceData["
       appliesOnBankHolidays: true,
       months: allMonths,
       startTime: "00:00",
-      endTime: "07:00"
+      endTime: "07:00",
+      sourceReference: ""
     },
     {
       id: "Super Red",
@@ -481,7 +484,8 @@ export function createDefaultSupplyTimeOfUseDefinitions(): SupplyReferenceData["
       appliesOnBankHolidays: false,
       months: allMonths,
       startTime: "16:00",
-      endTime: "19:00"
+      endTime: "19:00",
+      sourceReference: ""
     },
     {
       id: "Day",
@@ -490,7 +494,8 @@ export function createDefaultSupplyTimeOfUseDefinitions(): SupplyReferenceData["
       appliesOnBankHolidays: true,
       months: allMonths,
       startTime: "07:00",
-      endTime: "23:30"
+      endTime: "23:30",
+      sourceReference: ""
     },
     {
       id: "Night",
@@ -499,7 +504,8 @@ export function createDefaultSupplyTimeOfUseDefinitions(): SupplyReferenceData["
       appliesOnBankHolidays: true,
       months: allMonths,
       startTime: "00:00",
-      endTime: "07:00"
+      endTime: "07:00",
+      sourceReference: ""
     }
   ];
 }
