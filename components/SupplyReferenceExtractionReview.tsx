@@ -221,6 +221,9 @@ export function SupplyReferenceExtractionReview() {
     distributorId: string;
     networkArea: string;
     chargingYear: string;
+    sourceDocumentTitle: string;
+    sourceDocumentUrl: string;
+    sourceNotes: string;
   }) {
     if (!isAdmin) {
       setStatusMessage("Only Semarts admin users can create extraction tasks.");
@@ -231,12 +234,13 @@ export function SupplyReferenceExtractionReview() {
       id: getSupplyReferenceExtractionTaskId(requirement),
       distributorId: requirement.distributorId,
       chargingYear: requirement.chargingYear,
-      title: getRequirementTaskTitle(requirement),
-      sourceUrl: "",
+      title: requirement.sourceDocumentTitle || getRequirementTaskTitle(requirement),
+      sourceUrl: requirement.sourceDocumentUrl,
       fileName: "",
       fileType: "Other",
       extractionStatus: "Pending extraction",
-      extractionNotes: "Created from project MPAN reference requirement.",
+      extractionNotes:
+        requirement.sourceNotes || "Created from project MPAN reference requirement.",
       uploadedAt: new Date().toISOString()
     };
 
@@ -359,13 +363,14 @@ export function SupplyReferenceExtractionReview() {
           Requirements are generated from project MPANs and grouped by DNO/network area.
         </p>
         <div className="mt-5 overflow-x-auto">
-          <table className="w-full min-w-[1080px] border-collapse text-sm">
+          <table className="w-full min-w-[1180px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
               <tr>
                 <th className="px-3 py-2 font-semibold">DNO</th>
                 <th className="px-3 py-2 font-semibold">Network area</th>
                 <th className="px-3 py-2 font-semibold">Charging year</th>
                 <th className="px-3 py-2 font-semibold">Required review</th>
+                <th className="px-3 py-2 font-semibold">Source</th>
                 <th className="px-3 py-2 font-semibold">MPANs</th>
                 <th className="px-3 py-2 font-semibold">Projects</th>
                 <th className="px-3 py-2 font-semibold">Task</th>
@@ -390,6 +395,22 @@ export function SupplyReferenceExtractionReview() {
                       ]
                         .filter(Boolean)
                         .join(", ")}
+                    </td>
+                    <td className="px-3 py-3">
+                      {requirement.sourceDocumentUrl ? (
+                        <a
+                          href={requirement.sourceDocumentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-semibold text-semarts-dark underline-offset-4 hover:underline"
+                        >
+                          {requirement.sourceDocumentTitle || "Source"}
+                        </a>
+                      ) : (
+                        <span className="text-ink/60">
+                          {requirement.sourceDocumentTitle || "No source linked"}
+                        </span>
+                      )}
                     </td>
                     <td className="px-3 py-3">{requirement.mpans.join(", ")}</td>
                     <td className="px-3 py-3">{requirement.projectNames.join(", ")}</td>
@@ -425,7 +446,7 @@ export function SupplyReferenceExtractionReview() {
               })}
               {requirementQueue.length === 0 ? (
                 <tr className="border-t border-line">
-                  <td colSpan={7} className="px-3 py-4 text-center text-ink/60">
+                  <td colSpan={8} className="px-3 py-4 text-center text-ink/60">
                     No project MPANs currently require Semarts reference review.
                   </td>
                 </tr>

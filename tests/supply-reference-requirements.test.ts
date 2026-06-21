@@ -42,8 +42,8 @@ function withPendingReferenceData(): SupplyReferenceData {
         extractionStatus: "Not extracted",
         timeOfUseReviewStatus: "Pending review",
         lossesReviewStatus: "Pending review",
-        sourceDocumentTitle: "Source",
-        sourceDocumentUrl: "",
+        sourceDocumentTitle: "UKPN source",
+        sourceDocumentUrl: "https://example.com/ukpn",
         sourceReviewedAt: "",
         sourceNotes: "",
         timeOfUseDefinitions: [],
@@ -71,6 +71,8 @@ describe("getSupplyReferenceRequirementQueue", () => {
       chargingYear: "2026/27",
       requiresTimeOfUseReview: true,
       requiresLossesReview: true,
+      sourceDocumentTitle: "UKPN source",
+      sourceDocumentUrl: "https://example.com/ukpn",
       projectNames: ["Test project"]
     });
     expect(queue[0].mpans).toEqual(["1000000000000", "1000000000001"]);

@@ -15,6 +15,9 @@ export type SupplyReferenceRequirementQueueItem = {
   chargingYear: string;
   requiresTimeOfUseReview: boolean;
   requiresLossesReview: boolean;
+  sourceDocumentTitle: string;
+  sourceDocumentUrl: string;
+  sourceNotes: string;
   mpans: string[];
   projectNames: string[];
 };
@@ -47,6 +50,12 @@ export function getSupplyReferenceRequirementQueue({
   referenceData: SupplyReferenceData;
 }): SupplyReferenceRequirementQueueItem[] {
   const projectNameById = new Map(projects.map((project) => [project.id, project.name]));
+  const dataSetByDistributorYear = new Map(
+    referenceData.dataSets.map((dataSet) => [
+      `${dataSet.distributorId}|${dataSet.chargingYear}`,
+      dataSet
+    ])
+  );
   const groupedRequirements = new Map<string, SupplyReferenceRequirementQueueItem>();
 
   methodologyInputs.forEach((inputs) => {
@@ -58,6 +67,10 @@ export function getSupplyReferenceRequirementQueue({
       const existingRequirement = groupedRequirements.get(key);
 
       if (!existingRequirement) {
+        const dataSet = dataSetByDistributorYear.get(
+          `${requirement.distributorId}|${requirement.chargingYear}`
+        );
+
         groupedRequirements.set(key, {
           id: key,
           distributorId: requirement.distributorId,
@@ -65,6 +78,9 @@ export function getSupplyReferenceRequirementQueue({
           chargingYear: requirement.chargingYear,
           requiresTimeOfUseReview: requirement.requiresTimeOfUseReview,
           requiresLossesReview: requirement.requiresLossesReview,
+          sourceDocumentTitle: dataSet?.sourceDocumentTitle ?? "",
+          sourceDocumentUrl: dataSet?.sourceDocumentUrl ?? "",
+          sourceNotes: dataSet?.sourceNotes ?? "",
           mpans: [requirement.mpan],
           projectNames: [projectName]
         });
