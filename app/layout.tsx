@@ -26,6 +26,9 @@ export default function RootLayout({
                 <Link href="/projects" className="hover:text-semarts-dark">
                   Projects
                 </Link>
+                <Link href="/reference-data/supply" className="hover:text-semarts-dark">
+                  Reference data
+                </Link>
                 <Link
                   href="/projects/new"
                   className="rounded-md bg-semarts px-3 py-2 font-medium text-white hover:bg-semarts-dark"

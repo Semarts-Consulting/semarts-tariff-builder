@@ -16,8 +16,10 @@ import {
   createSupplyContractChargeInput,
   createSupplyDetailsInput,
   createTenantInput,
+  getDnoNetworkAreaForMpan,
   getProjectById,
   getProjectMethodologyInputs,
+  getSupplyReferenceData,
   saveProjectMethodologyInputs
 } from "@/lib/project-storage";
 import {
@@ -37,6 +39,7 @@ import {
   loadDirectCostDataFromSupabase,
   loadEmployeeCostDataFromSupabase,
   loadIndirectOverheadDataFromSupabase,
+  loadSupplyReferenceDataFromSupabase,
   loadSupplyDetailsFromSupabase,
   saveAssetDataToSupabase,
   saveDirectCostDataToSupabase,
@@ -65,6 +68,7 @@ import type {
   SupplyContractTimeOfUse,
   SupplyContractUnitOfMeasurement,
   SupplyDetailsInput,
+  SupplyReferenceData,
   SupplyVoltage,
   TariffAssumptions,
   TenantInput,
@@ -2612,6 +2616,9 @@ export function WorkbookCostInputsForm({
   const { methodologyInputs, setMethodologyInputs, saveState, isArchived, save } =
     useWorkbookMethodology(projectId);
   const showAllSections = section === undefined;
+  const [supplyReferenceData, setSupplyReferenceData] = useState<SupplyReferenceData>(() =>
+    getSupplyReferenceData()
+  );
   const [assetImportStatus, setAssetImportStatus] = useState("");
   const [assetImportErrors, setAssetImportErrors] = useState<string[]>([]);
   const [assetCloudStatus, setAssetCloudStatus] = useState("");
@@ -2661,6 +2668,30 @@ export function WorkbookCostInputsForm({
       ),
     [methodologyInputs.supplyDetails]
   );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    loadSupplyReferenceDataFromSupabase()
+      .then((cloudReferenceData) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setSupplyReferenceData(cloudReferenceData ?? getSupplyReferenceData());
+      })
+      .catch(() => {
+        if (!isMounted) {
+          return;
+        }
+
+        setSupplyReferenceData(getSupplyReferenceData());
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!showAllSections && section !== "direct-non-employee") {
@@ -4964,6 +4995,7 @@ export function WorkbookCostInputsForm({
                 <thead className="bg-white text-left text-xs uppercase text-ink/60">
                   <tr>
                     <th className="px-3 py-2 font-semibold">MPAN</th>
+                    <th className="px-3 py-2 font-semibold">DNO / Network Area</th>
                     <th className="px-3 py-2 font-semibold">Supply Capacity (kVA)</th>
                     <th className="px-3 py-2 font-semibold">Voltage</th>
                     <th className="px-3 py-2 font-semibold">Transmission</th>
@@ -4972,7 +5004,10 @@ export function WorkbookCostInputsForm({
                   </tr>
                 </thead>
                 <tbody>
-                  {methodologyInputs.supplyDetails.map((row) => (
+                  {methodologyInputs.supplyDetails.map((row) => {
+                    const dnoNetworkArea = getDnoNetworkAreaForMpan(row.mpan, supplyReferenceData);
+
+                    return (
                     <tr key={row.id} className="border-t border-line">
                       <td className="px-3 py-2">
                         <input
@@ -4987,6 +5022,18 @@ export function WorkbookCostInputsForm({
                           }
                           className="w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
                         />
+                      </td>
+                      <td className="px-3 py-2">
+                        {dnoNetworkArea ? (
+                          <div>
+                            <p className="font-medium">{dnoNetworkArea.dnoName}</p>
+                            <p className="text-xs text-ink/60">{dnoNetworkArea.networkArea}</p>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-ink/50">
+                            {row.mpan.length >= 2 ? "No reference match" : "Enter MPAN"}
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-2">
                         <NumberCell
@@ -5061,10 +5108,11 @@ export function WorkbookCostInputsForm({
                         />
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {methodologyInputs.supplyDetails.length === 0 ? (
                     <tr className="border-t border-line">
-                      <td colSpan={6} className="px-3 py-4 text-center text-ink/60">
+                      <td colSpan={7} className="px-3 py-4 text-center text-ink/60">
                         No supply MPANs entered yet.
                       </td>
                     </tr>

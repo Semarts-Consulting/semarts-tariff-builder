@@ -16,6 +16,7 @@ import type {
   ProjectAllocationMethods,
   ProjectCostPools,
   ProjectDataInputs,
+  SupplyReferenceData,
   TenantInput,
   AssetInput
 } from "@/types/project";
@@ -422,6 +423,194 @@ export function createSupplyDetailsInput(): ProjectMethodologyInputs["supplyDeta
   };
 }
 
+export function createDefaultSupplyTimeOfUseDefinitions(): SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"] {
+  const weekdays: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"][number]["daysOfWeek"] = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday"
+  ];
+  const allMonths: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"][number]["months"] = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
+
+  return [
+    {
+      id: "Red",
+      label: "Red",
+      daysOfWeek: weekdays,
+      appliesOnBankHolidays: false,
+      months: allMonths,
+      startTime: "16:00",
+      endTime: "19:00"
+    },
+    {
+      id: "Amber",
+      label: "Amber",
+      daysOfWeek: weekdays,
+      appliesOnBankHolidays: false,
+      months: allMonths,
+      startTime: "07:00",
+      endTime: "16:00"
+    },
+    {
+      id: "Green",
+      label: "Green",
+      daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      appliesOnBankHolidays: true,
+      months: allMonths,
+      startTime: "00:00",
+      endTime: "07:00"
+    },
+    {
+      id: "Super Red",
+      label: "Super Red",
+      daysOfWeek: weekdays,
+      appliesOnBankHolidays: false,
+      months: allMonths,
+      startTime: "16:00",
+      endTime: "19:00"
+    },
+    {
+      id: "Day",
+      label: "Day",
+      daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      appliesOnBankHolidays: true,
+      months: allMonths,
+      startTime: "07:00",
+      endTime: "23:30"
+    },
+    {
+      id: "Night",
+      label: "Night",
+      daysOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      appliesOnBankHolidays: true,
+      months: allMonths,
+      startTime: "00:00",
+      endTime: "07:00"
+    }
+  ];
+}
+
+export function createDefaultSupplyReferenceData(): SupplyReferenceData {
+  return {
+    dnoNetworkAreas: [
+      {
+        distributorId: "10",
+        dnoName: "UK Power Networks",
+        networkArea: "Eastern England",
+        operatorCode: "EPN",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "11",
+        dnoName: "National Grid Electricity Distribution",
+        networkArea: "East Midlands",
+        operatorCode: "EMID",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "12",
+        dnoName: "UK Power Networks",
+        networkArea: "London",
+        operatorCode: "LPN",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "13",
+        dnoName: "SP Energy Networks",
+        networkArea: "Merseyside and North Wales",
+        operatorCode: "MANW",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "14",
+        dnoName: "National Grid Electricity Distribution",
+        networkArea: "West Midlands",
+        operatorCode: "WMID",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "15",
+        dnoName: "Northern Powergrid",
+        networkArea: "North East",
+        operatorCode: "NPGN",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "16",
+        dnoName: "Electricity North West",
+        networkArea: "North West",
+        operatorCode: "ENWL",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "17",
+        dnoName: "Scottish and Southern Electricity Networks",
+        networkArea: "North Scotland",
+        operatorCode: "SSEN-N",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "18",
+        dnoName: "SP Energy Networks",
+        networkArea: "South Scotland",
+        operatorCode: "SPD",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "19",
+        dnoName: "UK Power Networks",
+        networkArea: "South East England",
+        operatorCode: "SPN",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "20",
+        dnoName: "Scottish and Southern Electricity Networks",
+        networkArea: "Southern England",
+        operatorCode: "SSEN-S",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "21",
+        dnoName: "National Grid Electricity Distribution",
+        networkArea: "South Wales",
+        operatorCode: "SWALES",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "22",
+        dnoName: "National Grid Electricity Distribution",
+        networkArea: "South West England",
+        operatorCode: "SWEST",
+        notes: "Review against current DNO reference before using in calculations."
+      },
+      {
+        distributorId: "23",
+        dnoName: "Northern Powergrid",
+        networkArea: "Yorkshire",
+        operatorCode: "NPGY",
+        notes: "Review against current DNO reference before using in calculations."
+      }
+    ],
+    dataSets: [],
+    lastUpdated: todayLabel()
+  };
+}
+
 export function createHalfHourlyImportRow(): HalfHourlyImportRow {
   return {
     id: createWorkbookRowId("hh-import"),
@@ -517,6 +706,25 @@ export function saveProjectMethodologyInputs(methodologyInputs: ProjectMethodolo
   window.localStorage.setItem(
     methodologyInputsStorageKey,
     JSON.stringify(nextMethodologyInputs)
+  );
+}
+
+export function getSupplyReferenceData() {
+  return createDefaultSupplyReferenceData();
+}
+
+export function getDnoNetworkAreaForMpan(
+  mpan: string,
+  referenceData: SupplyReferenceData = getSupplyReferenceData()
+) {
+  const distributorId = mpan.replace(/\D/g, "").slice(0, 2);
+
+  if (distributorId.length !== 2) {
+    return undefined;
+  }
+
+  return referenceData.dnoNetworkAreas.find(
+    (networkArea) => networkArea.distributorId === distributorId
   );
 }
 

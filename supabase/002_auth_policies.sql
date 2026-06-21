@@ -80,6 +80,8 @@ create index if not exists supply_details_project_idx on public.supply_details(p
 create index if not exists supply_contract_charges_user_id_idx on public.supply_contract_charges(user_id);
 create index if not exists supply_contract_charges_project_idx on public.supply_contract_charges(project_local_id);
 create index if not exists supply_contract_charges_supply_detail_idx on public.supply_contract_charges(supply_detail_id);
+create index if not exists supply_reference_dno_network_areas_distributor_idx on public.supply_reference_dno_network_areas(distributor_id);
+create index if not exists supply_reference_data_sets_distributor_year_idx on public.supply_reference_data_sets(distributor_id, charging_year);
 
 drop policy if exists "Users can read their projects" on public.projects;
 create policy "Users can read their projects"
@@ -300,3 +302,19 @@ on public.supply_contract_charges for all
 to authenticated
 using (user_id = auth.uid())
 with check (user_id = auth.uid());
+
+drop policy if exists "Users can read supply DNO reference data" on public.supply_reference_dno_network_areas;
+create policy "Users can read supply DNO reference data"
+on public.supply_reference_dno_network_areas for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Users can manage their DNO reference data" on public.supply_reference_dno_network_areas;
+
+drop policy if exists "Users can read supply reference data sets" on public.supply_reference_data_sets;
+create policy "Users can read supply reference data sets"
+on public.supply_reference_data_sets for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Users can manage their supply reference data sets" on public.supply_reference_data_sets;

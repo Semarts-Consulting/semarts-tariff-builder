@@ -222,6 +222,50 @@ export type SupplyContractCustomTimeOfUse = {
   endTime: string;
 };
 
+export type SupplyTimeOfUseReference =
+  | "Red"
+  | "Amber"
+  | "Green"
+  | "Super Red"
+  | "Day"
+  | "Night";
+
+export type SupplyTimeOfUseDefinition = {
+  id: SupplyTimeOfUseReference;
+  label: SupplyTimeOfUseReference;
+  daysOfWeek: SupplyContractDayOfWeek[];
+  appliesOnBankHolidays: boolean;
+  months: SupplyContractMonth[];
+  startTime: string;
+  endTime: string;
+};
+
+export type DnoNetworkAreaReference = {
+  distributorId: string;
+  dnoName: string;
+  networkArea: string;
+  operatorCode: string;
+  notes: string;
+};
+
+export type SupplyReferenceDataSet = {
+  id: string;
+  distributorId: string;
+  chargingYear: string;
+  reviewStatus: "Source required" | "Pending review" | "Reviewed";
+  sourceDocumentTitle: string;
+  sourceDocumentUrl: string;
+  sourceReviewedAt: string;
+  sourceNotes: string;
+  timeOfUseDefinitions: SupplyTimeOfUseDefinition[];
+};
+
+export type SupplyReferenceData = {
+  dnoNetworkAreas: DnoNetworkAreaReference[];
+  dataSets: SupplyReferenceDataSet[];
+  lastUpdated: string;
+};
+
 export type SupplyContractChargeInput = {
   id: string;
   chargeName: string;

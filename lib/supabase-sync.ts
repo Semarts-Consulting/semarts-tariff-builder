@@ -11,6 +11,7 @@ import type {
   ProjectAllocationMethods,
   ProjectCostPools,
   ProjectDataInputs,
+  SupplyReferenceData,
   SupplyDetailsInput
 } from "@/types/project";
 
@@ -545,6 +546,53 @@ function fromSupplyDataRows(
         rate: charge.rate
       }))
   }));
+}
+
+function fromSupplyReferenceRows(
+  dnoRows: {
+    distributor_id: string;
+    dno_name: string;
+    network_area: string;
+    operator_code: string;
+    notes: string;
+  }[],
+  dataSetRows: {
+    id: string;
+    distributor_id: string;
+    charging_year: string;
+    review_status: SupplyReferenceData["dataSets"][number]["reviewStatus"];
+    source_document_title: string;
+    source_document_url: string;
+    source_reviewed_at: string | null;
+    source_notes: string;
+    time_of_use_definitions: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"];
+  }[]
+): SupplyReferenceData {
+  return {
+    dnoNetworkAreas: dnoRows.map((row) => ({
+      distributorId: row.distributor_id,
+      dnoName: row.dno_name,
+      networkArea: row.network_area,
+      operatorCode: row.operator_code,
+      notes: row.notes
+    })),
+    dataSets: dataSetRows.map((row) => ({
+      id: row.id,
+      distributorId: row.distributor_id,
+      chargingYear: row.charging_year,
+      reviewStatus: row.review_status,
+      sourceDocumentTitle: row.source_document_title,
+      sourceDocumentUrl: row.source_document_url,
+      sourceReviewedAt: row.source_reviewed_at ?? "",
+      sourceNotes: row.source_notes,
+      timeOfUseDefinitions: row.time_of_use_definitions
+    })),
+    lastUpdated: new Intl.DateTimeFormat("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    }).format(new Date())
+  };
 }
 
 function toProjectRow(project: Project, userId: string) {
@@ -1440,6 +1488,39 @@ export async function clearSupplyDetailsFromSupabase(projectId: string) {
   }
 
   return true;
+}
+
+export async function loadSupplyReferenceDataFromSupabase() {
+  if (!supabase) {
+    return null;
+  }
+
+  const { data: dnoRows, error: dnoError } = await supabase
+    .from("supply_reference_dno_network_areas")
+    .select("distributor_id, dno_name, network_area, operator_code, notes")
+    .order("distributor_id", { ascending: true });
+
+  if (dnoError) {
+    throw dnoError;
+  }
+
+  const { data: dataSetRows, error: dataSetError } = await supabase
+    .from("supply_reference_data_sets")
+    .select(
+      "id, distributor_id, charging_year, review_status, source_document_title, source_document_url, source_reviewed_at, source_notes, time_of_use_definitions"
+    )
+    .order("distributor_id", { ascending: true })
+    .order("charging_year", { ascending: false });
+
+  if (dataSetError) {
+    throw dataSetError;
+  }
+
+  if ((dnoRows ?? []).length === 0 && (dataSetRows ?? []).length === 0) {
+    return null;
+  }
+
+  return fromSupplyReferenceRows(dnoRows ?? [], dataSetRows ?? []);
 }
 
 export async function pushBackupToSupabase(backup: LocalProjectBackup) {

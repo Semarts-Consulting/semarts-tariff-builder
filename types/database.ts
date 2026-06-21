@@ -8,7 +8,8 @@ import type {
   IndirectOverheadInput,
   ProjectStatus,
   SupplyContractChargeInput,
-  SupplyDetailsInput
+  SupplyDetailsInput,
+  SupplyReferenceData
 } from "@/types/project";
 
 export type Database = {
@@ -519,6 +520,62 @@ export type Database = {
         };
         Update: Partial<
           Database["public"]["Tables"]["supply_contract_charges"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      supply_reference_dno_network_areas: {
+        Row: {
+          distributor_id: string;
+          dno_name: string;
+          network_area: string;
+          operator_code: string;
+          notes: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          distributor_id: string;
+          dno_name: string;
+          network_area: string;
+          operator_code: string;
+          notes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["supply_reference_dno_network_areas"]["Insert"]
+        >;
+        Relationships: [];
+      };
+      supply_reference_data_sets: {
+        Row: {
+          id: string;
+          distributor_id: string;
+          charging_year: string;
+          review_status: SupplyReferenceData["dataSets"][number]["reviewStatus"];
+          source_document_title: string;
+          source_document_url: string;
+          source_reviewed_at: string | null;
+          source_notes: string;
+          time_of_use_definitions: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          distributor_id: string;
+          charging_year: string;
+          review_status?: SupplyReferenceData["dataSets"][number]["reviewStatus"];
+          source_document_title: string;
+          source_document_url?: string;
+          source_reviewed_at?: string | null;
+          source_notes?: string;
+          time_of_use_definitions?: SupplyReferenceData["dataSets"][number]["timeOfUseDefinitions"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<
+          Database["public"]["Tables"]["supply_reference_data_sets"]["Insert"]
         >;
         Relationships: [];
       };
