@@ -358,7 +358,7 @@ create table if not exists public.supply_reference_source_documents (
     file_type in ('PDF', 'Excel', 'CSV', 'Other')
   ),
   constraint supply_reference_source_documents_extraction_status_check check (
-    extraction_status in ('Pending extraction', 'Extracted', 'Extraction failed', 'Reviewed', 'Rejected')
+    extraction_status in ('Pending extraction', 'Source discovered', 'Extracted', 'Extraction failed', 'Reviewed', 'Rejected')
   ),
   constraint supply_reference_source_documents_distributor_fkey foreign key (distributor_id)
     references public.supply_reference_dno_network_areas(distributor_id) on delete restrict
@@ -416,6 +416,14 @@ create table if not exists public.supply_reference_loss_candidates (
   ),
   constraint supply_reference_loss_candidates_distributor_fkey foreign key (distributor_id)
     references public.supply_reference_dno_network_areas(distributor_id) on delete restrict
+);
+
+alter table public.supply_reference_source_documents
+drop constraint if exists supply_reference_source_documents_extraction_status_check;
+
+alter table public.supply_reference_source_documents
+add constraint supply_reference_source_documents_extraction_status_check check (
+  extraction_status in ('Pending extraction', 'Source discovered', 'Extracted', 'Extraction failed', 'Reviewed', 'Rejected')
 );
 
 alter table public.supply_reference_data_sets

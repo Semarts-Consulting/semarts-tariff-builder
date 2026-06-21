@@ -24,8 +24,10 @@ import {
   isCurrentUserSemartsAdmin,
   loadSupplyReferenceDataFromSupabase,
   loadSupplyReferenceExtractionFromSupabase,
-  saveSupplyReferenceExtractionToSupabase
+  saveSupplyReferenceExtractionToSupabase,
+  updateSupplyReferenceExtractionTaskDiscoveryInSupabase
 } from "@/lib/supabase-sync";
+import type { SourceDiscoveryResult } from "@/lib/supply-reference-source-discovery";
 import type {
   SupplyReferenceCandidateStatus,
   SupplyReferenceExtractionStatus,
@@ -56,6 +58,7 @@ const candidateStatusStyles: Record<SupplyReferenceCandidateStatus, string> = {
 
 const extractionStatusStyles: Record<SupplyReferenceExtractionStatus, string> = {
   "Pending extraction": "border-amber-200 bg-amber-50 text-amber-800",
+  "Source discovered": "border-sky-200 bg-sky-50 text-sky-800",
   Extracted: "border-blue-200 bg-blue-50 text-blue-800",
   "Extraction failed": "border-red-200 bg-red-50 text-red-800",
   Reviewed: "border-green-200 bg-green-50 text-green-800",
@@ -252,6 +255,57 @@ export function SupplyReferenceExtractionReview() {
         : "Supabase is not configured. Extraction task was not saved."
     );
 
+    await loadExtractionData();
+  }
+
+  async function discoverSourceLinks(document: SupplyReferenceSourceDocument) {
+    if (!isAdmin) {
+      setStatusMessage("Only Semarts admin users can run source discovery.");
+      return;
+    }
+
+    if (!document.sourceUrl) {
+      setStatusMessage("This extraction task has no source URL.");
+      return;
+    }
+
+    const response = await fetch("/api/reference-data/source-discovery", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        distributorId: document.distributorId,
+        sourceUrl: document.sourceUrl
+      })
+    });
+
+    const result: unknown = await response.json();
+
+    if (!response.ok) {
+      const errorMessage =
+        typeof result === "object" &&
+        result !== null &&
+        "error" in result &&
+        typeof result.error === "string"
+          ? result.error
+          : "Source discovery failed.";
+      throw new Error(errorMessage);
+    }
+
+    const discoveryResult = result as SourceDiscoveryResult;
+    const notes = [
+      discoveryResult.notes,
+      ...discoveryResult.matchedLinks.map((link) => `${link.title}: ${link.url}`)
+    ].join("\n");
+
+    await updateSupplyReferenceExtractionTaskDiscoveryInSupabase({
+      taskId: document.id,
+      extractionStatus: "Source discovered",
+      extractionNotes: notes
+    });
+
+    setStatusMessage(`Source discovery completed for ${document.title}.`);
     await loadExtractionData();
   }
 
@@ -468,6 +522,7 @@ export function SupplyReferenceExtractionReview() {
                 <th className="px-3 py-2 font-semibold">Type</th>
                 <th className="px-3 py-2 font-semibold">Status</th>
                 <th className="px-3 py-2 font-semibold">Uploaded</th>
+                <th className="px-3 py-2 font-semibold">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -504,11 +559,35 @@ export function SupplyReferenceExtractionReview() {
                     </span>
                   </td>
                   <td className="px-3 py-3">{formatDateTime(document.uploadedAt)}</td>
+                  <td className="px-3 py-3">
+                    {isAdmin &&
+                    document.sourceUrl &&
+                    ["10", "12", "19"].includes(document.distributorId) &&
+                    document.extractionStatus === "Pending extraction" ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          discoverSourceLinks(document).catch((error: unknown) => {
+                            setStatusMessage(
+                              error instanceof Error
+                                ? `Source discovery failed: ${error.message}`
+                                : "Source discovery failed."
+                            );
+                          });
+                        }}
+                        className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+                      >
+                        Discover source links
+                      </button>
+                    ) : (
+                      <span className="text-ink/60">No action</span>
+                    )}
+                  </td>
                 </tr>
               ))}
               {extractionState.sourceDocuments.length === 0 ? (
                 <tr className="border-t border-line">
-                  <td colSpan={6} className="px-3 py-4 text-center text-ink/60">
+                  <td colSpan={7} className="px-3 py-4 text-center text-ink/60">
                     No source documents have been staged yet.
                   </td>
                 </tr>

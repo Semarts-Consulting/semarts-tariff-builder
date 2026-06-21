@@ -260,6 +260,7 @@ export type DistributionLossFactorReference = {
 
 export type SupplyReferenceExtractionStatus =
   | "Pending extraction"
+  | "Source discovered"
   | "Extracted"
   | "Extraction failed"
   | "Reviewed"

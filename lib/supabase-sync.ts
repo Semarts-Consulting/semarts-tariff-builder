@@ -1754,6 +1754,34 @@ export async function createSupplyReferenceExtractionTaskInSupabase(
   return true;
 }
 
+export async function updateSupplyReferenceExtractionTaskDiscoveryInSupabase({
+  taskId,
+  extractionStatus,
+  extractionNotes
+}: {
+  taskId: string;
+  extractionStatus: SupplyReferenceSourceDocument["extractionStatus"];
+  extractionNotes: string;
+}) {
+  if (!supabase) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("supply_reference_source_documents")
+    .update({
+      extraction_status: extractionStatus,
+      extraction_notes: extractionNotes
+    })
+    .eq("id", taskId);
+
+  if (error) {
+    throw error;
+  }
+
+  return true;
+}
+
 export async function pushBackupToSupabase(backup: LocalProjectBackup) {
   if (!supabase) {
     throw new Error("Supabase is not configured.");
