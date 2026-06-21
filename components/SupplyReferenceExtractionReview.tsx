@@ -5,6 +5,12 @@ import { readSheet } from "read-excel-file/browser";
 import writeXlsxFile from "write-excel-file/browser";
 import type { SheetData } from "write-excel-file/browser";
 import {
+  getProjects,
+  getStoredMethodologyInputs,
+  getSupplyReferenceData
+} from "@/lib/project-storage";
+import { getSupplyReferenceRequirementQueue } from "@/lib/supply-reference-requirements";
+import {
   getSupplyReferenceExtractionSummary,
   parseSupplyReferenceExtractionWorkbook,
   supplyReferenceLossCandidateHeaders,
@@ -12,6 +18,7 @@ import {
 } from "@/lib/supply-reference-extraction";
 import {
   isCurrentUserSemartsAdmin,
+  loadSupplyReferenceDataFromSupabase,
   loadSupplyReferenceExtractionFromSupabase,
   saveSupplyReferenceExtractionToSupabase
 } from "@/lib/supabase-sync";
@@ -19,6 +26,7 @@ import type {
   SupplyReferenceCandidateStatus,
   SupplyReferenceExtractionStatus,
   SupplyReferenceLossCandidate,
+  SupplyReferenceData,
   SupplyReferenceSourceDocument,
   SupplyReferenceTouCandidate
 } from "@/types/project";
@@ -71,10 +79,22 @@ export function SupplyReferenceExtractionReview() {
   const [statusMessage, setStatusMessage] = useState("");
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [referenceData, setReferenceData] = useState<SupplyReferenceData>(() =>
+    getSupplyReferenceData()
+  );
 
   const summary = useMemo(
     () => getSupplyReferenceExtractionSummary(extractionState),
     [extractionState]
+  );
+  const requirementQueue = useMemo(
+    () =>
+      getSupplyReferenceRequirementQueue({
+        projects: getProjects(),
+        methodologyInputs: getStoredMethodologyInputs(),
+        referenceData
+      }),
+    [referenceData]
   );
 
   useEffect(() => {
@@ -83,6 +103,11 @@ export function SupplyReferenceExtractionReview() {
         error instanceof Error ? `Cloud load failed: ${error.message}` : "Cloud load failed."
       );
     });
+    loadSupplyReferenceDataFromSupabase()
+      .then((cloudReferenceData) => {
+        setReferenceData(cloudReferenceData ?? getSupplyReferenceData());
+      })
+      .catch(() => setReferenceData(getSupplyReferenceData()));
     isCurrentUserSemartsAdmin()
       .then(setIsAdmin)
       .catch(() => setIsAdmin(false));
@@ -275,6 +300,53 @@ export function SupplyReferenceExtractionReview() {
             <p className="text-sm text-ink/60">Needs review</p>
             <p className="mt-1 text-2xl font-semibold">{summary.needsReviewCandidateCount}</p>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-md border border-line bg-white p-6 shadow-sm">
+        <h2 className="font-semibold">Reference requirement queue</h2>
+        <p className="mt-1 text-sm text-ink/70">
+          Requirements are generated from project MPANs and grouped by DNO/network area.
+        </p>
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[980px] border-collapse text-sm">
+            <thead className="bg-field text-left text-xs uppercase text-ink/60">
+              <tr>
+                <th className="px-3 py-2 font-semibold">DNO</th>
+                <th className="px-3 py-2 font-semibold">Network area</th>
+                <th className="px-3 py-2 font-semibold">Charging year</th>
+                <th className="px-3 py-2 font-semibold">Required review</th>
+                <th className="px-3 py-2 font-semibold">MPANs</th>
+                <th className="px-3 py-2 font-semibold">Projects</th>
+              </tr>
+            </thead>
+            <tbody>
+              {requirementQueue.map((requirement) => (
+                <tr key={requirement.id} className="border-t border-line align-top">
+                  <td className="px-3 py-3 font-semibold">{requirement.distributorId}</td>
+                  <td className="px-3 py-3">{requirement.networkArea}</td>
+                  <td className="px-3 py-3">{requirement.chargingYear || "Unknown"}</td>
+                  <td className="px-3 py-3">
+                    {[
+                      requirement.requiresTimeOfUseReview ? "TOU bands" : "",
+                      requirement.requiresLossesReview ? "Distribution losses" : ""
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </td>
+                  <td className="px-3 py-3">{requirement.mpans.join(", ")}</td>
+                  <td className="px-3 py-3">{requirement.projectNames.join(", ")}</td>
+                </tr>
+              ))}
+              {requirementQueue.length === 0 ? (
+                <tr className="border-t border-line">
+                  <td colSpan={6} className="px-3 py-4 text-center text-ink/60">
+                    No project MPANs currently require Semarts reference review.
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
       </section>
 

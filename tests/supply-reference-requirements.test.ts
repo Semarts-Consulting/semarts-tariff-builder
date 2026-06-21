@@ -1,0 +1,75 @@
+import { describe, expect, it } from "vitest";
+import {
+  createDefaultMethodologyInputs,
+  createDefaultSupplyReferenceData,
+  createSupplyDetailsInput
+} from "@/lib/project-storage";
+import { getSupplyReferenceRequirementQueue } from "@/lib/supply-reference-requirements";
+import type { Project, SupplyReferenceData } from "@/types/project";
+
+const project: Project = {
+  id: "project-1",
+  name: "Test project",
+  networkName: "Test network",
+  tariffYear: 2026,
+  effectiveDate: "2026-01-01",
+  billingPeriod: "Annual",
+  customerClasses: [],
+  status: "Draft",
+  lastUpdated: "21 June 2026"
+};
+
+function createSupply(mpan: string) {
+  return {
+    ...createSupplyDetailsInput(),
+    id: `supply-${mpan}`,
+    mpan
+  };
+}
+
+function withPendingReferenceData(): SupplyReferenceData {
+  return {
+    ...createDefaultSupplyReferenceData(),
+    dataSets: [
+      {
+        id: "lc14-10-2026-27",
+        distributorId: "10",
+        chargingYear: "2026/27",
+        reviewStatus: "Partially reviewed",
+        extractionStatus: "Not extracted",
+        timeOfUseReviewStatus: "Pending review",
+        lossesReviewStatus: "Pending review",
+        sourceDocumentTitle: "Source",
+        sourceDocumentUrl: "",
+        sourceReviewedAt: "",
+        sourceNotes: "",
+        timeOfUseDefinitions: [],
+        distributionLossFactors: []
+      }
+    ],
+    lastUpdated: "21 June 2026"
+  };
+}
+
+describe("getSupplyReferenceRequirementQueue", () => {
+  it("groups duplicate MPAN requirements by DNO and charging year", () => {
+    const inputs = createDefaultMethodologyInputs(project.id);
+    inputs.supplyDetails = [createSupply("1000000000000"), createSupply("1000000000001")];
+
+    const queue = getSupplyReferenceRequirementQueue({
+      projects: [project],
+      methodologyInputs: [inputs],
+      referenceData: withPendingReferenceData()
+    });
+
+    expect(queue).toHaveLength(1);
+    expect(queue[0]).toMatchObject({
+      distributorId: "10",
+      chargingYear: "2026/27",
+      requiresTimeOfUseReview: true,
+      requiresLossesReview: true,
+      projectNames: ["Test project"]
+    });
+    expect(queue[0].mpans).toEqual(["1000000000000", "1000000000001"]);
+  });
+});
