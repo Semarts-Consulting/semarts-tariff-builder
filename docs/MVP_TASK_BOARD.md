@@ -5,8 +5,10 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
+| OUT-003 Report readiness UI alignment | UI Flow plus PM/Engine review | `components/ReportsSummary.tsx`, possibly `components/TariffAuditTracePanel.tsx` | OUT-001 contract | Medium | Align rendered report with readiness mapping, warning severity, and audit evidence expectations. |
+| QA-003 Report/export regression tests | QA plus UI review | report/calculation component tests and fixtures | OUT-001 contract | Medium | Cover report sections, warnings, audit trace visibility, and HTML/print actions. |
 | ENG-003 Supply calculation design closure | PM plus Tariff Engine | `SUPPLY_CALCULATION_DESIGN.md`, future service/types | Business answers required | High | No production DTO or engine until assumptions are resolved. |
-| OUT-001 Export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages. |
+| OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
 
 ## In Progress
 
@@ -18,7 +20,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| ALLOC-001 Default allocation review indicator | Data/storage, Tariff Engine, UI, PM | `types/project.ts`, `lib/project-storage.ts`, `lib/calculation-engine.ts`, `components/AllocationMethodsForm.tsx`, focused tests, `docs/APP_CONTRACTS.md` | Allocation reconciliation storage behavior | Medium | Implemented on `codex/default-allocation-review`; awaiting staging/commit/PR. |
+| OUT-001 Report/export readiness contract | PM plus UI/Engine/QA review | `docs/APP_CONTRACTS.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #5 baseline | Medium | Defines MVP rendered report output and keeps formal export DTO as future work. |
 
 ## Blocked
 
@@ -35,6 +37,7 @@
 | PR-002 Audit trace contract documentation | PM | `docs/APP_CONTRACTS.md`, manager docs | Merged PR #2 | Medium | Approved audit trace shared contract before implementation. |
 | PR-003 Audit trace implementation | Tariff Engine plus PM | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Merged PR #3 | High | Calculation audit trace implemented and tested. |
 | PR-004 Audit trace UI display | UI Flow plus PM | tariff calculations UI | Merged PR #4 | Medium | Tariff audit trace display merged to `main`. |
+| PR-005 Default allocation review indicator | Data/storage, Tariff Engine, UI, PM | allocation row contract, reconciliation, engine warning, allocation UI | Merged PR #5 | Medium | Default-created allocation methods are flagged, surfaced, and cleared on user review. |
 | DATA-001 Import parser extraction and workbook wiring | Data Import | import modules, workbook form, import tests | Merged in PR #1 | Medium | Header, dedupe, and fingerprint contracts documented. |
 | ENG-001 Tariff calculation validation package | Tariff Engine | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Merged in PR #1 | High | Validation issues and revenue recovery accepted for MVP. |
 | UI-001 Layout-only UI package | UI Flow | layout/page/component files | Merged in PR #1 | Medium | Broad responsive layout package integrated. |

@@ -84,6 +84,7 @@ It returns `TariffCalculationResult`:
 - `isRevenueRecovered`
 - `validationIssues`
 - `classResults`
+- `auditTrace`
 
 Current calculation rules:
 
@@ -124,15 +125,15 @@ Current implementation emits `Error` issues for calculation-readiness problems a
 
 `Warning` issues are non-blocking readiness items. MVP report/UI code should treat validation issues as readiness information and should not prevent the calculation function from returning outputs.
 
-## Tariff Audit Trace Contract Proposal
+## Tariff Audit Trace Contract
 
-Status: proposed for MVP implementation; not yet implemented.
+Status: implemented for MVP.
 
-The audit trace should be generated inside `calculateTariffs` and returned as part of `TariffCalculationResult` as `auditTrace: TariffCalculationTraceEntry[]`.
+The audit trace is generated inside `calculateTariffs` and returned as part of `TariffCalculationResult` as `auditTrace: TariffCalculationTraceEntry[]`.
 
 Reason: trace entries explain the calculation result and should not drift from the values returned by the pure calculation function.
 
-Proposed trace stages:
+Trace stages:
 
 - `Revenue requirement`
 - `Cost allocation`
@@ -140,7 +141,7 @@ Proposed trace stages:
 - `Rate derivation`
 - `Revenue recovery`
 
-Proposed trace units:
+Trace units:
 
 - `GBP`
 - `Percent`
@@ -151,13 +152,13 @@ Proposed trace units:
 - `GBP per kWh`
 - `GBP per kW`
 
-Proposed trace value shape:
+Trace value shape:
 
 - `label`
 - `value`
 - `unit`
 
-Proposed trace entry shape:
+Trace entry shape:
 
 - `id`
 - `stage`
@@ -172,7 +173,7 @@ Proposed trace entry shape:
 - `customerClass`
 - `tariffComponent`
 
-Minimum MVP trace coverage:
+MVP trace coverage:
 
 - One revenue requirement trace entry per cost pool using `annualAmount * recoverablePercent / 100`.
 - One allocation trace entry per applied allocation share using `recoverableCost * allocationPercent / 100`.
@@ -183,7 +184,7 @@ Minimum MVP trace coverage:
 - Zero denominator cases should still trace the inputs and result `0`; validation issues explain why the value needs review.
 - One revenue recovery trace entry using `revenueRequirement - allocatedCost`, including the `0.01` GBP tolerance.
 
-Required audit trace tests:
+Audit trace tests:
 
 - Recoverable cost trace includes one entry per cost pool and sums to `revenueRequirement`.
 - Allocation trace includes cost pool, allocation method, customer class, percentage, tariff component, and allocated GBP.
@@ -326,9 +327,44 @@ Do not add production supply calculation DTOs or services until these questions 
 
 ## Report And Export Contract
 
-Current report screens are presentation components, not stable export DTOs.
+Current report screens are stakeholder-facing presentation components. `ReportsSummary.tsx` provides MVP rendered report output through browser print/PDF and rendered HTML download.
 
-Any new stakeholder-facing export model must define:
+MVP report output must include:
+
+- Project name, network name, tariff year, effective date, billing period, and project status.
+- Data input totals by customer count, annual kWh, and peak demand.
+- Cost pool totals including gross and recoverable cost.
+- Allocation method summary and readiness issues.
+- Tariff calculation outputs by customer class.
+- Revenue requirement, allocated cost, unallocated cost, and revenue recovery status.
+- Calculation validation issues, including `Error` and `Warning` severities.
+- Supply-reference review warnings where source data has not been reviewed.
+- Methodology inputs and assumptions currently captured by the workbook-style forms.
+- Audit evidence sufficient to explain how tariff outputs were produced.
+
+MVP report output rules:
+
+- Reports may display calculation outputs even when readiness issues exist.
+- Reports must clearly label outputs as requiring review before approval when validation issues, supply-reference review issues, or revenue recovery variance exist.
+- Warnings are non-blocking readiness items; errors indicate calculation input problems that still need review before stakeholder approval.
+- HTML download and browser print/PDF are acceptable MVP rendered report outputs because they export the stakeholder report view, not a separate data model.
+- The rendered HTML report is not a stable machine-readable export DTO.
+
+Report readiness mapping:
+
+- Any `Error` validation issue: `Needs correction`.
+- Only `Warning` validation issues: `Needs review`.
+- No validation issues but `isRevenueRecovered === false`: `Revenue variance`.
+- No validation issues and revenue recovered: `Ready for review`.
+
+Known MVP report gaps before final release readiness:
+
+- `ReportsSummary.tsx` must be checked against this contract because it currently presents rendered report content, not a formal DTO.
+- Audit trace is stable enough for rendered stakeholder explanation, but raw audit trace IDs and source row IDs are not a machine-readable export contract.
+- Report UI must distinguish readiness severity clearly enough for stakeholder review.
+- Regression tests must cover report rendering, warning visibility, audit trace visibility where required, and HTML/print actions.
+
+Future formal export DTOs must define:
 
 - Source input references.
 - Calculation result references.
@@ -337,4 +373,4 @@ Any new stakeholder-facing export model must define:
 - Date and tariff-year metadata.
 - Audit trail references.
 
-Until then, `ReportsSummary.tsx` can present approved calculation outputs but should not become a hidden export contract.
+Until a formal DTO is approved, new export code must not infer a hidden data contract from `ReportsSummary.tsx` markup.
