@@ -2,9 +2,33 @@
 
 Date: 2026-06-22
 
-Status: internal MVP candidate validation in progress.
+Status: accepted with limitations for internal MVP candidate.
 
 Sign-off owner: user.
+
+## Internal MVP Candidate Decision
+
+Decision: accepted with limitations.
+
+Decision date: 2026-06-22.
+
+Decision basis:
+
+- The representative scenario reconciles tariff outputs to the recoverable cost base.
+- The calculation workflow shows tariff outputs, allocation method, key assumptions, validation status, revenue recovery, and audit trace.
+- The manual demo path from inputs to allocation, calculation, audit trace, output, and report view has been accepted by the user.
+- Local lint, type-check, test, and production build evidence has been recorded in the PM control log.
+
+Accepted limitations:
+
+- The decision is for an internal MVP candidate, not an external release commitment.
+- Formal machine-readable export DTOs remain outside MVP scope.
+- Formal report/export audit trace remains post-MVP or MVP+.
+- Supply calculation remains deferred until business assumptions are resolved.
+- The representative test scenario covers one site and does not replace broader regression or stakeholder-specific scenario testing.
+- Browser print/PDF and rendered HTML download remain stakeholder report outputs, not stable export data contracts.
+
+Next action: prepare stakeholder-demo materials and a concise limitation summary, or split any review feedback into narrow fix packages.
 
 ## Purpose
 
@@ -105,7 +129,7 @@ The user should confirm:
 - Supply calculation is deferred pending business decisions in `SUPPLY_CALCULATION_DESIGN.md`.
 - Browser print/PDF and rendered HTML download are stakeholder report outputs, not a stable export data contract.
 - Local/cloud storage reconciliation failure cases still need broader coverage.
-- UI/browser demo evidence is still required before calling the internal MVP candidate complete.
+- Broader UI/browser regression evidence is still required before treating the workflow as externally release-ready.
 
 ## Required Evidence Before Internal MVP Candidate
 

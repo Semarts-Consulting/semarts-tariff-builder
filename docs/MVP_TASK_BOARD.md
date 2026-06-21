@@ -4,7 +4,6 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| MVP-003 MVP candidate review | User sign-off owner plus PM support | `docs/MVP_CANDIDATE_SIGNOFF.md`, `docs/MVP_DEMO_PATH_CHECK.md`, `docs/MVP_TIMELINE_TRACKER.md` | Accepted manual demo path | High | Decide accepted, accepted with limitations, or fixes required. |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
 | OUT-003 Report readiness UI alignment | UI Flow plus PM/Engine review | `components/ReportsSummary.tsx`, possibly `components/TariffAuditTracePanel.tsx` | OUT-001 contract | Medium | Align rendered report with readiness mapping, warning severity, and audit evidence expectations. |
 | QA-003 Report/export regression tests | QA plus UI review | report/calculation component tests and fixtures | OUT-001 contract | Medium | Cover report sections, warnings, audit trace visibility, and HTML/print actions. |
@@ -15,7 +14,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| _None_ |  |  |  |  |  |
+| MVP-004 Stakeholder-demo preparation | PM plus user sign-off owner | future demo notes, limitation summary | Accepted-with-limitations MVP decision | Medium | Prepare a focused commercial walkthrough without expanding MVP scope. |
 
 ## Review
 
@@ -42,6 +41,8 @@
 | PR-006 Report/export readiness contract | PM plus UI/Engine/QA review | `docs/APP_CONTRACTS.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Merged PR #6 | Medium | Defines MVP rendered report output and keeps formal export DTO as future work. |
 | PR-007 MVP candidate validation scenario | PM plus Tariff Engine/QA review | `tests/mvp-candidate-scenario.test.ts`, `tests/fixtures/mvp-candidate-scenario.ts`, `docs/MVP_CANDIDATE_SIGNOFF.md`, `docs/MVP_TIMELINE_TRACKER.md`, manager docs | Merged PR #7 | High | Representative scenario, cost-base reconciliation, audit-trace evidence, sign-off pack, and timeline tracking. |
 | PR-008 Manual MVP demo path check | PM plus user sign-off owner | `docs/MVP_DEMO_PATH_CHECK.md`, `docs/MVP_TIMELINE_TRACKER.md`, manager docs | Merged PR #8 and user acceptance | High | Demo path from inputs to allocation, calculation, audit trace, outputs, and reconciliation accepted. |
+| PR-009 MVP demo acceptance evidence | PM plus user sign-off owner | `docs/MVP_DEMO_PATH_CHECK.md`, `docs/MVP_TIMELINE_TRACKER.md`, manager docs | Merged PR #9 | High | User accepted all six manual demo path steps. |
+| MVP-003 Internal MVP candidate review and decision | User sign-off owner plus PM support | `docs/MVP_CANDIDATE_SIGNOFF.md`, `docs/MVP_DEMO_PATH_CHECK.md`, `docs/MVP_TIMELINE_TRACKER.md` | Decision recorded as accepted with limitations | High | Internal MVP candidate accepted with limitations on 2026-06-22. |
 | DATA-001 Import parser extraction and workbook wiring | Data Import | import modules, workbook form, import tests | Merged in PR #1 | Medium | Header, dedupe, and fingerprint contracts documented. |
 | ENG-001 Tariff calculation validation package | Tariff Engine | `types/project.ts`, `lib/calculation-engine.ts`, `tests/calculation-engine.test.ts` | Merged in PR #1 | High | Validation issues and revenue recovery accepted for MVP. |
 | UI-001 Layout-only UI package | UI Flow | layout/page/component files | Merged in PR #1 | Medium | Broad responsive layout package integrated. |

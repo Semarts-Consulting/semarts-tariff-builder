@@ -4,20 +4,20 @@
 
 Date: 2026-06-22
 
-Branch: `codex/mvp-demo-accepted`
+Branch: `codex/mvp-candidate-decision`
 
-Working tree status: manual MVP demo path accepted; MVP candidate review in progress.
+Working tree status: internal MVP candidate decision being recorded.
 
-Latest full checks on this branch:
+Latest full checks before this docs-only decision package:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 12 test files and 64 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #8 have been merged to `main`. The current branch records user acceptance of the manual demo path and moves the MVP candidate review milestone to in progress.
+PRs #1 through #9 have been merged to `main`. The current branch records the internal MVP candidate decision as accepted with limitations.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: MVP candidate review.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: stakeholder-demo preparation or narrow fixes if review feedback identifies them.
 
 ## MVP Definition
 
@@ -154,6 +154,7 @@ Review risks:
 - Browser print/PDF and rendered HTML download are acceptable MVP stakeholder report outputs.
 - `ReportsSummary.tsx` is report UI, not a stable machine-readable export DTO.
 - Report readiness mapping is: `Needs correction` for validation errors, `Needs review` for warnings only, `Revenue variance` for unrecovered revenue without validation issues, and `Ready for review` when validation is clear and revenue is recovered.
+- Internal MVP candidate decision is accepted with limitations as of 2026-06-22.
 
 ## QA Staging Warnings
 
@@ -176,8 +177,9 @@ Missing MVP-critical regression coverage:
 - Report rendering, warning visibility, audit trace visibility, and HTML/print action tests.
 - Local/cloud storage reconciliation failure cases.
 - Supply calculation tests remain intentionally deferred until business rules are approved.
-- MVP candidate review decision: accepted, accepted with limitations, or fixes required.
+- Broader UI/browser regression evidence before external release readiness.
+- Additional representative/stakeholder-specific tariff scenarios beyond the internal MVP candidate.
 
 ## Immediate Next Action
 
-Review and commit the MVP demo acceptance evidence, then open a PR from `codex/mvp-demo-accepted`.
+Review and commit the internal MVP candidate decision, then open a PR from `codex/mvp-candidate-decision`.
