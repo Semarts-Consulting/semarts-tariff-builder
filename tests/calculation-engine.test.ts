@@ -119,6 +119,36 @@ describe("calculateTariffs", () => {
     expect(result.revenueRequirement).toBe(40000);
   });
 
+  it("traces recoverable revenue requirement by cost pool", () => {
+    const result = calculateTariffs({
+      projectId: "project",
+      dataInputRows,
+      costPoolRows,
+      allocationRows: balancedAllocationRows
+    });
+    const revenueTrace = result.auditTrace?.filter(
+      (entry) => entry.stage === "Revenue requirement"
+    );
+
+    expect(revenueTrace).toHaveLength(costPoolRows.length);
+    expect(revenueTrace?.map((entry) => entry.result.value).reduce((total, value) => total + value, 0)).toBe(
+      result.revenueRequirement
+    );
+    expect(revenueTrace).toContainEqual(
+      expect.objectContaining({
+        id: "revenue-requirement:energy-cost",
+        formula: "annualAmount * recoverablePercent / 100",
+        costPoolId: "energy-cost",
+        sourceRowIds: ["energy-cost"],
+        result: {
+          label: "Recoverable cost",
+          value: 10000,
+          unit: "GBP"
+        }
+      })
+    );
+  });
+
   it("allocates costs by tariff component and customer class", () => {
     const result = calculateTariffs({
       projectId: "project",
@@ -144,6 +174,39 @@ describe("calculateTariffs", () => {
     expect(business?.totalAllocatedCost).toBe(14500);
   });
 
+  it("traces cost allocation by cost pool, customer class, share, and component", () => {
+    const result = calculateTariffs({
+      projectId: "project",
+      dataInputRows,
+      costPoolRows,
+      allocationRows: balancedAllocationRows
+    });
+    const allocationTrace = result.auditTrace?.find(
+      (entry) =>
+        entry.stage === "Cost allocation" &&
+        entry.costPoolId === "fixed-cost" &&
+        entry.customerClass === "Residential"
+    );
+
+    expect(allocationTrace).toMatchObject({
+      formula: "recoverableCost * allocationPercent / 100",
+      sourceRowIds: ["fixed-cost", "allocation-fixed"],
+      costPoolId: "fixed-cost",
+      allocationMethodId: "allocation-fixed",
+      customerClass: "Residential",
+      tariffComponent: "Fixed",
+      result: {
+        label: "Allocated cost",
+        value: 8000,
+        unit: "GBP"
+      }
+    });
+    expect(allocationTrace?.inputs).toEqual([
+      { label: "Recoverable cost", value: 10000, unit: "GBP" },
+      { label: "Allocation percent", value: 80, unit: "Percent" }
+    ]);
+  });
+
   it("calculates indicative fixed, energy, and demand rates", () => {
     const result = calculateTariffs({
       projectId: "project",
@@ -163,6 +226,46 @@ describe("calculateTariffs", () => {
     expect(business?.fixedChargePerCustomer).toBe(100);
     expect(business?.energyChargePerKwh).toBe(0.08125);
     expect(business?.demandChargePerKw).toBe(30);
+  });
+
+  it("traces class totals and rate derivation formulas", () => {
+    const result = calculateTariffs({
+      projectId: "project",
+      dataInputRows,
+      costPoolRows,
+      allocationRows: balancedAllocationRows
+    });
+    const residentialClassTotal = result.auditTrace?.find(
+      (entry) => entry.id === "class-total:Residential"
+    );
+    const residentialEnergyRate = result.auditTrace?.find(
+      (entry) => entry.id === "rate:Residential:energy"
+    );
+
+    expect(residentialClassTotal).toMatchObject({
+      stage: "Class total",
+      formula: "fixedCost + energyCost + demandCost + passThroughCost",
+      dataInputRowId: "input-residential",
+      customerClass: "Residential",
+      result: {
+        label: "Total allocated cost",
+        value: 25500,
+        unit: "GBP"
+      }
+    });
+    expect(residentialEnergyRate).toMatchObject({
+      stage: "Rate derivation",
+      formula: "(energyCost + passThroughCost) / annualKwh",
+      dataInputRowId: "input-residential",
+      customerClass: "Residential",
+      tariffComponent: "Energy"
+    });
+    expect(residentialEnergyRate?.inputs).toEqual([
+      { label: "Energy cost", value: 6000, unit: "GBP" },
+      { label: "Pass-through cost", value: 2500, unit: "GBP" },
+      { label: "Annual kWh", value: 120000, unit: "kWh" }
+    ]);
+    expect(residentialEnergyRate?.result.value).toBeCloseTo(0.070833, 5);
   });
 
   it("flags unbalanced allocations and preserves the resulting variance", () => {
@@ -193,6 +296,41 @@ describe("calculateTariffs", () => {
     );
   });
 
+  it("traces revenue recovery reconciliation", () => {
+    const result = calculateTariffs({
+      projectId: "project",
+      dataInputRows,
+      costPoolRows: [costPoolRows[0]],
+      allocationRows: [
+        {
+          ...balancedAllocationRows[0],
+          classShares: [
+            { customerClass: "Residential", percent: 50 },
+            { customerClass: "Business", percent: 25 }
+          ]
+        }
+      ]
+    });
+    const revenueRecoveryTrace = result.auditTrace?.find(
+      (entry) => entry.id === "revenue-recovery:project"
+    );
+
+    expect(revenueRecoveryTrace).toMatchObject({
+      stage: "Revenue recovery",
+      formula: "revenueRequirement - allocatedCost",
+      result: {
+        label: "Unallocated cost",
+        value: 2500,
+        unit: "GBP"
+      }
+    });
+    expect(revenueRecoveryTrace?.inputs).toEqual([
+      { label: "Revenue requirement", value: 10000, unit: "GBP" },
+      { label: "Allocated cost", value: 7500, unit: "GBP" },
+      { label: "Revenue recovery tolerance", value: 0.01, unit: "GBP" }
+    ]);
+  });
+
   it("ignores allocation rows without a matching cost pool", () => {
     const result = calculateTariffs({
       projectId: "project",
@@ -214,6 +352,12 @@ describe("calculateTariffs", () => {
     expect(result.validationIssues).toContainEqual(
       expect.objectContaining({
         code: "Missing cost pool",
+        costPoolId: "missing"
+      })
+    );
+    expect(result.auditTrace).not.toContainEqual(
+      expect.objectContaining({
+        stage: "Cost allocation",
         costPoolId: "missing"
       })
     );
@@ -528,6 +672,16 @@ describe("calculateTariffs", () => {
         expect.objectContaining({ code: "Missing consumption denominator" }),
         expect.objectContaining({ code: "Missing capacity denominator" })
       ])
+    );
+    expect(result.auditTrace).toContainEqual(
+      expect.objectContaining({
+        id: "rate:Residential:fixed",
+        result: {
+          label: "Fixed charge per customer",
+          value: 0,
+          unit: "GBP per customer"
+        }
+      })
     );
   });
 });
