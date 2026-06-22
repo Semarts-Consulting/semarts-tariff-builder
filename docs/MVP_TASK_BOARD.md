@@ -5,7 +5,7 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
-| MODEL-004 Representative workbook-derived scenario plan | QA plus Tariff Engine/Data Import/PM review | future scenario docs and test fixture proposals | Workbook source mapping proposal | Medium | Identify representative workbook-derived cases before any broad import or methodology configuration implementation. |
+| WB-001 Airport customer-class scenario fixture proposal | QA plus Tariff Engine/Data Import/PM review | future scenario fixture docs and possible test fixture proposal | Workbook-derived scenario plan | Medium | Prepare the first workbook-derived scenario as a narrow, reviewable fixture proposal before tests or production implementation. |
 | ENG-010 Supply tariff integration proposal | Tariff Engine plus PM review | future tariff integration docs, future shared type proposals if approved | Supply integration decision pack | High | Start only after allocation, recovery, pass-through, reconciliation, and report treatment are signed off. |
 | SUP-003 Billing-period daily annualisation | Tariff Engine plus QA review | future `lib/supply-calculation-engine.ts` and focused tests if approved | User decision to replace 365-day annualisation with actual billing-period days | Medium | Keep separate from tariff integration; requires a clear billing-period input before production calculation changes. |
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
@@ -14,7 +14,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| MODEL-003 Workbook source mapping proposal | PM plus Data Import/QA review | `docs/WORKBOOK_SOURCE_MAPPING_PROPOSAL.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Methodology configuration contract proposal | Medium | Propose non-binding source mapping and traceability concepts before any broad import support. |
+| MODEL-004 Representative workbook-derived scenario plan | PM plus QA/Tariff Engine/Data Import review | `docs/WORKBOOK_DERIVED_SCENARIO_PLAN.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Workbook source mapping proposal | Medium | Identify representative workbook-derived cases before any broad import, methodology configuration, or calculation implementation. |
 
 ## Review
 
@@ -81,6 +81,7 @@
 | PR-048 Codex Git workflow helpers | PM plus workflow governance | `AGENTS.md`, `docs/CODEX_GIT_WORKFLOW.md`, `scripts/codex-*.ps1` | Merged PR #48 | Low | Added project-specific Codex/Git workflow guardrails and helper scripts without product behaviour changes. |
 | PR-049 PM control workflow baseline | PM | `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Merged PR #49 | Low | Aligned manager control docs with the current `main` baseline and Codex/Git workflow. |
 | PR-050 Methodology configuration contract proposal | PM plus future Tariff Engine/Data Import/QA review | `docs/METHODOLOGY_CONFIGURATION_CONTRACT_PROPOSAL.md`, manager docs | Merged PR #50 | Medium | Proposed non-binding methodology configuration contract concepts and kept implementation gated. |
+| PR-051 Workbook source mapping proposal | PM plus Data Import/QA review | `docs/WORKBOOK_SOURCE_MAPPING_PROPOSAL.md`, manager docs | Merged PR #51 | Medium | Proposed non-binding source mapping and traceability concepts before broad import support. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
 | SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Fixture and regression test for energy charge sensitivity. |
