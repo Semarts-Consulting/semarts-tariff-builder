@@ -46,3 +46,5 @@ The next package should be selected from one of:
 3. Prepare supply calculation decision pack.
 4. Prepare formal report/export DTO decision pack.
 5. Start a narrow fix package if demo feedback identifies a defect.
+
+Post-demo feedback should be captured in `docs/POST_DEMO_FEEDBACK_LOG.md`.

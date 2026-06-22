@@ -4,9 +4,9 @@
 
 Date: 2026-06-22
 
-Branch: `codex/demo-approval-record`
+Branch: `codex/post-demo-feedback-log`
 
-Working tree status: demo approval record package in progress.
+Working tree status: post-demo feedback log package in progress.
 
 Latest full checks from PR #15 live demo tariff seed:
 
@@ -16,9 +16,9 @@ Latest full checks from PR #15 live demo tariff seed:
 - `npm.cmd test`: passed, 13 test files and 65 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #15 have been merged to `main`. The current branch records that the corrected live MVP demo is approved to carry forward.
+PRs #1 through #16 have been merged to `main`. The current branch prepares the feedback log for post-demo triage.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: select the next post-demo package.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: post-demo feedback capture.
 
 ## MVP Definition
 
@@ -162,6 +162,7 @@ Review risks:
 - Final MVP candidate verification baseline is green after live demo tariff seed: lint passed, type-check passed, 13 test files and 65 tests passed, and production build passed.
 - The live `demo-private-network` sample project must include aggregate customer information, recoverable cost pools, and allocation methods sufficient to calculate tariffs in the application.
 - Demo is approved to carry forward after the PR #15 live tariff seed correction.
+- Post-demo feedback must be triaged into narrow defects, decisions, scenarios, enhancements, or out-of-scope items before implementation.
 
 ## QA Staging Warnings
 
@@ -193,6 +194,8 @@ Final verification baseline is maintained in `docs/MVP_FINAL_BASELINE.md`.
 
 Demo approval is maintained in `docs/MVP_DEMO_APPROVAL.md`.
 
+Post-demo feedback is maintained in `docs/POST_DEMO_FEEDBACK_LOG.md`.
+
 ## Immediate Next Action
 
-Review and commit the demo approval record package, then open a PR from `codex/demo-approval-record`.
+Review and commit the post-demo feedback log package, then open a PR from `codex/post-demo-feedback-log`.
