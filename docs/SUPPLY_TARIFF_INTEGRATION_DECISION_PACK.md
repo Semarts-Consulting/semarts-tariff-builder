@@ -2,7 +2,7 @@
 
 Date: 2026-06-22
 
-Status: prepared for business review.
+Status: decision answers approved; implementation proposal still required.
 
 Purpose: define the decisions required before supply annual amounts can feed tariff outputs, reports, or exports.
 
@@ -12,23 +12,23 @@ Supply Phase 2 annual amount calculation is merged inside the disconnected suppl
 
 The service can calculate annual amounts for approved fixed and kVA capacity charge lines, but those values do not currently affect tariff revenue requirement, allocation, customer class outputs, report totals, or export data.
 
-Tariff integration must not start until the decisions below are accepted.
+Tariff integration must not start until a separate implementation proposal is prepared and approved.
 
 Related calculation-rule decisions are recorded in `docs/SUPPLY_RULE_DECISIONS.md`.
 
-The remaining integration choices are summarised for user sign-off in `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`.
+The approved integration answers are recorded in `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`.
 
 ## Decisions Required
 
 | Decision | Required answer | Why it matters | Current status |
 | --- | --- | --- | --- |
-| Allocation destination | Decide whether supply charges allocate by MPAN, tenant, network level, customer class, or existing allocation methods | Determines how supply costs become customer class tariff outputs | Open; user requested clarification |
-| Cost recovery treatment | Decide whether supply annual amounts join recoverable network cost pools, remain separate supply tariff lines, or are reported as pass-through only | Avoids double recovery or mixing supply and network methodology | Open |
-| Pass-through treatment | Decide whether pass-through supply lines are excluded from recovery, shown separately, or included in indicative tariff outputs | Controls stakeholder reporting and revenue reconciliation | Open; recommended model needs customer applicability, reporting category, and pass-through flag |
-| Customer class mapping | Decide how MPAN-level supply costs map to customer classes when multiple classes share a site | Prevents arbitrary allocation assumptions | Open |
-| Revenue reconciliation | Decide whether supply annual amounts reconcile inside the existing cost-base recovery check or a separate supply reconciliation | Protects auditability and commercial review | Open |
-| Report presentation | Decide whether supply annual amounts appear in the MVP report as separate evidence or as tariff-impacting values | Avoids changing stakeholder report meaning by accident | Open |
-| Export contract | Decide whether supply integration requires a machine-readable DTO before external release | Prevents premature export schema changes | Open |
+| Allocation destination | Decide whether supply charges allocate by MPAN, tenant, network level, customer class, or existing allocation methods | Determines how supply costs become customer class tariff outputs | Approved: no allocation into customer class tariffs until customer applicability is explicit |
+| Cost recovery treatment | Decide whether supply annual amounts join recoverable network cost pools, remain separate supply tariff lines, or are reported as pass-through only | Avoids double recovery or mixing supply and network methodology | Approved: keep separate from recoverable network cost pools |
+| Pass-through treatment | Decide whether pass-through supply lines are excluded from recovery, shown separately, or included in indicative tariff outputs | Controls stakeholder reporting and revenue reconciliation | Approved: exclude from recoverable tariff revenue and show separately |
+| Customer class mapping | Decide how MPAN-level supply costs map to customer classes when multiple classes share a site | Prevents arbitrary allocation assumptions | Approved: explicit customer applicability required before tariff-impacting integration |
+| Revenue reconciliation | Decide whether supply annual amounts reconcile inside the existing cost-base recovery check or a separate supply reconciliation | Protects auditability and commercial review | Approved: separate supply reconciliation |
+| Report presentation | Decide whether supply annual amounts appear in the MVP report as separate evidence or as tariff-impacting values | Avoids changing stakeholder report meaning by accident | Approved: evidence-only until tariff impact is separately approved |
+| Export contract | Decide whether supply integration requires a machine-readable DTO before external release | Prevents premature export schema changes | Approved: no export DTO change for MVP |
 
 ## Recommended Integration Approach
 
@@ -52,17 +52,17 @@ This approach preserves the current tariff methodology while allowing commercial
 - Adding export DTO fields.
 - Changing import parsers or storage schema.
 
-## Minimum Approval To Start Implementation Proposal
+## Approved Answers Before Implementation Proposal
 
-Before Tariff Engine can propose implementation, the user must answer:
+The user approved the following on 2026-06-22:
 
-1. Should supply annual amounts affect customer tariffs now, or remain evidence-only?
-2. If tariff-impacting, what is the allocation destination?
-3. Should pass-through supply lines be excluded from recovery?
-4. Should supply reconciliation be separate from network cost recovery?
-5. Should reports show supply values as evidence only or as tariff-impacting totals?
-6. Should each supply charge have an explicit customer applicability rule?
-7. Should the current Phase 2 `per day` calculation move from 365-day annualisation to actual billing-period days before integration?
+1. Supply annual amounts remain evidence-only for now.
+2. Supply does not allocate into customer class tariffs until customer applicability is explicit.
+3. Pass-through supply lines are excluded from recoverable tariff revenue and shown separately.
+4. Supply reconciliation is separate from network cost recovery.
+5. Reports show supply values as evidence-only until tariff impact is separately approved.
+6. Each supply charge must have an explicit customer applicability rule before tariff-impacting integration.
+7. The current Phase 2 `per day` calculation moves to actual billing-period days only in a separate approved implementation package.
 
 ## Future Implementation Proposal Files If Later Approved
 

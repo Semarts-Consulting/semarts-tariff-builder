@@ -2,7 +2,7 @@
 
 Date: 2026-06-22
 
-Status: prepared for user decision.
+Status: answered by user; see `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`.
 
 Purpose: convert the remaining supply tariff integration blockers into clear business choices before any supply annual amounts affect tariff outputs, report totals, exports, imports, storage, or shared DTOs.
 
@@ -19,7 +19,7 @@ The service can calculate annual amounts for approved fixed and kVA capacity lin
 - export data;
 - imports or storage.
 
-This separation remains correct until the decisions below are accepted.
+This separation remains correct until an approved implementation proposal is prepared and merged. The decision answers are recorded in `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`.
 
 ## Decision Set
 
@@ -65,7 +65,7 @@ The recommended MVP-safe response is:
 | Export contract | No export DTO change for MVP. |
 | Daily annualisation | Replace the Phase 2 365-day rule with actual billing-period days only in a separate approved implementation package. |
 
-If accepted, the next production proposal should be limited to evidence-only supply presentation and separate supply reconciliation. It should not alter tariff rates, network revenue recovery, report totals, imports, storage, or exports.
+Accepted by user on 2026-06-22. The next production proposal should be limited to evidence-only supply presentation and separate supply reconciliation. It should not alter tariff rates, network revenue recovery, report totals, imports, storage, or exports.
 
 ## Recommended Next Safe Package
 
@@ -95,7 +95,7 @@ The decision answer record is ready only when it:
 - states whether actual billing-period daily annualisation is approved as a separate implementation package;
 - confirms no production code, imports, storage, exports, report totals, or shared DTOs are changed in the decision package.
 
-If any answer is missing, production implementation remains blocked.
+The answer set is complete. Production implementation remains blocked until a separate implementation proposal is prepared and approved.
 
 ## Explicitly Not Approved
 
