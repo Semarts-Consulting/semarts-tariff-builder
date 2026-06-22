@@ -5,7 +5,6 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
-| MODEL-002 Methodology configuration contract proposal | Tariff Engine plus Data Import/QA/PM review | future contract docs and possible type proposals | Owner decision on methodology configuration direction | High | Define configuration contracts before changing project types, calculation inputs, imports, reports, or UI. |
 | MODEL-003 Workbook source mapping proposal | Data Import plus PM/QA review | future mapping docs and parser contract proposals | Methodology configuration decision | Medium | Define workbook source, sheet, header, row key, and mapping confidence before broad import support. |
 | ENG-010 Supply tariff integration proposal | Tariff Engine plus PM review | future tariff integration docs, future shared type proposals if approved | Supply integration decision pack | High | Start only after allocation, recovery, pass-through, reconciliation, and report treatment are signed off. |
 | SUP-003 Billing-period daily annualisation | Tariff Engine plus QA review | future `lib/supply-calculation-engine.ts` and focused tests if approved | User decision to replace 365-day annualisation with actual billing-period days | Medium | Keep separate from tariff integration; requires a clear billing-period input before production calculation changes. |
@@ -15,7 +14,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| PM control workflow baseline refresh | PM | `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #47 and PR #48 merged | Low | Align manager control docs with the current `main` baseline and new Codex/Git workflow. |
+| MODEL-002 Methodology configuration contract proposal | PM plus future Tariff Engine/Data Import/QA review | `docs/METHODOLOGY_CONFIGURATION_CONTRACT_PROPOSAL.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Methodology configuration decision pack | Medium | Propose non-binding contract concepts before any project type, calculation input, import, report, export, storage, or UI change. |
 
 ## Review
 
@@ -80,6 +79,7 @@
 | PR-046 Model flexibility requirements | PM plus future Tariff Engine/Data Import/QA review | `docs/MODEL_FLEXIBILITY_REVIEW.md`, manager docs | Merged PR #46 | Medium | Captured workbook-derived flexibility requirements without changing production behaviour. |
 | PR-047 Methodology configuration decision pack | PM plus future Tariff Engine/Data Import/QA review | `docs/METHODOLOGY_CONFIGURATION_DECISION_PACK.md`, manager docs | Merged PR #47 | Medium | Proposed future methodology configuration direction and kept production implementation gated. |
 | PR-048 Codex Git workflow helpers | PM plus workflow governance | `AGENTS.md`, `docs/CODEX_GIT_WORKFLOW.md`, `scripts/codex-*.ps1` | Merged PR #48 | Low | Added project-specific Codex/Git workflow guardrails and helper scripts without product behaviour changes. |
+| PR-049 PM control workflow baseline | PM | `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Merged PR #49 | Low | Aligned manager control docs with the current `main` baseline and Codex/Git workflow. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
 | SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Fixture and regression test for energy charge sensitivity. |
