@@ -311,7 +311,7 @@ Storage reconciliation changes are business behavior and must not be included in
 
 ## Supply Calculation Contract
 
-Production supply calculation is deferred.
+Production supply calculation beyond Phase 1 normalisation is deferred.
 
 `SUPPLY_CALCULATION_DESIGN.md` records unresolved assumptions, including:
 
@@ -323,7 +323,28 @@ Production supply calculation is deferred.
 - Blank charge names.
 - Custom time-of-use behavior.
 
-Do not add production supply calculation DTOs or services until these questions are resolved.
+Phase 1 supply calculation is a normalisation-only service in `lib/supply-calculation-engine.ts`.
+
+Phase 1 may:
+
+- Convert supply input rows into normalised, source-linked charge lines.
+- Convert rates from pence to pounds while leaving pound rates unchanged.
+- Preserve project id, MPAN, supply detail id, and supply contract charge id where available.
+- Preserve losses basis, time-of-use, custom time-of-use, unit, charge type, and voltage.
+- Emit explicit line statuses: `Normalised`, `Needs business rule`, `Needs volume data`, `Invalid`, and `Excluded`.
+- Represent pass-through transmission and distribution charges as excluded evidence lines.
+- Mark unresolved annualisation, loss, DUoS volume, and kVA-to-kW rules without calculating tariff impacts.
+
+Phase 1 must not:
+
+- Feed values into `calculateTariffs`.
+- Change tariff revenue requirement, allocation, class outputs, revenue recovery, or tariff audit trace.
+- Change stakeholder report totals or export DTOs.
+- Change storage, import parsing, UI, Supabase, or API behavior.
+
+Phase 1 types are service-local until the normalisation contract is accepted for wider use. Do not promote supply calculation result DTOs into `types/project.ts` without manager review.
+
+Do not add production supply annual amount calculation or tariff integration until the unresolved questions are signed off.
 
 ## Report And Export Contract
 
