@@ -85,6 +85,11 @@ const capacityUnits: SupplyContractUnitOfMeasurement[] = [
   "per kVA per Month"
 ];
 
+type AnnualAmountCalculation = {
+  quantity: number | null;
+  annualAmount: number | null;
+};
+
 export function normaliseSupplyRate(rate: number, rateUnit: SupplyContractRateUnit) {
   return rateUnit === "p" ? rate / 100 : rate;
 }
@@ -235,12 +240,11 @@ export function buildTransmissionChargeLines(
           ...validation.detailMessages,
           ...(validation.fieldMessages.tnuosNonLocationalChargePerDay ?? [])
         ],
-        "Needs business rule"
+        "Normalised"
       ),
       messages: [
         ...validation.detailMessages,
-        ...(validation.fieldMessages.tnuosNonLocationalChargePerDay ?? []),
-        "Annualisation for per-day fixed transmission charges needs a business rule."
+        ...(validation.fieldMessages.tnuosNonLocationalChargePerDay ?? [])
       ]
     }),
     createSupplyLine({
@@ -380,6 +384,10 @@ function statusForSupplyContractCharge(
     return "Normalised";
   }
 
+  if (charge.chargeType === "Fixed" || charge.chargeType === "Capacity") {
+    return "Normalised";
+  }
+
   return "Needs business rule";
 }
 
@@ -390,8 +398,7 @@ function createDuosFixedLine(
 ) {
   const messages = [
     ...validation.detailMessages,
-    ...(validation.fieldMessages.duosFixedChargePerDay ?? []),
-    "Annualisation for per-day fixed distribution charges needs a business rule."
+    ...(validation.fieldMessages.duosFixedChargePerDay ?? [])
   ];
 
   return createSupplyLine({
@@ -410,7 +417,7 @@ function createDuosFixedLine(
         ...validation.detailMessages,
         ...(validation.fieldMessages.duosFixedChargePerDay ?? [])
       ],
-      "Needs business rule"
+      "Normalised"
     ),
     messages
   });
@@ -423,8 +430,7 @@ function createDuosCapacityLine(
 ) {
   const messages = [
     ...validation.detailMessages,
-    ...(validation.fieldMessages.duosImportCapacityPencePerKvaPerDay ?? []),
-    "Annualisation for per-kVA per-day distribution charges needs a business rule."
+    ...(validation.fieldMessages.duosImportCapacityPencePerKvaPerDay ?? [])
   ];
 
   return createSupplyLine({
@@ -446,10 +452,73 @@ function createDuosCapacityLine(
         ...validation.detailMessages,
         ...(validation.fieldMessages.duosImportCapacityPencePerKvaPerDay ?? [])
       ],
-      "Needs business rule"
+      "Normalised"
     ),
     messages
   });
+}
+
+function calculateAnnualAmount(input: {
+  status: SupplyNormalisationStatus;
+  chargeType: SupplyNormalisedChargeType;
+  unitOfMeasurement: NormalisedSupplyChargeLine["unitOfMeasurement"];
+  ratePounds: number;
+  supplyCapacityKva: number;
+}): AnnualAmountCalculation {
+  if (input.status !== "Normalised") {
+    return { quantity: null, annualAmount: null };
+  }
+
+  if (input.chargeType === "Fixed") {
+    return calculateFixedAnnualAmount(input.ratePounds, input.unitOfMeasurement);
+  }
+
+  if (input.chargeType === "Capacity") {
+    return calculateCapacityAnnualAmount(
+      input.ratePounds,
+      input.unitOfMeasurement,
+      input.supplyCapacityKva
+    );
+  }
+
+  return { quantity: null, annualAmount: null };
+}
+
+function calculateFixedAnnualAmount(
+  ratePounds: number,
+  unitOfMeasurement: NormalisedSupplyChargeLine["unitOfMeasurement"]
+): AnnualAmountCalculation {
+  if (unitOfMeasurement === "per day") {
+    return { quantity: 365, annualAmount: ratePounds * 365 };
+  }
+
+  if (unitOfMeasurement === "per Month") {
+    return { quantity: 12, annualAmount: ratePounds * 12 };
+  }
+
+  if (unitOfMeasurement === "per year") {
+    return { quantity: 1, annualAmount: ratePounds };
+  }
+
+  return { quantity: null, annualAmount: null };
+}
+
+function calculateCapacityAnnualAmount(
+  ratePounds: number,
+  unitOfMeasurement: NormalisedSupplyChargeLine["unitOfMeasurement"],
+  supplyCapacityKva: number
+): AnnualAmountCalculation {
+  if (unitOfMeasurement === "per kVA per day") {
+    const quantity = supplyCapacityKva * 365;
+    return { quantity, annualAmount: ratePounds * quantity };
+  }
+
+  if (unitOfMeasurement === "per kVA per Month") {
+    const quantity = supplyCapacityKva * 12;
+    return { quantity, annualAmount: ratePounds * quantity };
+  }
+
+  return { quantity: null, annualAmount: null };
 }
 
 function createDuosUnitLines(
@@ -559,6 +628,14 @@ function createSupplyLine(input: {
   status: SupplyNormalisationStatus;
   messages: string[];
 }): NormalisedSupplyChargeLine {
+  const annualAmountCalculation = calculateAnnualAmount({
+    status: input.status,
+    chargeType: input.chargeType,
+    unitOfMeasurement: input.unitOfMeasurement,
+    ratePounds: input.ratePounds,
+    supplyCapacityKva: input.supplyDetail.supplyCapacityKva
+  });
+
   return {
     id: `${input.supplyDetail.id}:${input.idSuffix}`,
     projectId: input.projectId,
@@ -575,8 +652,8 @@ function createSupplyLine(input: {
     timeOfUse: input.timeOfUse ?? null,
     customTimeOfUse: input.customTimeOfUse ?? null,
     ratePounds: input.ratePounds,
-    quantity: null,
-    annualAmount: null,
+    quantity: annualAmountCalculation.quantity,
+    annualAmount: annualAmountCalculation.annualAmount,
     status: input.status,
     messages: input.messages
   };
