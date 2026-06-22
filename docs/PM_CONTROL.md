@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/supply-phase-2-implementation-proposal`
+Branch: `codex/supply-phase-2-closeout`
 
-Working tree status: supply Phase 2 implementation proposal in progress.
+Working tree status: supply Phase 2 closeout in progress.
 
-Latest full checks on `main` after PR #34:
+Latest full checks on `main` after PR #36:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test`: passed, 16 test files and 89 tests.
+- `npm.cmd test`: passed, 16 test files and 96 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #34 have been merged to `main`. The current branch defines the Supply Phase 2 implementation proposal.
+PRs #1 through #36 have been merged to `main`. The current branch records Supply Phase 2 annual amount closeout.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply Phase 2 implementation proposal.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply Phase 2 closeout.
 
 ## Operating Mode
 
 Current package ownership: Manager-led.
 
-Reason: this is a documentation-only implementation proposal. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
+Reason: this is a documentation-only closeout package for the merged Supply Phase 2 annual amount implementation. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
 
 Future package rule:
 
@@ -87,7 +87,7 @@ Observed work:
 - Deferred supply calculation DTO and scaffold work was removed from the active package.
 - Tariff Engine accepts `validationIssues`, `Warning` severity, the current issue-code set, and `isRevenueRecovered` tolerance for MVP after documentation alignment.
 - Calculation warnings include default-created allocation methods requiring review, without changing tariff outputs or audit trace values.
-- Supply Phase 1 normalisation is merged in `lib/supply-calculation-engine.ts` with focused tests. It remains disconnected from tariff outputs, reports, storage, imports, and shared project DTOs.
+- Supply Phase 2 annual amount calculation is merged in `lib/supply-calculation-engine.ts` with focused tests. It remains disconnected from tariff outputs, reports, storage, imports, and shared project DTOs.
 
 Review risks:
 
@@ -137,7 +137,7 @@ Review risks:
 | Tariff calculation result shape | `types/project.ts`, `lib/calculation-engine.ts`, `components/TariffCalculationsSummary.tsx`, `components/ReportsSummary.tsx` | High | Tariff Engine owns semantics; UI can render only after contract approval. |
 | Validation result semantics | `types/project.ts`, form components, calculation engine, reports | High | Do not mix form save-blocking validation with calculation validation in one package. |
 | Allocation reconciliation | `lib/project-storage.ts`, `components/CostPoolsForm.tsx`, `tests/allocation-reconciliation.test.ts` | Medium | Treat as data/storage behavior, not UI behavior. |
-| Supply calculation | `SUPPLY_CALCULATION_DESIGN.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, `lib/supply-calculation-engine.ts`, future shared types/integration files | High | Phase 1 normalisation only; annual amounts and tariff/report integration remain blocked until Phase 2 decisions are accepted. |
+| Supply calculation | `SUPPLY_CALCULATION_DESIGN.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, `lib/supply-calculation-engine.ts`, future shared types/integration files | High | Phase 2 annual amounts only; tariff/report integration remains blocked until allocation and pass-through decisions are accepted. |
 | Report/export DTOs | `components/ReportsSummary.tsx`, future export code, tariff result types | Medium | PM approval required before adding stakeholder-facing checks or export fields. |
 
 ## Merge Order
@@ -157,7 +157,7 @@ Review risks:
 3. Whether a future machine-readable export DTO is required for first commercial release after MVP rendered report output.
 4. Which imported workbook headers are contractual and which remain provisional.
 5. Whether `ReportsSummary.tsx` should be considered report UI only or the start of an export DTO contract.
-6. Supply annual amount calculation may proceed to Tariff Engine proposal after Option A approval; tariff/report integration remains deferred.
+6. Supply tariff integration remains deferred until allocation destination and pass-through treatment are signed off.
 
 ## Accepted Decisions
 
@@ -192,6 +192,7 @@ Review risks:
 - Supply Phase 2 decision brief should be approved, amended, or rejected by the user before Tariff Engine prepares implementation.
 - User approved Supply Phase 2 Option A on 2026-06-22. Tariff Engine may prepare an annual-amount-only implementation proposal. Tariff integration, report totals, export fields, imports, and storage remain out of scope.
 - Supply Phase 2 implementation proposal is documented in `docs/SUPPLY_PHASE_2_IMPLEMENTATION_PROPOSAL.md`; implementation ownership is Tariff Engine with QA and PM review.
+- Supply Phase 2 annual amounts are merged through PR #36. Fixed annual, monthly, daily, and clear kVA capacity charge lines can calculate annual amounts inside the disconnected supply service only. Tariff integration, report totals, export fields, imports, storage, and shared DTO changes remain out of scope.
 
 ## QA Staging Warnings
 
@@ -213,7 +214,7 @@ Missing MVP-critical regression coverage:
 - Report readiness/export contract tests.
 - Report rendering, warning visibility, audit trace visibility, and HTML/print action tests.
 - Local/cloud storage reconciliation failure cases.
-- Supply Phase 1 normalisation tests are present; annual amount and tariff integration tests remain intentionally deferred until business rules are approved.
+- Supply Phase 2 annual amount tests are present; tariff integration tests remain intentionally deferred until allocation and pass-through rules are approved.
 - Broader UI/browser regression evidence before external release readiness.
 - Additional representative/stakeholder-specific tariff scenarios beyond the internal MVP candidate.
 
@@ -233,4 +234,4 @@ Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECIS
 
 ## Immediate Next Action
 
-Review and commit the supply Phase 2 implementation proposal, then open a PR from `codex/supply-phase-2-implementation-proposal`.
+Review and commit the supply Phase 2 closeout, then open a PR from `codex/supply-phase-2-closeout`.
