@@ -5,7 +5,6 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
-| SCN-001 Small two-class scenario | Tariff Engine plus QA | future scenario fixture and tests | `docs/ADDITIONAL_SCENARIO_PLAN.md` | High | Add after plan approval; validates a simpler residential/commercial site. |
 | SCN-005 Non-recoverable cost scenario | Tariff Engine plus QA | future scenario fixture and tests | `docs/ADDITIONAL_SCENARIO_PLAN.md` | Medium | Add after plan approval; validates partial recovery and excluded cost explanation. |
 | OUT-003 Report readiness UI alignment | UI Flow plus PM/Engine review | `components/ReportsSummary.tsx`, possibly `components/TariffAuditTracePanel.tsx` | OUT-001 contract | Medium | Align rendered report with readiness mapping, warning severity, and audit evidence expectations. |
 | QA-003 Report/export regression tests | QA plus UI review | report/calculation component tests and fixtures | OUT-001 contract | Medium | Cover report sections, warnings, audit trace visibility, and HTML/print actions. |
@@ -16,7 +15,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| MVP-007 Additional scenario plan | PM plus Tariff Engine/QA review | `docs/ADDITIONAL_SCENARIO_PLAN.md`, `docs/POST_DEMO_FEEDBACK_LOG.md`, `docs/MVP_LIMITATIONS_CLOSEOUT.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Demo approved and feedback log in place | Medium | Define scenario backlog before adding more fixtures or tests. |
+| SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, `docs/ADDITIONAL_SCENARIO_PLAN.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Additional scenario plan merged | High | Add fixture and regression test for simpler residential/commercial site. |
 
 ## Review
 
