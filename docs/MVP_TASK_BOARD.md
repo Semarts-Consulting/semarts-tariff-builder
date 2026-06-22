@@ -14,7 +14,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| _None_ |  |  |  |  |  |
+| MVP-006 Post-demo feedback capture | PM plus user sign-off owner | `docs/POST_DEMO_FEEDBACK_LOG.md`, `docs/MVP_DEMO_APPROVAL.md`, `docs/MVP_TIMELINE_TRACKER.md`, `docs/PM_CONTROL.md` | Demo approved to carry forward | Medium | Capture feedback and triage into narrow decisions, fixes, scenarios, enhancements, or out-of-scope requests. |
 
 ## Review
 
