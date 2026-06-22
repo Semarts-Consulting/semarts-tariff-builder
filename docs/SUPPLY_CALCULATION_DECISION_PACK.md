@@ -2,7 +2,7 @@
 
 Date: 2026-06-22
 
-Status: decision pack prepared; production implementation remains blocked.
+Status: Phase 1 normalisation merged; production annual amounts and tariff integration remain blocked.
 
 Purpose: define the business decisions required before supply calculation can move from design note to production calculation service.
 
@@ -10,7 +10,9 @@ Purpose: define the business decisions required before supply calculation can mo
 
 Supply calculation is not part of the approved MVP calculation workflow yet. The current tariff workflow can calculate and explain tariff outputs from customer classes, cost pools, allocation methods, and audit trace evidence.
 
-Supply calculation should stay separate until the questions below are answered. Do not add production DTOs, services, report fields, or tariff-engine integration until the relevant decision group is signed off.
+Phase 1 normalisation is implemented in `lib/supply-calculation-engine.ts` as a disconnected pure service. It normalises rows, converts rates, and flags unresolved cases, but it does not calculate annual amounts or feed tariffs.
+
+Supply calculation should stay separate until the questions below are answered. Do not add shared production DTOs, report fields, tariff-engine integration, or annual amount calculation until the relevant decision group is signed off.
 
 ## Decision Groups
 
@@ -27,7 +29,7 @@ Supply calculation should stay separate until the questions below are answered. 
 
 ## Safe Phase 1 Scope
 
-Phase 1 can proceed only as a normalisation layer if it:
+Phase 1 has proceeded only as a normalisation layer. Its implemented scope is to:
 
 - Converts supply input rows into normalised charge lines.
 - Preserves MPAN, source row, charge, voltage, losses basis, time-of-use, and custom time-of-use references.
@@ -72,4 +74,4 @@ Before production implementation starts, record answers for:
 
 ## Recommended Next Step
 
-Ask Tariff Engine to review this decision pack and produce a Phase 1 normalisation proposal only. That proposal should list exact files, types, test cases, and unresolved statuses before any implementation branch is opened.
+Ask the user and Tariff Engine to resolve the annual amount and tariff integration decision groups before any Phase 2 implementation branch is opened. The next proposal should list exact business-rule answers, files, types, test cases, and integration boundaries.
