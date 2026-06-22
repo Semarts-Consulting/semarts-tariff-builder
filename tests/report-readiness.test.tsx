@@ -1,0 +1,198 @@
+/**
+ * @vitest-environment jsdom
+ */
+import React, { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ReportsSummary } from "@/components/ReportsSummary";
+import {
+  reportReadinessScenarios,
+  type ReportReadinessScenario
+} from "@/tests/fixtures/report-readiness";
+
+type RenderedReport = {
+  container: HTMLDivElement;
+  root: Root;
+};
+
+const mockState = vi.hoisted((): {
+  scenariosByProjectId: Map<string, ReportReadinessScenario>;
+} => ({
+  scenariosByProjectId: new Map()
+}));
+
+vi.mock("@/lib/project-storage", () => ({
+  getProjectById: (projectId: string) => mockState.scenariosByProjectId.get(projectId)?.project,
+  getProjectDataInputs: (projectId: string) =>
+    mockState.scenariosByProjectId.get(projectId)?.dataInputs,
+  getProjectCostPools: (projectId: string) =>
+    mockState.scenariosByProjectId.get(projectId)?.costPools,
+  getProjectAllocationMethods: (projectId: string) =>
+    mockState.scenariosByProjectId.get(projectId)?.allocationMethods,
+  getProjectMethodologyInputs: (projectId: string) =>
+    mockState.scenariosByProjectId.get(projectId)?.methodologyInputs,
+  getSupplyReferenceData: () => reportReadinessScenarios[0].supplyReferenceData
+}));
+
+vi.mock("@/lib/supabase-sync", () => ({
+  loadSupplyReferenceDataFromSupabase: vi.fn(async () => null)
+}));
+
+const renderedReports: RenderedReport[] = [];
+
+function getText(container: HTMLElement) {
+  return container.textContent ?? "";
+}
+
+function getButton(container: HTMLElement, label: string) {
+  const button = Array.from(container.querySelectorAll("button")).find((candidate) =>
+    candidate.textContent?.includes(label)
+  );
+
+  if (!button) {
+    throw new Error(`Button not found: ${label}`);
+  }
+
+  return button;
+}
+
+async function renderReport(projectId: string) {
+  const container = document.createElement("div");
+  const root = createRoot(container);
+  document.body.appendChild(container);
+  renderedReports.push({ container, root });
+
+  await act(async () => {
+    root.render(<ReportsSummary projectId={projectId} />);
+  });
+
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  return container;
+}
+
+beforeEach(() => {
+  Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+  mockState.scenariosByProjectId = new Map(
+    reportReadinessScenarios.map((scenario) => [scenario.project.id, scenario])
+  );
+});
+
+afterEach(() => {
+  renderedReports.splice(0).forEach(({ container, root }) => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+  vi.restoreAllMocks();
+});
+
+describe("ReportsSummary readiness regression coverage", () => {
+  it("renders ready report status, financial totals, and audit evidence", async () => {
+    const container = await renderReport("report-ready-project");
+    const text = getText(container);
+
+    expect(text).toContain("Report readiness");
+    expect(text).toContain("Ready for review");
+    expect(text).toContain("Recoverable cost");
+    expect(text).toContain("£12,500.00");
+    expect(text).toContain("Allocated cost");
+    expect(text).toContain("Revenue variance: £0.00");
+    expect(text).toContain("Tariff schedule");
+    expect(text).toContain("Ready report project");
+    expect(text).toContain("Calculation audit trace");
+    expect(text).toContain("Network standing charge recoverable cost");
+    expect(text).toContain("annualAmount * recoverablePercent / 100");
+    expect(text).toContain("Source row: cost-standing-network");
+  });
+
+  it("renders non-ready status, validation severity labels, and revenue variance", async () => {
+    const container = await renderReport("report-non-ready-project");
+    const text = getText(container);
+
+    expect(text).toContain("Needs correction");
+    expect(text).toContain("Warning");
+    expect(text).toContain("Error");
+    expect(text).toContain("Allocation method was created automatically");
+    expect(text).toContain("Allocation class shares must total 100%.");
+    expect(text).toContain("Allocation methods require at least one customer-class share.");
+    expect(text).toContain("Revenue variance");
+    expect(text).toContain("Variance £4,500.00.");
+    expect(text).toContain("Allocated cost: £8,000.00");
+    expect(text).toContain("Recoverable cost: £12,500.00");
+    expect(text).toContain("Revenue recovered: No");
+  });
+
+  it("calls browser print from the report action", async () => {
+    const printMock = vi.fn();
+    const focusMock = vi.fn();
+    Object.defineProperty(window, "print", {
+      configurable: true,
+      value: printMock
+    });
+    Object.defineProperty(window, "focus", {
+      configurable: true,
+      value: focusMock
+    });
+
+    const container = await renderReport("report-ready-project");
+
+    await act(async () => {
+      getButton(container, "Print / save PDF").dispatchEvent(
+        new MouseEvent("click", { bubbles: true })
+      );
+    });
+
+    expect(focusMock).toHaveBeenCalledOnce();
+    expect(printMock).toHaveBeenCalledOnce();
+    expect(getText(container)).toContain("Opening print dialog");
+  });
+
+  it("downloads rendered HTML containing stakeholder report content", async () => {
+    let downloadedBlob: Blob | undefined;
+    let downloadedFileName = "";
+    const createObjectUrlMock = vi.fn((blob: Blob) => {
+      downloadedBlob = blob;
+      return "blob:report-readiness";
+    });
+    const revokeObjectUrlMock = vi.fn();
+
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createObjectUrlMock
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectUrlMock
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function click(
+      this: HTMLAnchorElement
+    ) {
+      downloadedFileName = this.download;
+    });
+
+    const container = await renderReport("report-ready-project");
+
+    await act(async () => {
+      getButton(container, "Download HTML").dispatchEvent(
+        new MouseEvent("click", { bubbles: true })
+      );
+    });
+
+    expect(createObjectUrlMock).toHaveBeenCalledOnce();
+    expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:report-readiness");
+    expect(downloadedFileName).toBe("report-ready-project-tariff-report.html");
+    expect(downloadedBlob).toBeDefined();
+
+    const html = await downloadedBlob?.text();
+    expect(html).toContain("<!doctype html>");
+    expect(html).toContain("Ready report project tariff report");
+    expect(html).toContain("Tariff methodology report");
+    expect(html).toContain("Ready for review");
+    expect(html).toContain("Tariff schedule");
+    expect(html).toContain("Calculation audit trace");
+  });
+});
