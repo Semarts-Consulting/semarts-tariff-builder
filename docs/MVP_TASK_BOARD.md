@@ -5,7 +5,6 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
-| SCN-002 High fixed-cost scenario | Tariff Engine plus QA | future scenario fixture and tests | `docs/ADDITIONAL_SCENARIO_PLAN.md` | High | Next scenario candidate; validates fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | future scenario fixture and tests | `docs/ADDITIONAL_SCENARIO_PLAN.md` | High | Next scenario candidate; validates energy charge sensitivity. |
 | OUT-003 Report readiness UI alignment | UI Flow plus PM/Engine review | `components/ReportsSummary.tsx`, possibly `components/TariffAuditTracePanel.tsx` | OUT-001 contract | Medium | Align rendered report with readiness mapping, warning severity, and audit evidence expectations. |
 | QA-003 Report/export regression tests | QA plus UI review | report/calculation component tests and fixtures | OUT-001 contract | Medium | Cover report sections, warnings, audit trace visibility, and HTML/print actions. |
@@ -17,6 +16,7 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | _None_ |  |  |  |  |  |
+| SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, `docs/ADDITIONAL_SCENARIO_PLAN.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Scenario baseline recorded | High | Add fixture and regression test for fixed charge sensitivity. |
 
 ## Review
 
