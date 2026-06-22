@@ -63,6 +63,8 @@ Avoid these claims:
 - Broader UI/browser regression evidence is still required before external release readiness.
 - Additional representative and stakeholder-specific tariff scenarios should be added after the internal MVP candidate decision.
 
+The controlled limitation register is maintained in `docs/MVP_LIMITATIONS_CLOSEOUT.md`.
+
 ## Support Needed
 
 - User to confirm the stakeholder-demo audience and expected depth.

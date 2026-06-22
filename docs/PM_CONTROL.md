@@ -4,20 +4,20 @@
 
 Date: 2026-06-22
 
-Branch: `codex/demo-rehearsal-notes`
+Branch: `codex/mvp-limitations-closeout`
 
-Working tree status: demo rehearsal notes package in progress.
+Working tree status: MVP limitations closeout package in progress.
 
-Latest full checks before the docs-only MVP decision and stakeholder-demo preparation packages:
+Latest full checks before the docs-only MVP decision, stakeholder-demo preparation, and limitation closeout packages:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 12 test files and 64 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #11 have been merged to `main`. The current branch prepares rehearsal notes for presenting the accepted-with-limitations internal MVP candidate.
+PRs #1 through #12 have been merged to `main`. The current branch converts accepted MVP limitations into a controlled follow-up backlog.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: stakeholder-demo rehearsal and next-step decision.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: stakeholder-demo rehearsal, limitation closeout, and next-step decision.
 
 ## MVP Definition
 
@@ -157,6 +157,7 @@ Review risks:
 - Internal MVP candidate decision is accepted with limitations as of 2026-06-22.
 - Stakeholder-demo preparation should explain the workflow as an internal MVP candidate and must not imply external release readiness.
 - Demo rehearsal should focus on methodology defensibility, audit trace, revenue recovery reconciliation, accepted limitations, and support needed.
+- Accepted limitations do not block stakeholder-demo preparation, provided the demo language avoids external release and formal compliance claims.
 
 ## QA Staging Warnings
 
@@ -182,6 +183,8 @@ Missing MVP-critical regression coverage:
 - Broader UI/browser regression evidence before external release readiness.
 - Additional representative/stakeholder-specific tariff scenarios beyond the internal MVP candidate.
 
+Controlled follow-up backlog is maintained in `docs/MVP_LIMITATIONS_CLOSEOUT.md`.
+
 ## Immediate Next Action
 
-Review and commit the demo rehearsal notes package, then open a PR from `codex/demo-rehearsal-notes`.
+Review and commit the MVP limitations closeout package, then open a PR from `codex/mvp-limitations-closeout`.

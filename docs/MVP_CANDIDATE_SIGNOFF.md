@@ -30,6 +30,8 @@ Accepted limitations:
 
 Next action: prepare stakeholder-demo materials and a concise limitation summary, or split any review feedback into narrow fix packages.
 
+Limitations closeout is tracked in `docs/MVP_LIMITATIONS_CLOSEOUT.md`.
+
 ## Purpose
 
 This pack supports review of whether the MVP tariff methodology workflow is commercially defensible for an internal candidate release.
