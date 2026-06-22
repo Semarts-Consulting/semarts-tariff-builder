@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { calculateTariffs } from "@/lib/calculation-engine";
 import {
+  capacityHeavyScenarioAllocationRows,
+  capacityHeavyScenarioCostPoolRows,
+  capacityHeavyScenarioDataInputRows,
+  capacityHeavyScenarioExpected,
   highConsumptionCostScenarioAllocationRows,
   highConsumptionCostScenarioCostPoolRows,
   highConsumptionCostScenarioDataInputRows,
@@ -316,5 +320,79 @@ describe("additional tariff scenarios", () => {
     );
     expect(residentialEnergyRateTrace?.result.unit).toBe("GBP per kWh");
     expect(residentialEnergyRateTrace?.result.value).toBeCloseTo(0.2, 4);
+  });
+
+  it("SCN-004 validates demand charge sensitivity on a capacity-heavy site", () => {
+    const result = calculateTariffs({
+      projectId: "scn-004-capacity-heavy",
+      dataInputRows: capacityHeavyScenarioDataInputRows,
+      costPoolRows: capacityHeavyScenarioCostPoolRows,
+      allocationRows: capacityHeavyScenarioAllocationRows
+    });
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.revenueRequirement).toBe(
+      capacityHeavyScenarioExpected.revenueRequirement
+    );
+    expect(result.allocatedCost).toBeCloseTo(result.revenueRequirement, 2);
+    expect(result.unallocatedCost).toBeCloseTo(0, 2);
+    expect(result.isRevenueRecovered).toBe(true);
+    expect(result.unbalancedAllocationCount).toBe(0);
+
+    Object.entries(capacityHeavyScenarioExpected.classResults).forEach(
+      ([customerClass, expected]) => {
+        const classResult = result.classResults.find(
+          (row) => row.customerClass === customerClass
+        );
+
+        expect(classResult).toBeDefined();
+        expect(classResult?.fixedCost).toBeCloseTo(expected.fixedCost, 2);
+        expect(classResult?.energyCost).toBeCloseTo(expected.energyCost, 2);
+        expect(classResult?.demandCost).toBeCloseTo(expected.demandCost, 2);
+        expect(classResult?.passThroughCost).toBeCloseTo(
+          expected.passThroughCost,
+          2
+        );
+        expect(classResult?.totalAllocatedCost).toBeCloseTo(
+          expected.totalAllocatedCost,
+          2
+        );
+        expect(classResult?.fixedChargePerCustomer).toBeCloseTo(
+          expected.fixedChargePerCustomer,
+          4
+        );
+        expect(classResult?.energyChargePerKwh).toBeCloseTo(
+          expected.energyChargePerKwh,
+          4
+        );
+        expect(classResult?.demandChargePerKw).toBeCloseTo(
+          expected.demandChargePerKw,
+          4
+        );
+      }
+    );
+
+    const auditTrace = result.auditTrace ?? [];
+    const commercialDemandAllocationTrace = auditTrace.find(
+      (entry) =>
+        entry.stage === "Cost allocation" &&
+        entry.allocationMethodId === "allocation-capacity-heavy-demand" &&
+        entry.customerClass === "Commercial" &&
+        entry.tariffComponent === "Demand"
+    );
+    expect(commercialDemandAllocationTrace?.result.unit).toBe("GBP");
+    expect(commercialDemandAllocationTrace?.result.value).toBeCloseTo(
+      25000,
+      2
+    );
+
+    const residentialDemandRateTrace = auditTrace.find(
+      (entry) =>
+        entry.stage === "Rate derivation" &&
+        entry.customerClass === "Residential" &&
+        entry.tariffComponent === "Demand"
+    );
+    expect(residentialDemandRateTrace?.result.unit).toBe("GBP per kW");
+    expect(residentialDemandRateTrace?.result.value).toBeCloseTo(50, 4);
   });
 });
