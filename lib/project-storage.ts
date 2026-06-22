@@ -1,4 +1,10 @@
-import { sampleProjects } from "@/lib/sample-data";
+import {
+  createDemoProjectAllocationMethods,
+  createDemoProjectCostPools,
+  createDemoProjectDataInputs,
+  demoProjectId,
+  sampleProjects
+} from "@/lib/sample-data";
 import type {
   AllocationBasis,
   AllocationClassShare,
@@ -746,6 +752,10 @@ export function createDataInputRow(customerClass = ""): DataInputRow {
 }
 
 export function createDefaultDataInputs(project: Project): ProjectDataInputs {
+  if (project.id === demoProjectId) {
+    return createDemoProjectDataInputs();
+  }
+
   return {
     projectId: project.id,
     rows: project.customerClasses.map((customerClass) => createDataInputRow(customerClass)),
@@ -802,6 +812,10 @@ export function createCostPoolRow(
 }
 
 export function createDefaultCostPools(projectId: string): ProjectCostPools {
+  if (projectId === demoProjectId) {
+    return createDemoProjectCostPools();
+  }
+
   return {
     projectId,
     rows: [
@@ -953,6 +967,10 @@ export function reconcileAllocationMethodsWithCostPools(
 }
 
 export function createDefaultAllocationMethods(projectId: string): ProjectAllocationMethods {
+  if (projectId === demoProjectId) {
+    return createDemoProjectAllocationMethods();
+  }
+
   const costPools = getProjectCostPools(projectId);
 
   return {

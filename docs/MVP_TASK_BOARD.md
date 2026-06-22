@@ -15,6 +15,7 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | MVP-004 Stakeholder-demo preparation | PM plus user sign-off owner | `docs/MVP_STAKEHOLDER_DEMO_PREP.md`, `docs/MVP_DEMO_REHEARSAL_NOTES.md`, `docs/MVP_LIMITATIONS_CLOSEOUT.md`, `docs/MVP_FINAL_BASELINE.md`, `docs/MVP_TIMELINE_TRACKER.md`, `docs/PM_CONTROL.md` | Accepted-with-limitations MVP decision and green final baseline | Medium | Focused walkthrough, rehearsal notes, limitation closeout, and final verification baseline prepared without expanding MVP scope. |
+| MVP-005 Live demo tariff seed | PM plus Tariff Engine/QA review | `lib/sample-data.ts`, `lib/project-storage.ts`, `tests/demo-project-defaults.test.ts`, `docs/MVP_FINAL_BASELINE.md` | Demo review found sample project had class names but no aggregate tariff inputs | High | Seed the live demo project with representative customer, cost, and allocation data so the app produces tariff outputs. |
 
 ## Review
 
