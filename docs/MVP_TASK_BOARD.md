@@ -15,7 +15,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Methodology configuration decision pack | PM plus future Tariff Engine/Data Import/QA review | `docs/METHODOLOGY_CONFIGURATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Model flexibility review | Medium | Present owner decisions required before broader methodology configuration production work. |
+| PM control workflow baseline refresh | PM | `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #47 and PR #48 merged | Low | Align manager control docs with the current `main` baseline and new Codex/Git workflow. |
 
 ## Review
 
@@ -78,6 +78,8 @@
 | PR-044 Supply evidence implementation closeout | PM | `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Merged PR #44 | Low | Recorded supply evidence implementation closeout and kept tariff-impacting supply integration blocked. |
 | PR-045 Supply evidence closeout review | PM plus QA review | `docs/SUPPLY_EVIDENCE_REVIEW.md`, manager docs | Merged PR #45 | Low | Confirmed supply evidence presentation remains evidence-only and non-tariff-impacting. |
 | PR-046 Model flexibility requirements | PM plus future Tariff Engine/Data Import/QA review | `docs/MODEL_FLEXIBILITY_REVIEW.md`, manager docs | Merged PR #46 | Medium | Captured workbook-derived flexibility requirements without changing production behaviour. |
+| PR-047 Methodology configuration decision pack | PM plus future Tariff Engine/Data Import/QA review | `docs/METHODOLOGY_CONFIGURATION_DECISION_PACK.md`, manager docs | Merged PR #47 | Medium | Proposed future methodology configuration direction and kept production implementation gated. |
+| PR-048 Codex Git workflow helpers | PM plus workflow governance | `AGENTS.md`, `docs/CODEX_GIT_WORKFLOW.md`, `scripts/codex-*.ps1` | Merged PR #48 | Low | Added project-specific Codex/Git workflow guardrails and helper scripts without product behaviour changes. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
 | SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Fixture and regression test for energy charge sensitivity. |
