@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/supply-integration-decision-answer`
+Branch: `codex/supply-evidence-proposal`
 
-Working tree status: supply integration decision-answer record in progress.
+Working tree status: supply evidence implementation proposal in progress.
 
-Latest full checks on `main` after PR #40:
+Latest full checks on `main` after PR #41:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 16 test files and 96 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #40 have been merged to `main`. The current branch records the user's approved evidence-only supply integration answers before any production implementation proposal.
+PRs #1 through #41 have been merged to `main`. The current branch defines the proposed evidence-only supply presentation and separate reconciliation implementation package.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply integration decision answer.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply evidence implementation proposal.
 
 ## Operating Mode
 
-Current package ownership: Manager-led.
+Current package ownership: Manager-led documentation proposal.
 
-Reason: this is a documentation-only decision-answer record. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
+Reason: this is a documentation-only implementation proposal. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
 
 Future package rule:
 
@@ -196,6 +196,7 @@ Review risks:
 - Supply tariff integration decisioning is documented in `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`; no implementation should start until the user accepts or amends it.
 - Supply rule decisions for losses, Triad, DUoS, annualisation, input validity, and time-of-use are recorded in `docs/SUPPLY_RULE_DECISIONS.md`. Tariff integration remains blocked pending allocation destination, customer applicability, reporting category, pass-through flag, and reconciliation decisions.
 - Remaining supply integration choices are answered in `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`; production integration remains blocked until a separate implementation proposal is prepared and approved.
+- Evidence-only supply presentation and separate supply reconciliation are proposed in `docs/SUPPLY_EVIDENCE_IMPLEMENTATION_PROPOSAL.md`; production implementation should be delegated after proposal review.
 
 ## QA Staging Warnings
 
@@ -233,8 +234,8 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 Scenario coverage closeout is maintained in `docs/SCENARIO_COVERAGE_CLOSEOUT.md`.
 
-Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_RULE_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, and `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`.
+Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_RULE_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`, `docs/SUPPLY_EVIDENCE_IMPLEMENTATION_PROPOSAL.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, and `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`.
 
 ## Immediate Next Action
 
-Review and commit the supply integration decision-answer record, then open a PR from `codex/supply-integration-decision-answer`.
+Review and commit the supply evidence implementation proposal, then open a PR from `codex/supply-evidence-proposal`.
