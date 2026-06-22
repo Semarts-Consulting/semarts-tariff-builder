@@ -4,7 +4,9 @@
 
 This note defines how the new MPAN-level supply inputs should be transformed into calculation-ready data before they are used in tariff outputs.
 
-It is intentionally a design note, not an implementation. Several business rules still need confirmation before calculation code should be added.
+It started as a design note. Phase 1 normalisation is now implemented as a disconnected service in `lib/supply-calculation-engine.ts` and covered by `tests/supply-calculation-engine.test.ts`.
+
+The implemented Phase 1 scope normalises supply input rows and reports unresolved statuses only. It does not calculate annual amounts and must not feed tariff outputs, report totals, storage, imports, or export DTOs until the remaining business rules are signed off.
 
 The decision pack in `docs/SUPPLY_CALCULATION_DECISION_PACK.md` is the current gate for moving this design into production work. If the design note and decision pack differ, treat the decision pack as the active delivery control.
 
@@ -368,7 +370,7 @@ Implement only the normalisation layer:
 
 This phase is safe because it does not change tariff results. It creates a tested intermediate layer that can be reviewed against the Excel model.
 
-Phase 1 still requires manager approval and Tariff Engine review before implementation starts. The implementation branch must not add tariff integration, stakeholder report totals, or formal export DTO fields.
+Phase 1 has been implemented and merged through PR #30. It remains a disconnected normalisation layer only; it must not add tariff integration, stakeholder report totals, or formal export DTO fields.
 
 ## Recommended Phase 2 Implementation
 
