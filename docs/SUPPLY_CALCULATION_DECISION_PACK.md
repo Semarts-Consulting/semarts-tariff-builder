@@ -2,7 +2,7 @@
 
 Date: 2026-06-22
 
-Status: Phase 2 annual amounts merged; tariff integration remains blocked.
+Status: supply rule decisions recorded; tariff integration remains blocked.
 
 Purpose: define the business decisions required before supply calculation can move from disconnected service outputs to tariff-impacting results.
 
@@ -14,18 +14,20 @@ Phase 1 normalisation and Phase 2 annual amounts are implemented in `lib/supply-
 
 Supply calculation should stay separate until the integration questions below are answered. Do not add shared production DTOs, report fields, or tariff-engine integration until the relevant decision group is signed off.
 
+Detailed business-rule decisions are recorded in `docs/SUPPLY_RULE_DECISIONS.md`.
+
 ## Decision Groups
 
 | Group | Decision required | Owner | Blocks Phase 1 normalisation? | Blocks annual amount calculation? | Blocks tariff integration? |
 | --- | --- | --- | --- | --- | --- |
-| Losses basis | Define `CM`, `GSP`, and `NBP`; decide source volume and adjustment direction | User plus Tariff Engine | No, if preserved only | Yes | Yes |
-| Capacity conversion | Define kVA to kW conversion and power factor for TNUoS triad | User plus Tariff Engine | No, if flagged `Needs business rule` | Yes | Yes |
-| Time bands | Define DUoS red/amber/green/super red mapping source and tariff-year/DNO variability | User plus Tariff Engine | No, if preserved only | Yes | Yes |
-| Annualisation | Decide day/month/year calculation basis for fixed and capacity charges | User plus Tariff Engine | No, if status is explicit | Approved for Phase 2 scope | Yes |
+| Losses basis | Define `CM`, `GSP`, and `NBP`; decide source volume and adjustment direction | User plus Tariff Engine | No, if preserved only | Partially resolved; implementation still needed for volume-based charges | Yes |
+| Capacity conversion | Define kVA to kW conversion and power factor for TNUoS triad | User plus Tariff Engine | No, if flagged `Needs business rule` | Resolved: no kVA to kW conversion for Triad | Yes |
+| Time bands | Define DUoS red/amber/green/super red mapping source and tariff-year/DNO variability | User plus Tariff Engine | No, if preserved only | Resolved: DNO LC14 by tariff year | Yes |
+| Annualisation | Decide day/month/year calculation basis for fixed and capacity charges | User plus Tariff Engine | No, if status is explicit | Phase 2 uses 365-day rule; user now prefers actual billing-period days for per-day calculations | Yes |
 | Allocation destination | Decide whether supply charges allocate by MPAN, tenant, network level, or customer class | User plus PM/Tariff Engine | No | No | Yes |
 | Pass-through treatment | Decide whether pass-through lines are excluded from recovery or reported separately | User plus PM/Tariff Engine | No | No | Yes |
-| Input validity | Decide whether blank charge names and incompatible time-of-use options block calculation | User plus Data/Engine | Yes | Yes | Yes |
-| Custom time windows | Decide bank holiday semantics and whether windows may cross midnight | User plus Tariff Engine | No, if preserved only | Yes | Yes |
+| Input validity | Decide whether blank charge names and incompatible time-of-use options block calculation | User plus Data/Engine | Resolved: blank names block calculation | Resolved for blank names | Yes |
+| Custom time windows | Decide bank holiday semantics and whether windows may cross midnight | User plus Tariff Engine | No, if preserved only | Resolved: LC14 bank holiday rules; custom windows cannot cross midnight | Yes |
 
 ## Safe Phase 1 Scope
 

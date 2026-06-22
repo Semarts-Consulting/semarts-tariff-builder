@@ -12,7 +12,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Supply tariff integration decision pack | PM plus user sign-off owner | `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #37 merged | High | Define decisions required before supply values affect tariff outputs, reports, or exports. |
+| Supply rule decisions record | PM plus user sign-off owner | `docs/SUPPLY_RULE_DECISIONS.md`, `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #38 merged | High | Record supplied losses, Triad, DUoS, annualisation, validity, and time-of-use decisions while keeping tariff integration blocked. |
 
 ## Review
 
