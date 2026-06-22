@@ -2,25 +2,30 @@
 
 Date: 2026-06-22
 
-Status: minimum Phase 2 decision set approved.
+Status: minimum Phase 2 decision set approved and annual-amount implementation complete.
 
-Purpose: capture the business-rule decisions required before supply annual amount calculation or tariff integration starts.
+Purpose: capture the business-rule decisions required before supply annual amount calculation and identify the separate decisions still required before tariff integration starts.
 
 Plain-English decision route: `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`.
+
+Tariff integration decision route: `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`.
 
 ## Delivery Position
 
 Supply Phase 1 normalisation is merged as a disconnected pure service. It can normalise supply rows, convert rates, and identify unresolved calculation statuses.
 
-Phase 2 may proceed to a Tariff Engine implementation proposal because the user approved Option A in `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`. Implementation must still wait for package plan and PM review.
+Supply Phase 2 annual amount calculation is merged as a disconnected pure service for approved fixed and kVA capacity lines. It does not feed tariff outputs, report totals, exports, imports, storage, or shared DTOs.
 
-## Phase 2 Scope To Approve
+Tariff integration remains blocked by the open decisions in `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`.
+
+## Approved Phase 2 Scope
 
 Phase 2 should be limited to annual amount calculation inside the supply calculation service.
 
-Allowed scope after sign-off:
+Approved implemented scope:
 
-- Calculate annual supply charge amounts for supported fixed, capacity, and consumption charge lines.
+- Calculate annual supply charge amounts for supported fixed and kVA capacity charge lines only.
+- Keep consumption-based annual amounts blocked unless separately approved.
 - Keep outputs disconnected from tariff recovery until a separate tariff integration package is approved.
 - Preserve unresolved statuses where signed-off rules are still unavailable.
 - Add focused tests for each approved annual amount rule.
@@ -45,9 +50,11 @@ Out of scope:
 | Allocation destination | Confirm whether supply charges later allocate by MPAN, tenant, network level, or customer class | No | Yes | Open |
 | Pass-through treatment | Confirm whether pass-through lines are excluded from recovery or reported separately | No | Yes | Open |
 
-## Proposed Minimum Sign-Off For Phase 2
+The remaining tariff-integration decisions are tracked in `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`.
 
-To start Phase 2 without expanding scope, the minimum accepted answers are:
+## Historical Minimum Sign-Off For Phase 2
+
+Phase 2 proceeded without expanding scope because the minimum accepted answers were:
 
 1. Annualisation rules for fixed and capacity charges.
 2. Capacity conversion rule for kVA-based charges.
@@ -77,8 +84,8 @@ User sign-off owner:
 
 Tariff Engine:
 
-- Convert signed-off answers into a narrow implementation proposal.
-- List exact files and tests before coding.
+- Keep the annual-amount service disconnected until the open integration decisions are answered.
+- Prepare a separate implementation proposal only after user sign-off on tariff impact, applicability, pass-through treatment, reconciliation, and reporting.
 
 PM:
 

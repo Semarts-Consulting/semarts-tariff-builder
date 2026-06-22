@@ -16,6 +16,8 @@ Supply calculation should stay separate until the integration questions below ar
 
 Detailed business-rule decisions are recorded in `docs/SUPPLY_RULE_DECISIONS.md`.
 
+Remaining tariff-integration choices are tracked in `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`.
+
 ## Decision Groups
 
 | Group | Decision required | Owner | Blocks Phase 1 normalisation? | Blocks annual amount calculation? | Blocks tariff integration? |
@@ -49,7 +51,7 @@ Do not implement these until the relevant decisions are signed off:
 - Loss-adjusted volumes.
 - TNUoS triad annual amounts.
 - DUoS time-band annual amounts.
-- Per-day and per-month annualisation.
+- Billing-period daily annualisation changes beyond the current Phase 2 annual amount service.
 - Supply charge allocation into customer classes.
 - Pass-through recovery treatment in tariff outputs.
 - Report/export DTO fields for supply calculation results.
