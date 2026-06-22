@@ -2,13 +2,13 @@
 
 Date: 2026-06-22
 
-Status: prepared for user decision.
+Status: Option A approved by user on 2026-06-22.
 
 Purpose: give the calculation sign-off owner a plain-English decision route for unlocking supply annual amount calculation.
 
 ## Recommendation
 
-Proceed to a Phase 2 implementation proposal only if the owner accepts the minimum decision set below.
+Proceed to a Phase 2 implementation proposal using the approved minimum decision set below.
 
 Do not approve tariff integration, report totals, export fields, import changes, or storage changes as part of Phase 2. Those should remain separate packages after annual amount calculation is proven and reviewed.
 
@@ -86,6 +86,7 @@ Keep these blocked until a later package:
 Option A: approve the recommended minimum decision set.
 
 - Outcome: Tariff Engine can prepare a narrow Phase 2 implementation proposal for annual amount calculation only.
+- Decision: approved by user on 2026-06-22.
 
 Option B: approve with changes.
 
@@ -98,6 +99,8 @@ Option C: do not approve Phase 2 yet.
 ## Next Package If Approved
 
 Owner: Tariff Engine, with PM and QA review.
+
+Status: unlocked for proposal only. Implementation should still wait for the Tariff Engine package plan, file list, and PM review.
 
 Expected files:
 

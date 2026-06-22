@@ -2,7 +2,7 @@
 
 Date: 2026-06-22
 
-Status: prepared for business review.
+Status: minimum Phase 2 decision set approved.
 
 Purpose: capture the business-rule decisions required before supply annual amount calculation or tariff integration starts.
 
@@ -12,7 +12,7 @@ Plain-English decision route: `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`.
 
 Supply Phase 1 normalisation is merged as a disconnected pure service. It can normalise supply rows, convert rates, and identify unresolved calculation statuses.
 
-Phase 2 must not start implementation until the decisions below are answered and accepted by the user as calculation sign-off owner.
+Phase 2 may proceed to a Tariff Engine implementation proposal because the user approved Option A in `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`. Implementation must still wait for package plan and PM review.
 
 ## Phase 2 Scope To Approve
 
@@ -36,12 +36,12 @@ Out of scope:
 
 | Decision | Required answer | Blocks annual amount calculation? | Blocks tariff integration? | Current status |
 | --- | --- | --- | --- | --- |
-| Losses basis | Define `CM`, `GSP`, and `NBP`; identify source volume and adjustment direction | Yes | Yes | Open |
-| Capacity conversion | Confirm whether kVA converts to kW, and what power factor applies | Yes | Yes | Open |
-| Annualisation | Confirm day, month, year, and billing-period basis for fixed and capacity charges | Yes | Yes | Open |
-| Time bands | Confirm whether DUoS time bands are workbook-configured, DNO-specific, tariff-year-specific, or static | Yes | Yes | Open |
-| Custom time windows | Confirm bank holiday treatment and whether windows can cross midnight | Yes | Yes | Open |
-| Input validity | Confirm whether blank charge names and incompatible charge/time-of-use combinations block calculation | Yes | Yes | Open |
+| Losses basis | Define `CM`, `GSP`, and `NBP`; identify source volume and adjustment direction | Yes | Yes | Blocked beyond Phase 2 |
+| Capacity conversion | Confirm whether kVA converts to kW, and what power factor applies | Yes | Yes | Approved for Phase 2: calculate kVA charges against entered kVA; kW charges remain blocked |
+| Annualisation | Confirm day, month, year, and billing-period basis for fixed and capacity charges | Yes | Yes | Approved for Phase 2: per day 365, per Month 12, annual direct |
+| Time bands | Confirm whether DUoS time bands are workbook-configured, DNO-specific, tariff-year-specific, or static | Yes | Yes | Blocked beyond Phase 2 |
+| Custom time windows | Confirm bank holiday treatment and whether windows can cross midnight | Yes | Yes | Blocked beyond Phase 2 |
+| Input validity | Confirm whether blank charge names and incompatible charge/time-of-use combinations block calculation | Yes | Yes | Approved for Phase 2: blank names and negative rates block the line; invalid MPAN is row-level validation |
 | Allocation destination | Confirm whether supply charges later allocate by MPAN, tenant, network level, or customer class | No | Yes | Open |
 | Pass-through treatment | Confirm whether pass-through lines are excluded from recovery or reported separately | No | Yes | Open |
 
@@ -71,9 +71,9 @@ Phase 2 can be accepted only if:
 
 User sign-off owner:
 
-- Confirm the minimum Phase 2 decision answers.
-- Use `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md` to approve, amend, or reject the recommended minimum decision set.
-- Confirm whether Phase 2 should calculate annual amounts only, or whether tariff integration is wanted immediately after.
+- Approved Option A in `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`.
+- Phase 2 is annual amount calculation only.
+- Tariff integration remains a separate later decision.
 
 Tariff Engine:
 

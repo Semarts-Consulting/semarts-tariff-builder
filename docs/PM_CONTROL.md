@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/supply-phase-2-decision-brief`
+Branch: `codex/supply-phase-2-approval-record`
 
-Working tree status: supply Phase 2 decision brief in progress.
+Working tree status: supply Phase 2 approval record in progress.
 
-Latest full checks on `main` after PR #32:
+Latest full checks on `main` after PR #33:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 16 test files and 89 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #32 have been merged to `main`. The current branch prepares the owner-facing Phase 2 decision brief.
+PRs #1 through #33 have been merged to `main`. The current branch records owner approval of Supply Phase 2 Option A.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply Phase 2 decision brief.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply Phase 2 approval record.
 
 ## Operating Mode
 
 Current package ownership: Manager-led.
 
-Reason: this is a documentation-only owner decision package. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
+Reason: this is a documentation-only approval record. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
 
 Future package rule:
 
@@ -157,7 +157,7 @@ Review risks:
 3. Whether a future machine-readable export DTO is required for first commercial release after MVP rendered report output.
 4. Which imported workbook headers are contractual and which remain provisional.
 5. Whether `ReportsSummary.tsx` should be considered report UI only or the start of an export DTO contract.
-6. Supply annual amount calculation and tariff/report integration remain deferred until the owner accepts or amends `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`.
+6. Supply annual amount calculation may proceed to Tariff Engine proposal after Option A approval; tariff/report integration remains deferred.
 
 ## Accepted Decisions
 
@@ -190,6 +190,7 @@ Review risks:
 - Supply Phase 1 normalisation is merged through PR #30 as a disconnected pure service. It does not calculate annual amounts and must not feed tariff outputs, report totals, storage, imports, or export DTOs until the remaining business decisions are signed off.
 - Supply Phase 2 should be annual amount calculation only unless the user explicitly approves tariff integration as a separate package.
 - Supply Phase 2 decision brief should be approved, amended, or rejected by the user before Tariff Engine prepares implementation.
+- User approved Supply Phase 2 Option A on 2026-06-22. Tariff Engine may prepare an annual-amount-only implementation proposal. Tariff integration, report totals, export fields, imports, and storage remain out of scope.
 
 ## QA Staging Warnings
 
@@ -231,4 +232,4 @@ Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECIS
 
 ## Immediate Next Action
 
-Review and commit the supply Phase 2 decision brief, then open a PR from `codex/supply-phase-2-decision-brief`.
+Review and commit the supply Phase 2 approval record, then open a PR from `codex/supply-phase-2-approval-record`.
