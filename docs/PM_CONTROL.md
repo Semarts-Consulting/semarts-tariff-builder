@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/model-flexibility-review`
+Branch: `codex/methodology-config-decision-pack`
 
-Working tree status: model flexibility review in progress.
+Working tree status: methodology configuration decision pack in progress.
 
-Latest full checks on `main` after PR #45:
+Latest full checks on `main` after PR #46:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 16 test files and 98 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #45 have been merged to `main`. The current branch records workbook-derived model flexibility requirements from airport and Port of Tilbury examples.
+PRs #1 through #46 have been merged to `main`. The current branch prepares owner decisions for future methodology configuration.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: model flexibility review.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: methodology configuration decision pack.
 
 ## Operating Mode
 
 Current package ownership: Manager-led documentation review.
 
-Reason: this is a requirements review based on reference workbook models. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, storage, exports, or shared DTO contracts.
+Reason: this is a decision-control package based on reference workbook models. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, storage, exports, or shared DTO contracts.
 
 Future package rule:
 
@@ -201,6 +201,7 @@ Review risks:
 - Evidence-only supply presentation and separate supply reconciliation are implemented through PR #43. Tariff-impacting supply integration remains blocked; supply evidence does not feed `calculateTariffs`, network revenue recovery, report totals, imports, storage, exports, shared DTOs, or billing-period daily annualisation.
 - Supply evidence implementation has been reviewed in `docs/SUPPLY_EVIDENCE_REVIEW.md` as evidence-only and non-tariff-impacting. The next safe follow-up is a manual report-page check, not tariff integration.
 - Airport and Port of Tilbury workbooks show that broader commercial use requires configurable methodology support. This is recorded in `docs/MODEL_FLEXIBILITY_REVIEW.md` and does not approve production implementation.
+- Methodology configuration direction is proposed for owner approval in `docs/METHODOLOGY_CONFIGURATION_DECISION_PACK.md`. Production implementation remains gated.
 
 ## QA Staging Warnings
 
@@ -240,8 +241,10 @@ Scenario coverage closeout is maintained in `docs/SCENARIO_COVERAGE_CLOSEOUT.md`
 
 Model flexibility requirements are maintained in `docs/MODEL_FLEXIBILITY_REVIEW.md`.
 
+Methodology configuration decisions are maintained in `docs/METHODOLOGY_CONFIGURATION_DECISION_PACK.md`.
+
 Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_RULE_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`, `docs/SUPPLY_EVIDENCE_IMPLEMENTATION_PROPOSAL.md`, `docs/SUPPLY_EVIDENCE_REVIEW.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, and `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`.
 
 ## Immediate Next Action
 
-Review and commit the model flexibility review, then open a PR from `codex/model-flexibility-review`.
+Review and commit the methodology configuration decision pack, then open a PR from `codex/methodology-config-decision-pack`.
