@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/scenario-coverage-closeout`
+Branch: `codex/supply-calculation-decision-pack`
 
-Working tree status: scenario coverage closeout package in progress.
+Working tree status: supply calculation decision pack in progress.
 
-Latest full checks on `main` after PR #25:
+Latest full checks on `main` after PR #28:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test`: passed, 14 test files and 71 tests.
+- `npm.cmd test`: passed, 15 test files and 75 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #25 have been merged to `main`. The current branch records scenario coverage closeout.
+PRs #1 through #28 have been merged to `main`. The current branch records the supply calculation decision gate.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: scenario coverage closeout.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply calculation decision pack.
 
 ## Operating Mode
 
 Current package ownership: Manager-led.
 
-Reason: this is a narrow documentation and verification package. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
+Reason: this is a documentation-only decision package for unresolved business assumptions. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
 
 Future package rule:
 
@@ -156,7 +156,7 @@ Review risks:
 3. Whether a future machine-readable export DTO is required for first commercial release after MVP rendered report output.
 4. Which imported workbook headers are contractual and which remain provisional.
 5. Whether `ReportsSummary.tsx` should be considered report UI only or the start of an export DTO contract.
-6. Supply calculation remains deferred until the open questions in `SUPPLY_CALCULATION_DESIGN.md` are answered.
+6. Supply calculation remains deferred until the decision groups in `docs/SUPPLY_CALCULATION_DECISION_PACK.md` are answered.
 
 ## Accepted Decisions
 
@@ -184,6 +184,8 @@ Review risks:
 - SCN-004 should prove high capacity costs produce expected demand charge sensitivity while still reconciling to the recoverable cost base.
 - SCN-006 should prove existing validation issues are surfaced without silently correcting output values or revenue variance.
 - SCN-001 through SCN-006 are now implemented and merged to `main`; further scenario expansion should be driven by QA review, stakeholder feedback, or external release criteria.
+- Report readiness UI alignment and regression coverage are merged through PR #28.
+- Supply calculation may proceed only to a reviewed Phase 1 normalisation proposal until the decision pack is signed off.
 
 ## QA Staging Warnings
 
@@ -221,6 +223,8 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 Scenario coverage closeout is maintained in `docs/SCENARIO_COVERAGE_CLOSEOUT.md`.
 
+Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`.
+
 ## Immediate Next Action
 
-Review and commit the scenario coverage closeout package, then open a PR from `codex/scenario-coverage-closeout`.
+Review and commit the supply calculation decision pack, then open a PR from `codex/supply-calculation-decision-pack`.
