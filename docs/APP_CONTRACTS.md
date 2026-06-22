@@ -311,19 +311,18 @@ Storage reconciliation changes are business behavior and must not be included in
 
 ## Supply Calculation Contract
 
-Production supply calculation beyond Phase 1 normalisation is deferred.
+Supply annual amount calculation is implemented only for the approved Phase 2 scope. Tariff integration remains deferred.
 
 `SUPPLY_CALCULATION_DESIGN.md` records unresolved assumptions, including:
 
 - Losses basis.
-- kVA to kW conversion.
+- kVA to kW conversion for kW-based charges.
 - DUoS and time-of-use rules.
-- Annualisation for per-day, per-month, and seasonal charges.
+- Seasonal and billing-period annualisation variants.
 - Pass-through reporting.
-- Blank charge names.
 - Custom time-of-use behavior.
 
-Phase 1 supply calculation is a normalisation-only service in `lib/supply-calculation-engine.ts`.
+Phase 1 supply calculation is a normalisation service in `lib/supply-calculation-engine.ts`.
 
 Phase 1 may:
 
@@ -333,18 +332,28 @@ Phase 1 may:
 - Preserve losses basis, time-of-use, custom time-of-use, unit, charge type, and voltage.
 - Emit explicit line statuses: `Normalised`, `Needs business rule`, `Needs volume data`, `Invalid`, and `Excluded`.
 - Represent pass-through transmission and distribution charges as excluded evidence lines.
-- Mark unresolved annualisation, loss, DUoS volume, and kVA-to-kW rules without calculating tariff impacts.
+- Mark unresolved loss, DUoS volume, and kVA-to-kW rules without calculating tariff impacts.
 
-Phase 1 must not:
+Phase 2 may:
+
+- Calculate annual amounts for fixed annual, fixed monthly, fixed daily, and clear kVA capacity charge lines.
+- Use 365 days for `per day` annualisation.
+- Use 12 months for `per Month` annualisation.
+- Use entered annual values directly for `per year` charges.
+- Calculate kVA capacity charges from entered supply capacity without converting to kW.
+- Leave kW-based, loss-adjusted, consumption-volume, DUoS time-band, custom time-window, and pass-through recovery cases unresolved.
+- Keep invalid charge lines without annual amounts when charge names are blank, rates are negative, or unit/type combinations are unsupported.
+
+Phase 1 and Phase 2 must not:
 
 - Feed values into `calculateTariffs`.
 - Change tariff revenue requirement, allocation, class outputs, revenue recovery, or tariff audit trace.
 - Change stakeholder report totals or export DTOs.
 - Change storage, import parsing, UI, Supabase, or API behavior.
 
-Phase 1 types are service-local until the normalisation contract is accepted for wider use. Do not promote supply calculation result DTOs into `types/project.ts` without manager review.
+Supply calculation types are service-local until the calculation contract is accepted for wider use. Do not promote supply calculation result DTOs into `types/project.ts` without manager review.
 
-Do not add production supply annual amount calculation or tariff integration until the unresolved questions are signed off.
+Do not add supply tariff integration until the unresolved tariff allocation and pass-through treatment questions are signed off.
 
 ## Report And Export Contract
 
