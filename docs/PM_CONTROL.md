@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/workbook-source-mapping-proposal`
+Branch: `codex/workbook-derived-scenario-plan`
 
-Working tree status: workbook source mapping proposal in progress.
+Working tree status: workbook-derived scenario plan in progress.
 
-Latest full checks on `main` after PR #50:
+Latest full checks on `main` after PR #51:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 16 test files and 98 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #50 have been merged to `main`. The current branch proposes non-binding workbook source mapping and traceability concepts.
+PRs #1 through #51 have been merged to `main`. The current branch plans representative workbook-derived scenarios before any implementation work.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: workbook source mapping proposal.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: workbook-derived scenario plan.
 
 ## Operating Mode
 
 Current package ownership: Manager-led documentation proposal.
 
-Reason: this is a documentation-only mapping proposal before any implementation work. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, storage, exports, or shared DTO contracts.
+Reason: this is a documentation-only scenario planning package before any fixture, test, import, or calculation implementation. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, storage, exports, or shared DTO contracts.
 
 Future package rule:
 
@@ -209,6 +209,7 @@ Review risks:
 - Codex/Git workflow guardrails and helper scripts are recorded in `AGENTS.md`, `docs/CODEX_GIT_WORKFLOW.md`, and `scripts/codex-*.ps1`. Codex should not push, create PRs, force push, or merge from its own context.
 - Methodology configuration contract concepts are proposed in `docs/METHODOLOGY_CONFIGURATION_CONTRACT_PROPOSAL.md`. They are non-binding until owner and workstream review.
 - Workbook source mapping concepts are proposed in `docs/WORKBOOK_SOURCE_MAPPING_PROPOSAL.md`. They are non-binding until Data Import, QA, and PM review.
+- Representative workbook-derived scenarios are planned in `docs/WORKBOOK_DERIVED_SCENARIO_PLAN.md`. No fixtures or tests are approved by that plan alone.
 
 ## QA Staging Warnings
 
@@ -254,10 +255,12 @@ Methodology configuration contract proposals are maintained in `docs/METHODOLOGY
 
 Workbook source mapping proposals are maintained in `docs/WORKBOOK_SOURCE_MAPPING_PROPOSAL.md`.
 
+Workbook-derived scenario planning is maintained in `docs/WORKBOOK_DERIVED_SCENARIO_PLAN.md`.
+
 Codex/Git workflow guidance is maintained in `AGENTS.md`, `docs/CODEX_GIT_WORKFLOW.md`, and `scripts/codex-*.ps1`.
 
 Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_RULE_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`, `docs/SUPPLY_EVIDENCE_IMPLEMENTATION_PROPOSAL.md`, `docs/SUPPLY_EVIDENCE_REVIEW.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, and `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`.
 
 ## Immediate Next Action
 
-Review and commit the workbook source mapping proposal, then provide normal-PowerShell push and PR commands for `codex/workbook-source-mapping-proposal`.
+Review and commit the workbook-derived scenario plan, then provide normal-PowerShell push and PR commands for `codex/workbook-derived-scenario-plan`.
