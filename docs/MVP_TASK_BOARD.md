@@ -5,14 +5,14 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
-| ENG-006 Supply annual amount rules | Tariff Engine plus PM review | future `lib/supply-calculation-engine.ts`, future tests, future type additions if approved | Supply business-rule sign-off | High | Phase 1 normalisation is merged; annual amounts remain blocked until losses, annualisation, TOU, and capacity rules are resolved. |
+| ENG-007 Supply Phase 2 implementation proposal | Tariff Engine plus PM review | future `lib/supply-calculation-engine.ts`, future tests, future type additions if approved | Supply Phase 2 sign-off | High | Start only after `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md` is reviewed and accepted. |
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
 
 ## In Progress
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Supply Phase 1 closeout | PM | `SUPPLY_CALCULATION_DESIGN.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md`, `docs/MVP_LIMITATIONS_CLOSEOUT.md` | PR #30 merged | Medium | Record normalisation as complete and keep annual amounts, tariff integration, reports, and export fields blocked pending decisions. |
+| Supply Phase 2 sign-off pack | PM plus user sign-off owner | `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md`, `docs/MVP_LIMITATIONS_CLOSEOUT.md` | PR #31 merged | High | Convert annual amount and tariff integration blockers into approval-ready business decisions before implementation. |
 
 ## Review
 
@@ -24,7 +24,7 @@
 
 | Task | Owner | Files | Blocker | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| SUP-001 Production supply calculation engine | Tariff Engine | `lib/supply-calculation-engine.ts`, future shared types/integration files | Open questions in `SUPPLY_CALCULATION_DESIGN.md` and `docs/SUPPLY_CALCULATION_DECISION_PACK.md` | High | Phase 1 normalisation is available only as a disconnected service; do not calculate annual amounts or integrate into tariffs until losses, TOU, annualisation, pass-through, and kVA/kW rules are resolved. |
+| SUP-001 Production supply calculation engine | Tariff Engine | `lib/supply-calculation-engine.ts`, future shared types/integration files | Open questions in `SUPPLY_CALCULATION_DESIGN.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, and `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md` | High | Phase 1 normalisation is available only as a disconnected service; do not calculate annual amounts or integrate into tariffs until the Phase 2 sign-off pack is accepted. |
 | VAL-001 Cross-form save-blocking validation policy | PM plus workstream leads | forms, validation utilities, calculation engine | Need policy on when validation blocks save vs report readiness | High | Avoid partial save blocking until data-contract responsibilities are settled. |
 
 ## Done
@@ -59,6 +59,7 @@
 | PR-028 Report readiness regression tests | QA plus UI review | `tests/report-readiness.test.tsx`, `tests/fixtures/report-readiness.ts`, `vitest.config.ts`, dependency metadata | Merged PR #28 | Medium | Component coverage for report readiness, audit evidence, print, and HTML download. |
 | PR-029 Supply calculation decision pack | PM plus Tariff Engine review | `SUPPLY_CALCULATION_DESIGN.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, manager docs | Merged PR #29 | High | Business-rule decision gate created before supply calculation production work. |
 | PR-030 Supply Phase 1 normalisation | Tariff Engine plus QA | `lib/supply-calculation-engine.ts`, `tests/supply-calculation-engine.test.ts`, `docs/APP_CONTRACTS.md` | Merged PR #30 | High | Pure disconnected normalisation service added; annual amounts and tariff integration remain blocked. |
+| PR-031 Supply Phase 1 closeout | PM | supply design and manager docs | Merged PR #31 | Medium | Control docs updated to show Phase 1 normalisation complete and remaining supply work blocked by business decisions. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
 | SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Fixture and regression test for energy charge sensitivity. |

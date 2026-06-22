@@ -74,4 +74,4 @@ Before production implementation starts, record answers for:
 
 ## Recommended Next Step
 
-Ask the user and Tariff Engine to resolve the annual amount and tariff integration decision groups before any Phase 2 implementation branch is opened. The next proposal should list exact business-rule answers, files, types, test cases, and integration boundaries.
+Use `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md` to record the minimum owner decisions for annual amount calculation before any Phase 2 implementation branch is opened. The next Tariff Engine proposal should list exact business-rule answers, files, types, test cases, and integration boundaries.
