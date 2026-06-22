@@ -13,7 +13,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Supply integration open decisions | PM plus user sign-off owner | `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`, `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #39 merged | High | Convert remaining supply tariff integration blockers into clear user decisions before any production integration proposal. |
+| Supply integration decision answer | PM plus user sign-off owner | `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`, `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`, `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #40 merged and user approval | High | Record approved evidence-only supply integration answers before any production implementation proposal. |
 
 ## Review
 
@@ -69,6 +69,7 @@
 | PR-037 Supply Phase 2 closeout | PM | manager docs | Merged PR #37 | Medium | Annual amount implementation closed out; tariff integration decisioning is the next blocker. |
 | PR-038 Supply tariff integration decision pack | PM plus Tariff Engine review | `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`, manager docs | Merged PR #38 | High | Decision gate added before supply annual amounts can affect tariffs, reports, exports, imports, storage, or shared DTOs. |
 | PR-039 Supply rule decisions record | PM plus user sign-off owner | `docs/SUPPLY_RULE_DECISIONS.md`, supply decision docs, manager docs | Merged PR #39 | High | User-supplied rules for losses, Triad, DUoS, annualisation, input validity, and time-of-use recorded; tariff integration remains blocked. |
+| PR-040 Supply integration open decisions | PM plus user sign-off owner | `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`, supply decision docs, manager docs | Merged PR #40 | High | Remaining supply tariff integration choices, suggested MVP-safe answers, and acceptance criteria recorded. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
 | SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Fixture and regression test for energy charge sensitivity. |
