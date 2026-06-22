@@ -2,15 +2,15 @@
 
 Date: 2026-06-22
 
-Status: Option A approved by user on 2026-06-22.
+Status: Option A approved by user on 2026-06-22; annual amount implementation merged.
 
-Purpose: give the calculation sign-off owner a plain-English decision route for unlocking supply annual amount calculation.
+Purpose: record the approved Option A decision that unlocked the completed Phase 2 annual amount implementation.
 
 ## Recommendation
 
-Proceed to a Phase 2 implementation proposal using the approved minimum decision set below.
+Phase 2 proceeded using the approved minimum decision set below and has been implemented as disconnected annual amount calculation.
 
-Do not approve tariff integration, report totals, export fields, import changes, or storage changes as part of Phase 2. Those should remain separate packages after annual amount calculation is proven and reviewed.
+Do not treat the completed annual amount work as approval for tariff integration, report totals, export fields, import changes, or storage changes. Those remain separate packages after the open integration decisions are answered.
 
 ## Minimum Decisions To Unlock Phase 2
 
@@ -81,11 +81,11 @@ Keep these blocked until a later package:
 - Pass-through treatment in tariff recovery.
 - Report totals and export DTO fields.
 
-## Approval Options
+## Historical Approval Options
 
-Option A: approve the recommended minimum decision set.
+Option A: approved the recommended minimum decision set.
 
-- Outcome: Tariff Engine can prepare a narrow Phase 2 implementation proposal for annual amount calculation only.
+- Outcome: Tariff Engine prepared and completed a narrow Phase 2 implementation for annual amount calculation only.
 - Decision: approved by user on 2026-06-22.
 
 Option B: approve with changes.
@@ -96,11 +96,11 @@ Option C: do not approve Phase 2 yet.
 
 - Outcome: supply calculation remains at Phase 1 normalisation only.
 
-## Next Package If Approved
+## Completed Package And Next Gate
 
 Owner: Tariff Engine, with PM and QA review.
 
-Status: unlocked for proposal only. Implementation should still wait for the Tariff Engine package plan, file list, and PM review.
+Status: completed for disconnected annual amount calculation. Tariff integration remains separate and is tracked in `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`.
 
 Expected files:
 

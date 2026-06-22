@@ -16,6 +16,8 @@ Tariff integration must not start until the decisions below are accepted.
 
 Related calculation-rule decisions are recorded in `docs/SUPPLY_RULE_DECISIONS.md`.
 
+The remaining integration choices are summarised for user sign-off in `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`.
+
 ## Decisions Required
 
 | Decision | Required answer | Why it matters | Current status |
@@ -59,8 +61,12 @@ Before Tariff Engine can propose implementation, the user must answer:
 3. Should pass-through supply lines be excluded from recovery?
 4. Should supply reconciliation be separate from network cost recovery?
 5. Should reports show supply values as evidence only or as tariff-impacting totals?
+6. Should each supply charge have an explicit customer applicability rule?
+7. Should the current Phase 2 `per day` calculation move from 365-day annualisation to actual billing-period days before integration?
 
-## Next Package If Approved
+## Future Implementation Proposal Files If Later Approved
+
+The immediate next package remains a docs-only decision answer record. The files below become candidates only after the user accepts or amends the open integration decisions.
 
 Owner: Tariff Engine for calculation semantics, UI Flow for display only after contract approval, QA for regression evidence, PM for merge sequencing.
 

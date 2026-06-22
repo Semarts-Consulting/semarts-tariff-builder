@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/supply-rule-decisions-record`
+Branch: `codex/supply-integration-open-decisions`
 
-Working tree status: supply rule decisions record in progress.
+Working tree status: supply integration open-decision record in progress.
 
-Latest full checks on `main` after PR #37:
+Latest full checks on `codex/supply-integration-open-decisions` after the supply integration open-decision docs package:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 16 test files and 96 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #38 have been merged to `main`. The current branch records supply calculation rule decisions supplied by the user.
+PRs #1 through #39 have been merged to `main`. The current branch records remaining supply tariff integration decisions needed before any production integration proposal.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply rule decisions record.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply integration open decisions.
 
 ## Operating Mode
 
 Current package ownership: Manager-led.
 
-Reason: this is a documentation-only rule decision record. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
+Reason: this is a documentation-only decision gate. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
 
 Future package rule:
 
@@ -120,7 +120,7 @@ Status: green baseline on current branch.
 Observed work:
 
 - Tests cover import parsers, allocation reconciliation, supply reference flows, and tariff calculations.
-- Latest full test run reported 16 files and 89 tests.
+- Latest full test run reported 16 files and 96 tests.
 - MVP candidate scenario test verifies a representative site reconciles tariff outputs to the recoverable cost base.
 - Manual demo path from inputs to allocation, calculation, audit trace, outputs, and reconciliation has been accepted by the user.
 
@@ -186,15 +186,16 @@ Review risks:
 - SCN-006 should prove existing validation issues are surfaced without silently correcting output values or revenue variance.
 - SCN-001 through SCN-006 are now implemented and merged to `main`; further scenario expansion should be driven by QA review, stakeholder feedback, or external release criteria.
 - Report readiness UI alignment and regression coverage are merged through PR #28.
-- Supply calculation has proceeded only to reviewed Phase 1 normalisation; further production calculation remains gated by the decision pack.
-- Supply Phase 1 normalisation is merged through PR #30 as a disconnected pure service. It does not calculate annual amounts and must not feed tariff outputs, report totals, storage, imports, or export DTOs until the remaining business decisions are signed off.
-- Supply Phase 2 should be annual amount calculation only unless the user explicitly approves tariff integration as a separate package.
+- Supply calculation has proceeded through Phase 2 annual amounts as a disconnected service; tariff, report, export, import, storage, and shared DTO integration remains gated.
+- Supply Phase 1 normalisation was merged through PR #30 as a disconnected pure service and did not calculate annual amounts.
+- Supply Phase 2 annual amount calculation was limited to the disconnected supply service unless the user explicitly approves tariff integration as a separate package.
 - Supply Phase 2 decision brief should be approved, amended, or rejected by the user before Tariff Engine prepares implementation.
 - User approved Supply Phase 2 Option A on 2026-06-22. Tariff Engine may prepare an annual-amount-only implementation proposal. Tariff integration, report totals, export fields, imports, and storage remain out of scope.
 - Supply Phase 2 implementation proposal is documented in `docs/SUPPLY_PHASE_2_IMPLEMENTATION_PROPOSAL.md`; implementation ownership is Tariff Engine with QA and PM review.
 - Supply Phase 2 annual amounts are merged through PR #36. Fixed annual, monthly, daily, and clear kVA capacity charge lines can calculate annual amounts inside the disconnected supply service only. Tariff integration, report totals, export fields, imports, storage, and shared DTO changes remain out of scope.
 - Supply tariff integration decisioning is documented in `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`; no implementation should start until the user accepts or amends it.
 - Supply rule decisions for losses, Triad, DUoS, annualisation, input validity, and time-of-use are recorded in `docs/SUPPLY_RULE_DECISIONS.md`. Tariff integration remains blocked pending allocation destination, customer applicability, reporting category, pass-through flag, and reconciliation decisions.
+- Remaining supply integration choices are being tracked in `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`; production integration remains blocked until the user answers them.
 
 ## QA Staging Warnings
 
@@ -232,8 +233,8 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 Scenario coverage closeout is maintained in `docs/SCENARIO_COVERAGE_CLOSEOUT.md`.
 
-Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_RULE_DECISIONS.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, and `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`.
+Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_RULE_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, and `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`.
 
 ## Immediate Next Action
 
-Review and commit the supply rule decisions record, then open a PR from `codex/supply-rule-decisions-record`.
+Review and commit the supply integration open-decision record, then open a PR from `codex/supply-integration-open-decisions`.

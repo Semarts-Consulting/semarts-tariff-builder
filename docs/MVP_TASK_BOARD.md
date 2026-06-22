@@ -6,13 +6,14 @@
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
 | ENG-010 Supply tariff integration proposal | Tariff Engine plus PM review | future tariff integration docs, future shared type proposals if approved | Supply integration decision pack | High | Start only after allocation, recovery, pass-through, reconciliation, and report treatment are signed off. |
+| SUP-003 Billing-period daily annualisation | Tariff Engine plus QA review | future `lib/supply-calculation-engine.ts` and focused tests if approved | User decision to replace 365-day annualisation with actual billing-period days | Medium | Keep separate from tariff integration; requires a clear billing-period input before production calculation changes. |
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
 
 ## In Progress
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Supply rule decisions record | PM plus user sign-off owner | `docs/SUPPLY_RULE_DECISIONS.md`, `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #38 merged | High | Record supplied losses, Triad, DUoS, annualisation, validity, and time-of-use decisions while keeping tariff integration blocked. |
+| Supply integration open decisions | PM plus user sign-off owner | `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`, `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #39 merged | High | Convert remaining supply tariff integration blockers into clear user decisions before any production integration proposal. |
 
 ## Review
 
@@ -66,6 +67,8 @@
 | PR-035 Supply Phase 2 implementation proposal | PM plus Tariff Engine review | `docs/SUPPLY_PHASE_2_IMPLEMENTATION_PROPOSAL.md`, manager docs | Merged PR #35 | High | Annual-amount-only implementation scope, file ownership, tests, and guardrails approved. |
 | PR-036 Supply Phase 2 annual amounts | Tariff Engine plus QA | `lib/supply-calculation-engine.ts`, `tests/supply-calculation-engine.test.ts`, `docs/APP_CONTRACTS.md` | Merged PR #36 | High | Fixed and kVA capacity annual amounts implemented without tariff/report/export integration. |
 | PR-037 Supply Phase 2 closeout | PM | manager docs | Merged PR #37 | Medium | Annual amount implementation closed out; tariff integration decisioning is the next blocker. |
+| PR-038 Supply tariff integration decision pack | PM plus Tariff Engine review | `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`, manager docs | Merged PR #38 | High | Decision gate added before supply annual amounts can affect tariffs, reports, exports, imports, storage, or shared DTOs. |
+| PR-039 Supply rule decisions record | PM plus user sign-off owner | `docs/SUPPLY_RULE_DECISIONS.md`, supply decision docs, manager docs | Merged PR #39 | High | User-supplied rules for losses, Triad, DUoS, annualisation, input validity, and time-of-use recorded; tariff integration remains blocked. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
 | SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Fixture and regression test for energy charge sensitivity. |
