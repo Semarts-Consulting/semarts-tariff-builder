@@ -110,3 +110,116 @@ export const twoClassScenarioExpected = {
     }
   }
 };
+
+export const nonRecoverableScenarioDataInputRows: DataInputRow[] = [
+  {
+    id: "input-standard",
+    customerClass: "Standard",
+    customerCount: 40,
+    annualKwh: 80000,
+    peakDemandKw: 160,
+    notes: "Standard occupiers on the private network."
+  },
+  {
+    id: "input-large-user",
+    customerClass: "Large user",
+    customerCount: 5,
+    annualKwh: 70000,
+    peakDemandKw: 140,
+    notes: "Larger commercial user group with higher usage."
+  }
+];
+
+export const nonRecoverableScenarioCostPoolRows: CostPoolRow[] = [
+  {
+    id: "cost-recoverable-operations",
+    name: "Recoverable network operations",
+    category: "Operations",
+    annualAmount: 9000,
+    recoverablePercent: 100,
+    notes: "Fully recoverable fixed network operating cost."
+  },
+  {
+    id: "cost-partially-recoverable-maintenance",
+    name: "Partially recoverable maintenance",
+    category: "Maintenance",
+    annualAmount: 10000,
+    recoverablePercent: 60,
+    notes: "Only GBP 6,000 is recoverable; GBP 4,000 is excluded from tariffs."
+  },
+  {
+    id: "cost-non-recoverable-admin",
+    name: "Non-recoverable administration",
+    category: "Administration",
+    annualAmount: 5000,
+    recoverablePercent: 0,
+    notes: "Excluded from tariff recovery."
+  }
+];
+
+export const nonRecoverableScenarioAllocationRows: AllocationMethodRow[] = [
+  {
+    id: "allocation-recoverable-operations",
+    costPoolId: "cost-recoverable-operations",
+    costPoolName: "Recoverable network operations",
+    basis: "Customer count",
+    tariffComponent: "Fixed",
+    classShares: [
+      { customerClass: "Standard", percent: 88.88888888888889 },
+      { customerClass: "Large user", percent: 11.11111111111111 }
+    ],
+    notes: "Fixed recoverable costs allocated by customer count."
+  },
+  {
+    id: "allocation-partially-recoverable-maintenance",
+    costPoolId: "cost-partially-recoverable-maintenance",
+    costPoolName: "Partially recoverable maintenance",
+    basis: "Annual kWh",
+    tariffComponent: "Energy",
+    classShares: [
+      { customerClass: "Standard", percent: 53.333333333333336 },
+      { customerClass: "Large user", percent: 46.666666666666664 }
+    ],
+    notes: "Recoverable maintenance cost allocated by annual kWh."
+  },
+  {
+    id: "allocation-non-recoverable-admin",
+    costPoolId: "cost-non-recoverable-admin",
+    costPoolName: "Non-recoverable administration",
+    basis: "Customer count",
+    tariffComponent: "Fixed",
+    classShares: [
+      { customerClass: "Standard", percent: 88.88888888888889 },
+      { customerClass: "Large user", percent: 11.11111111111111 }
+    ],
+    notes: "Allocation exists, but recoverable cost is zero."
+  }
+];
+
+export const nonRecoverableScenarioExpected = {
+  annualCostBase: 24000,
+  excludedCost: 9000,
+  revenueRequirement: 15000,
+  classResults: {
+    Standard: {
+      fixedCost: 8000,
+      energyCost: 3200,
+      demandCost: 0,
+      passThroughCost: 0,
+      totalAllocatedCost: 11200,
+      fixedChargePerCustomer: 200,
+      energyChargePerKwh: 0.04,
+      demandChargePerKw: 0
+    },
+    "Large user": {
+      fixedCost: 1000,
+      energyCost: 2800,
+      demandCost: 0,
+      passThroughCost: 0,
+      totalAllocatedCost: 3800,
+      fixedChargePerCustomer: 200,
+      energyChargePerKwh: 0.04,
+      demandChargePerKw: 0
+    }
+  }
+};
