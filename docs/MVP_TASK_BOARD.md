@@ -5,14 +5,14 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
-| ENG-009 Supply tariff integration decision pack | PM plus Tariff Engine review | future tariff integration docs, future shared type proposals if approved | Supply annual amounts merged | High | Decide allocation destination and pass-through treatment before supply values feed tariff outputs. |
+| ENG-010 Supply tariff integration proposal | Tariff Engine plus PM review | future tariff integration docs, future shared type proposals if approved | Supply integration decision pack | High | Start only after allocation, recovery, pass-through, reconciliation, and report treatment are signed off. |
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
 
 ## In Progress
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Supply Phase 2 closeout | PM | `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md`, `docs/MVP_LIMITATIONS_CLOSEOUT.md` | PR #36 merged | Medium | Record annual amount calculation as complete and move next blocker to tariff integration decisions. |
+| Supply tariff integration decision pack | PM plus user sign-off owner | `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #37 merged | High | Define decisions required before supply values affect tariff outputs, reports, or exports. |
 
 ## Review
 
@@ -65,6 +65,7 @@
 | PR-034 Supply Phase 2 approval record | PM plus user sign-off owner | `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, manager docs | Merged PR #34 | High | User approved Option A; annual-amount-only implementation proposal unlocked. |
 | PR-035 Supply Phase 2 implementation proposal | PM plus Tariff Engine review | `docs/SUPPLY_PHASE_2_IMPLEMENTATION_PROPOSAL.md`, manager docs | Merged PR #35 | High | Annual-amount-only implementation scope, file ownership, tests, and guardrails approved. |
 | PR-036 Supply Phase 2 annual amounts | Tariff Engine plus QA | `lib/supply-calculation-engine.ts`, `tests/supply-calculation-engine.test.ts`, `docs/APP_CONTRACTS.md` | Merged PR #36 | High | Fixed and kVA capacity annual amounts implemented without tariff/report/export integration. |
+| PR-037 Supply Phase 2 closeout | PM | manager docs | Merged PR #37 | Medium | Annual amount implementation closed out; tariff integration decisioning is the next blocker. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
 | SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Fixture and regression test for energy charge sensitivity. |
