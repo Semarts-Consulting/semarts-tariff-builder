@@ -2,30 +2,30 @@
 
 Date: 2026-06-22
 
-Status: green on `main`.
+Status: green on `codex/demo-project-tariff-seed`; ready for PR review.
 
-Purpose: record the final internal MVP candidate verification baseline after PRs #1 through #13 were merged.
+Purpose: record the internal MVP candidate verification baseline after adding live demo project tariff seed data.
 
 ## Repository Baseline
 
-- Branch: `main`
-- Remote status: `main...origin/main`
-- Latest merged PR: PR #13, MVP limitations closeout
-- Working tree: clean when checked by user
+- Branch: `codex/demo-project-tariff-seed`
+- Base branch: `main`
+- Latest merged PR on `main`: PR #14, final MVP verification baseline
+- Package scope: seed the live demo project with representative customer, cost, and allocation data
 
 ## Verification Evidence
 
 | Check | Result | Evidence |
 | --- | --- | --- |
-| Git status | Passed | `## main...origin/main` |
 | Lint | Passed | `npm.cmd run lint` completed without errors |
 | Type-check | Passed | `npx.cmd tsc --noEmit --incremental false` completed without errors |
-| Tests | Passed | `npm.cmd test`: 12 test files, 64 tests passed |
+| Focused demo seed test | Passed | `npm.cmd test -- tests/demo-project-defaults.test.ts`: 1 test passed |
+| Tests | Passed | `npm.cmd test`: 13 test files, 65 tests passed |
 | Production build | Passed | `npm.cmd run build` completed successfully |
 
 ## Candidate Position
 
-The internal MVP candidate remains accepted with limitations.
+The internal MVP candidate remains accepted with limitations. The live demo project now contains the aggregate customer inputs, recoverable cost pools, and allocation methods needed to calculate tariff outputs in the application.
 
 The green baseline supports stakeholder-demo use of the current workflow, provided the demo remains clear that:
 

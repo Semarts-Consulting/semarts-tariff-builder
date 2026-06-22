@@ -4,20 +4,21 @@
 
 Date: 2026-06-22
 
-Branch: `codex/final-mvp-baseline`
+Branch: `codex/demo-project-tariff-seed`
 
-Working tree status: final MVP candidate baseline package in progress.
+Working tree status: live demo tariff seed package in progress.
 
-Latest full checks on `main` after PR #13 merged:
+Latest full checks on `codex/demo-project-tariff-seed`:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test`: passed, 12 test files and 64 tests.
+- `npm.cmd test -- tests/demo-project-defaults.test.ts`: passed, 1 test.
+- `npm.cmd test`: passed, 13 test files and 65 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #13 have been merged to `main`. The current branch records the final green verification baseline for the accepted-with-limitations internal MVP candidate.
+PRs #1 through #14 have been merged to `main`. The current branch fixes the live demo by seeding the sample project with representative aggregate customer, cost, and allocation data.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: stakeholder-demo preparation using the final green baseline.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: stakeholder-demo preparation using the seeded live demo project.
 
 ## MVP Definition
 
@@ -158,7 +159,8 @@ Review risks:
 - Stakeholder-demo preparation should explain the workflow as an internal MVP candidate and must not imply external release readiness.
 - Demo rehearsal should focus on methodology defensibility, audit trace, revenue recovery reconciliation, accepted limitations, and support needed.
 - Accepted limitations do not block stakeholder-demo preparation, provided the demo language avoids external release and formal compliance claims.
-- Final MVP candidate verification baseline is green on `main` after PR #13: clean Git status, lint passed, type-check passed, 12 test files and 64 tests passed, and production build passed.
+- Final MVP candidate verification baseline is green after live demo tariff seed: lint passed, type-check passed, 13 test files and 65 tests passed, and production build passed.
+- The live `demo-private-network` sample project must include aggregate customer information, recoverable cost pools, and allocation methods sufficient to calculate tariffs in the application.
 
 ## QA Staging Warnings
 
@@ -190,4 +192,4 @@ Final verification baseline is maintained in `docs/MVP_FINAL_BASELINE.md`.
 
 ## Immediate Next Action
 
-Review and commit the final MVP candidate baseline package, then open a PR from `codex/final-mvp-baseline`.
+Review and commit the live demo tariff seed package, then open a PR from `codex/demo-project-tariff-seed`.
