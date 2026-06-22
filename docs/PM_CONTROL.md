@@ -4,20 +4,20 @@
 
 Date: 2026-06-22
 
-Branch: `codex/mvp-limitations-closeout`
+Branch: `codex/final-mvp-baseline`
 
-Working tree status: MVP limitations closeout package in progress.
+Working tree status: final MVP candidate baseline package in progress.
 
-Latest full checks before the docs-only MVP decision, stakeholder-demo preparation, and limitation closeout packages:
+Latest full checks on `main` after PR #13 merged:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 12 test files and 64 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #12 have been merged to `main`. The current branch converts accepted MVP limitations into a controlled follow-up backlog.
+PRs #1 through #13 have been merged to `main`. The current branch records the final green verification baseline for the accepted-with-limitations internal MVP candidate.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: stakeholder-demo rehearsal, limitation closeout, and next-step decision.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: stakeholder-demo preparation using the final green baseline.
 
 ## MVP Definition
 
@@ -158,6 +158,7 @@ Review risks:
 - Stakeholder-demo preparation should explain the workflow as an internal MVP candidate and must not imply external release readiness.
 - Demo rehearsal should focus on methodology defensibility, audit trace, revenue recovery reconciliation, accepted limitations, and support needed.
 - Accepted limitations do not block stakeholder-demo preparation, provided the demo language avoids external release and formal compliance claims.
+- Final MVP candidate verification baseline is green on `main` after PR #13: clean Git status, lint passed, type-check passed, 12 test files and 64 tests passed, and production build passed.
 
 ## QA Staging Warnings
 
@@ -185,6 +186,8 @@ Missing MVP-critical regression coverage:
 
 Controlled follow-up backlog is maintained in `docs/MVP_LIMITATIONS_CLOSEOUT.md`.
 
+Final verification baseline is maintained in `docs/MVP_FINAL_BASELINE.md`.
+
 ## Immediate Next Action
 
-Review and commit the MVP limitations closeout package, then open a PR from `codex/mvp-limitations-closeout`.
+Review and commit the final MVP candidate baseline package, then open a PR from `codex/final-mvp-baseline`.
