@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/supply-phase-2-closeout`
+Branch: `codex/supply-tariff-integration-decision-pack`
 
-Working tree status: supply Phase 2 closeout in progress.
+Working tree status: supply tariff integration decision pack in progress.
 
-Latest full checks on `main` after PR #36:
+Latest full checks on `main` after PR #37:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 16 test files and 96 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #36 have been merged to `main`. The current branch records Supply Phase 2 annual amount closeout.
+PRs #1 through #37 have been merged to `main`. The current branch prepares the supply tariff integration decision pack.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply Phase 2 closeout.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply tariff integration decision pack.
 
 ## Operating Mode
 
 Current package ownership: Manager-led.
 
-Reason: this is a documentation-only closeout package for the merged Supply Phase 2 annual amount implementation. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
+Reason: this is a documentation-only decision package for tariff integration. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
 
 Future package rule:
 
@@ -193,6 +193,7 @@ Review risks:
 - User approved Supply Phase 2 Option A on 2026-06-22. Tariff Engine may prepare an annual-amount-only implementation proposal. Tariff integration, report totals, export fields, imports, and storage remain out of scope.
 - Supply Phase 2 implementation proposal is documented in `docs/SUPPLY_PHASE_2_IMPLEMENTATION_PROPOSAL.md`; implementation ownership is Tariff Engine with QA and PM review.
 - Supply Phase 2 annual amounts are merged through PR #36. Fixed annual, monthly, daily, and clear kVA capacity charge lines can calculate annual amounts inside the disconnected supply service only. Tariff integration, report totals, export fields, imports, storage, and shared DTO changes remain out of scope.
+- Supply tariff integration decisioning is documented in `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`; no implementation should start until the user accepts or amends it.
 
 ## QA Staging Warnings
 
@@ -230,8 +231,8 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 Scenario coverage closeout is maintained in `docs/SCENARIO_COVERAGE_CLOSEOUT.md`.
 
-Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, and `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`.
+Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, and `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`.
 
 ## Immediate Next Action
 
-Review and commit the supply Phase 2 closeout, then open a PR from `codex/supply-phase-2-closeout`.
+Review and commit the supply tariff integration decision pack, then open a PR from `codex/supply-tariff-integration-decision-pack`.

@@ -2,17 +2,17 @@
 
 Date: 2026-06-22
 
-Status: Phase 1 normalisation merged; production annual amounts and tariff integration remain blocked.
+Status: Phase 2 annual amounts merged; tariff integration remains blocked.
 
-Purpose: define the business decisions required before supply calculation can move from design note to production calculation service.
+Purpose: define the business decisions required before supply calculation can move from disconnected service outputs to tariff-impacting results.
 
 ## Delivery Position
 
 Supply calculation is not part of the approved MVP calculation workflow yet. The current tariff workflow can calculate and explain tariff outputs from customer classes, cost pools, allocation methods, and audit trace evidence.
 
-Phase 1 normalisation is implemented in `lib/supply-calculation-engine.ts` as a disconnected pure service. It normalises rows, converts rates, and flags unresolved cases, but it does not calculate annual amounts or feed tariffs.
+Phase 1 normalisation and Phase 2 annual amounts are implemented in `lib/supply-calculation-engine.ts` as a disconnected pure service. It normalises rows, converts rates, flags unresolved cases, and calculates approved fixed and kVA capacity annual amounts, but it does not feed tariffs.
 
-Supply calculation should stay separate until the questions below are answered. Do not add shared production DTOs, report fields, tariff-engine integration, or annual amount calculation until the relevant decision group is signed off.
+Supply calculation should stay separate until the integration questions below are answered. Do not add shared production DTOs, report fields, or tariff-engine integration until the relevant decision group is signed off.
 
 ## Decision Groups
 
@@ -21,7 +21,7 @@ Supply calculation should stay separate until the questions below are answered. 
 | Losses basis | Define `CM`, `GSP`, and `NBP`; decide source volume and adjustment direction | User plus Tariff Engine | No, if preserved only | Yes | Yes |
 | Capacity conversion | Define kVA to kW conversion and power factor for TNUoS triad | User plus Tariff Engine | No, if flagged `Needs business rule` | Yes | Yes |
 | Time bands | Define DUoS red/amber/green/super red mapping source and tariff-year/DNO variability | User plus Tariff Engine | No, if preserved only | Yes | Yes |
-| Annualisation | Decide day/month/year calculation basis for fixed and capacity charges | User plus Tariff Engine | No, if status is explicit | Yes | Yes |
+| Annualisation | Decide day/month/year calculation basis for fixed and capacity charges | User plus Tariff Engine | No, if status is explicit | Approved for Phase 2 scope | Yes |
 | Allocation destination | Decide whether supply charges allocate by MPAN, tenant, network level, or customer class | User plus PM/Tariff Engine | No | No | Yes |
 | Pass-through treatment | Decide whether pass-through lines are excluded from recovery or reported separately | User plus PM/Tariff Engine | No | No | Yes |
 | Input validity | Decide whether blank charge names and incompatible time-of-use options block calculation | User plus Data/Engine | Yes | Yes | Yes |
@@ -74,4 +74,4 @@ Before production implementation starts, record answers for:
 
 ## Recommended Next Step
 
-Use `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md` to record the minimum owner decisions for annual amount calculation before any Phase 2 implementation branch is opened. The next Tariff Engine proposal should list exact business-rule answers, files, types, test cases, and integration boundaries.
+Use `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md` to record allocation, recovery, pass-through, reconciliation, report, and export decisions before any tariff integration implementation branch is opened.
