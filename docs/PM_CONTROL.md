@@ -4,9 +4,9 @@
 
 Date: 2026-06-22
 
-Branch: `codex/scn-001-two-class-scenario`
+Branch: `codex/scn-005-non-recoverable-cost`
 
-Working tree status: SCN-001 two-class scenario package in progress.
+Working tree status: SCN-005 non-recoverable cost scenario package in progress.
 
 Latest full checks from PR #15 live demo tariff seed:
 
@@ -16,9 +16,9 @@ Latest full checks from PR #15 live demo tariff seed:
 - `npm.cmd test`: passed, 13 test files and 65 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #18 have been merged to `main`. The current branch adds the first additional scenario fixture and regression test.
+PRs #1 through #19 have been merged to `main`. The current branch adds non-recoverable cost scenario coverage.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: SCN-001 additional scenario coverage.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: SCN-005 additional scenario coverage.
 
 ## MVP Definition
 
@@ -165,6 +165,7 @@ Review risks:
 - Post-demo feedback must be triaged into narrow defects, decisions, scenarios, enhancements, or out-of-scope items before implementation.
 - Additional tariff scenarios should be planned before implementation; start with simple two-class and non-recoverable cost scenarios unless stakeholder feedback changes priority.
 - SCN-001 should remain calculation/test focused and must not introduce production workflow or UI scope.
+- SCN-005 should prove partial and zero recoverability affect only the recoverable tariff revenue requirement.
 
 ## QA Staging Warnings
 
@@ -202,4 +203,4 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 ## Immediate Next Action
 
-Review and commit the SCN-001 two-class scenario package, then open a PR from `codex/scn-001-two-class-scenario`.
+Review and commit the SCN-005 non-recoverable cost scenario package, then open a PR from `codex/scn-005-non-recoverable-cost`.
