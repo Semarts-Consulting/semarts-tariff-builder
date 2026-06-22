@@ -14,7 +14,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| SCN-004 Capacity-heavy scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, `docs/ADDITIONAL_SCENARIO_PLAN.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | SCN-003 merged | Medium | Add fixture and regression test for demand charge sensitivity. |
+| SCN-006 Validation issue scenario | QA plus Tariff Engine review | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, `docs/ADDITIONAL_SCENARIO_PLAN.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | SCN-004 merged | Medium | Add fixture and regression test for missing/invalid data warnings without changing production behavior. |
 
 ## Review
 
@@ -54,9 +54,11 @@
 | PR-020 SCN-005 non-recoverable cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #20 | Medium | Additional scenario coverage for partial and zero recoverability. |
 | PR-022 SCN-002 high fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Additional scenario coverage for fixed charge sensitivity. |
 | PR-023 SCN-003 high consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Additional scenario coverage for energy charge sensitivity. |
+| PR-024 SCN-004 capacity-heavy scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #24 | Medium | Additional scenario coverage for demand charge sensitivity. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
 | SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Fixture and regression test for energy charge sensitivity. |
+| SCN-004 Capacity-heavy scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #24 | Medium | Fixture and regression test for demand charge sensitivity. |
 | SCN-005 Non-recoverable cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #20 | Medium | Fixture and regression test for partial and zero recoverability. |
 | MVP-004 Stakeholder-demo preparation | PM plus user sign-off owner | `docs/MVP_STAKEHOLDER_DEMO_PREP.md`, `docs/MVP_DEMO_REHEARSAL_NOTES.md`, `docs/MVP_LIMITATIONS_CLOSEOUT.md`, `docs/MVP_FINAL_BASELINE.md`, `docs/MVP_TIMELINE_TRACKER.md`, `docs/PM_CONTROL.md` | Accepted-with-limitations MVP decision and green final baseline | Medium | Focused walkthrough, rehearsal notes, limitation closeout, final verification baseline, and live demo approval completed. |
 | MVP-005 Demo approval to proceed | User sign-off owner plus PM support | `docs/MVP_DEMO_APPROVAL.md`, `docs/MVP_TIMELINE_TRACKER.md`, `docs/PM_CONTROL.md` | PR #15 live demo tariff seed | High | User approved the demo to carry forward after validating the seeded tariff workflow. |

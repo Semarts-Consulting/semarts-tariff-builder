@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/scn-004-capacity-heavy`
+Branch: `codex/scn-006-validation-issue-scenario`
 
-Working tree status: SCN-004 capacity-heavy scenario package in progress.
+Working tree status: SCN-006 validation issue scenario package in progress.
 
-Latest full checks on `main` after PR #23:
+Latest full checks on `main` after PR #24:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test`: passed, 14 test files and 69 tests.
+- `npm.cmd test`: passed, 14 test files and 70 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #23 have been merged to `main`. The current branch adds capacity-heavy scenario coverage.
+PRs #1 through #24 have been merged to `main`. The current branch adds validation issue scenario coverage.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: SCN-004 additional scenario coverage.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: SCN-006 additional scenario coverage.
 
 ## Operating Mode
 
 Current package ownership: Manager-led.
 
-Reason: SCN-004 is a narrow fixture, regression-test, and coordination-doc package. It does not change production calculation semantics, import behavior, UI/report behavior, or shared DTO contracts.
+Reason: SCN-006 is a narrow fixture, regression-test, and coordination-doc package that exercises existing validation behavior. It does not change production calculation semantics, import behavior, UI/report behavior, or shared DTO contracts.
 
 Future package rule:
 
@@ -182,6 +182,7 @@ Review risks:
 - SCN-002 should prove high fixed costs produce expected fixed charge sensitivity while still reconciling to the recoverable cost base.
 - SCN-003 should prove high consumption costs produce expected energy charge sensitivity while still reconciling to the recoverable cost base.
 - SCN-004 should prove high capacity costs produce expected demand charge sensitivity while still reconciling to the recoverable cost base.
+- SCN-006 should prove existing validation issues are surfaced without silently correcting output values or revenue variance.
 
 ## QA Staging Warnings
 
@@ -219,4 +220,4 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 ## Immediate Next Action
 
-Review and commit the SCN-004 capacity-heavy scenario package, then open a PR from `codex/scn-004-capacity-heavy`.
+Review and commit the SCN-006 validation issue scenario package, then open a PR from `codex/scn-006-validation-issue-scenario`.
