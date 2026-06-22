@@ -5,6 +5,8 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
+| SCN-001 Small two-class scenario | Tariff Engine plus QA | future scenario fixture and tests | `docs/ADDITIONAL_SCENARIO_PLAN.md` | High | Add after plan approval; validates a simpler residential/commercial site. |
+| SCN-005 Non-recoverable cost scenario | Tariff Engine plus QA | future scenario fixture and tests | `docs/ADDITIONAL_SCENARIO_PLAN.md` | Medium | Add after plan approval; validates partial recovery and excluded cost explanation. |
 | OUT-003 Report readiness UI alignment | UI Flow plus PM/Engine review | `components/ReportsSummary.tsx`, possibly `components/TariffAuditTracePanel.tsx` | OUT-001 contract | Medium | Align rendered report with readiness mapping, warning severity, and audit evidence expectations. |
 | QA-003 Report/export regression tests | QA plus UI review | report/calculation component tests and fixtures | OUT-001 contract | Medium | Cover report sections, warnings, audit trace visibility, and HTML/print actions. |
 | ENG-003 Supply calculation design closure | PM plus Tariff Engine | `SUPPLY_CALCULATION_DESIGN.md`, future service/types | Business answers required | High | No production DTO or engine until assumptions are resolved. |
@@ -14,7 +16,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| MVP-006 Post-demo feedback capture | PM plus user sign-off owner | `docs/POST_DEMO_FEEDBACK_LOG.md`, `docs/MVP_DEMO_APPROVAL.md`, `docs/MVP_TIMELINE_TRACKER.md`, `docs/PM_CONTROL.md` | Demo approved to carry forward | Medium | Capture feedback and triage into narrow decisions, fixes, scenarios, enhancements, or out-of-scope requests. |
+| MVP-007 Additional scenario plan | PM plus Tariff Engine/QA review | `docs/ADDITIONAL_SCENARIO_PLAN.md`, `docs/POST_DEMO_FEEDBACK_LOG.md`, `docs/MVP_LIMITATIONS_CLOSEOUT.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Demo approved and feedback log in place | Medium | Define scenario backlog before adding more fixtures or tests. |
 
 ## Review
 
@@ -48,6 +50,8 @@
 | PR-013 MVP limitations closeout | PM plus workstream owners | `docs/MVP_LIMITATIONS_CLOSEOUT.md`, manager docs | Merged PR #13 | Medium | Accepted limitations converted into controlled follow-up backlog. |
 | PR-014 Final MVP baseline | PM plus QA evidence | `docs/MVP_FINAL_BASELINE.md`, manager docs | Merged PR #14 | Medium | Final green verification baseline recorded before live demo seed issue was found. |
 | PR-015 Live demo tariff seed | PM plus Tariff Engine/QA review | `lib/sample-data.ts`, `lib/project-storage.ts`, `tests/demo-project-defaults.test.ts`, manager docs | Merged PR #15 | High | Live demo project now includes aggregate customer, cost, and allocation data so tariff outputs calculate. |
+| PR-016 Demo approval record | User sign-off owner plus PM support | `docs/MVP_DEMO_APPROVAL.md`, manager docs | Merged PR #16 | High | Corrected MVP demo approved to carry forward. |
+| PR-017 Post-demo feedback log | PM plus user sign-off owner | `docs/POST_DEMO_FEEDBACK_LOG.md`, manager docs | Merged PR #17 | Medium | Feedback log and triage rules added. |
 | MVP-004 Stakeholder-demo preparation | PM plus user sign-off owner | `docs/MVP_STAKEHOLDER_DEMO_PREP.md`, `docs/MVP_DEMO_REHEARSAL_NOTES.md`, `docs/MVP_LIMITATIONS_CLOSEOUT.md`, `docs/MVP_FINAL_BASELINE.md`, `docs/MVP_TIMELINE_TRACKER.md`, `docs/PM_CONTROL.md` | Accepted-with-limitations MVP decision and green final baseline | Medium | Focused walkthrough, rehearsal notes, limitation closeout, final verification baseline, and live demo approval completed. |
 | MVP-005 Demo approval to proceed | User sign-off owner plus PM support | `docs/MVP_DEMO_APPROVAL.md`, `docs/MVP_TIMELINE_TRACKER.md`, `docs/PM_CONTROL.md` | PR #15 live demo tariff seed | High | User approved the demo to carry forward after validating the seeded tariff workflow. |
 | MVP-003 Internal MVP candidate review and decision | User sign-off owner plus PM support | `docs/MVP_CANDIDATE_SIGNOFF.md`, `docs/MVP_DEMO_PATH_CHECK.md`, `docs/MVP_TIMELINE_TRACKER.md` | Decision recorded as accepted with limitations | High | Internal MVP candidate accepted with limitations on 2026-06-22. |
