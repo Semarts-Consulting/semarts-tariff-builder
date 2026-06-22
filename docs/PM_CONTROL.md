@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/scn-006-validation-issue-scenario`
+Branch: `codex/scenario-coverage-closeout`
 
-Working tree status: SCN-006 validation issue scenario package in progress.
+Working tree status: scenario coverage closeout package in progress.
 
-Latest full checks on `main` after PR #24:
+Latest full checks on `main` after PR #25:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test`: passed, 14 test files and 70 tests.
+- `npm.cmd test`: passed, 14 test files and 71 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #24 have been merged to `main`. The current branch adds validation issue scenario coverage.
+PRs #1 through #25 have been merged to `main`. The current branch records scenario coverage closeout.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: SCN-006 additional scenario coverage.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: scenario coverage closeout.
 
 ## Operating Mode
 
 Current package ownership: Manager-led.
 
-Reason: SCN-006 is a narrow fixture, regression-test, and coordination-doc package that exercises existing validation behavior. It does not change production calculation semantics, import behavior, UI/report behavior, or shared DTO contracts.
+Reason: this is a narrow documentation and verification package. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
 
 Future package rule:
 
@@ -183,6 +183,7 @@ Review risks:
 - SCN-003 should prove high consumption costs produce expected energy charge sensitivity while still reconciling to the recoverable cost base.
 - SCN-004 should prove high capacity costs produce expected demand charge sensitivity while still reconciling to the recoverable cost base.
 - SCN-006 should prove existing validation issues are surfaced without silently correcting output values or revenue variance.
+- SCN-001 through SCN-006 are now implemented and merged to `main`; further scenario expansion should be driven by QA review, stakeholder feedback, or external release criteria.
 
 ## QA Staging Warnings
 
@@ -218,6 +219,8 @@ Post-demo feedback is maintained in `docs/POST_DEMO_FEEDBACK_LOG.md`.
 
 Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
+Scenario coverage closeout is maintained in `docs/SCENARIO_COVERAGE_CLOSEOUT.md`.
+
 ## Immediate Next Action
 
-Review and commit the SCN-006 validation issue scenario package, then open a PR from `codex/scn-006-validation-issue-scenario`.
+Review and commit the scenario coverage closeout package, then open a PR from `codex/scenario-coverage-closeout`.

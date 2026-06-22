@@ -4,13 +4,13 @@ Date: 2026-06-22
 
 Status: SCN-001 through SCN-006 implemented.
 
-Purpose: define the next representative tariff scenarios to strengthen confidence after the approved MVP demo.
+Purpose: record the representative tariff scenarios added to strengthen confidence after the approved MVP demo.
 
 ## Position
 
 The current live demo validates one private electricity network site with three customer groups and a GBP 45,000 recoverable cost base.
 
-That is enough for the approved internal MVP demo, but not enough for external release readiness. Additional scenarios should be added as narrow packages with expected outputs and reconciliation evidence.
+That is enough for the approved internal MVP demo, but not enough for external release readiness. The planned additional scenario set is now complete. Further scenarios should be added only when stakeholder feedback or external release criteria identify a specific gap.
 
 ## Scenario Backlog
 
@@ -27,6 +27,8 @@ That is enough for the approved internal MVP demo, but not enough for external r
 
 1. Review scenario coverage with QA before adding further scenarios.
 2. Defer further scenario expansion until stakeholder feedback or external release criteria identify a specific gap.
+
+Scenario closeout is recorded in `docs/SCENARIO_COVERAGE_CLOSEOUT.md`.
 
 ## Scenario Acceptance Criteria
 
