@@ -5,6 +5,7 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
+| MODEL-001 Methodology configuration decision pack | PM plus Tariff Engine/Data Import/QA | future model configuration docs and contract proposals | Model flexibility review | High | Define how the app supports airport, port, tenant, onward supply, loss, generation/export, AUoS/PUoS, and site-specific allocation variation before production changes. |
 | ENG-010 Supply tariff integration proposal | Tariff Engine plus PM review | future tariff integration docs, future shared type proposals if approved | Supply integration decision pack | High | Start only after allocation, recovery, pass-through, reconciliation, and report treatment are signed off. |
 | SUP-003 Billing-period daily annualisation | Tariff Engine plus QA review | future `lib/supply-calculation-engine.ts` and focused tests if approved | User decision to replace 365-day annualisation with actual billing-period days | Medium | Keep separate from tariff integration; requires a clear billing-period input before production calculation changes. |
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
@@ -13,7 +14,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Supply evidence closeout review | PM plus QA review | `docs/SUPPLY_EVIDENCE_REVIEW.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | PR #43 and PR #44 merged | Low | Confirm evidence-only supply presentation remains non-tariff-impacting and identify next safe follow-up. |
+| Model flexibility review | PM plus future Tariff Engine/Data Import/QA review | `docs/MODEL_FLEXIBILITY_REVIEW.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | User-supplied airport and Port of Tilbury workbook examples | Medium | Record workbook-derived flexibility requirements without changing production code or expanding current MVP scope. |
 
 ## Review
 
@@ -74,6 +75,7 @@
 | PR-042 Supply evidence implementation proposal | PM plus Tariff Engine/UI/QA review | `docs/SUPPLY_EVIDENCE_IMPLEMENTATION_PROPOSAL.md`, manager docs | Merged PR #42 | High | Narrow implementation proposal for evidence-only supply presentation and separate reconciliation. |
 | PR-043 Supply evidence report presentation | Tariff Engine, UI Flow, QA, PM | `lib/supply-calculation-engine.ts`, `components/ReportsSummary.tsx`, supply/report tests | Merged PR #43 | High | Evidence-only supply report section and service-local reconciliation helper implemented without changing tariff outputs, network revenue recovery, report totals, imports, storage, exports, shared DTOs, or billing-period daily annualisation. |
 | PR-044 Supply evidence implementation closeout | PM | `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Merged PR #44 | Low | Recorded supply evidence implementation closeout and kept tariff-impacting supply integration blocked. |
+| PR-045 Supply evidence closeout review | PM plus QA review | `docs/SUPPLY_EVIDENCE_REVIEW.md`, manager docs | Merged PR #45 | Low | Confirmed supply evidence presentation remains evidence-only and non-tariff-impacting. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
 | SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Fixture and regression test for energy charge sensitivity. |

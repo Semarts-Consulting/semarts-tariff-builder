@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/supply-evidence-review`
+Branch: `codex/model-flexibility-review`
 
-Working tree status: supply evidence closeout review in progress.
+Working tree status: model flexibility review in progress.
 
-Latest full checks on `main` after PR #44:
+Latest full checks on `main` after PR #45:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 16 test files and 98 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #44 have been merged to `main`. The current branch records a closeout review of the evidence-only supply presentation.
+PRs #1 through #45 have been merged to `main`. The current branch records workbook-derived model flexibility requirements from airport and Port of Tilbury examples.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply evidence closeout review.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: model flexibility review.
 
 ## Operating Mode
 
 Current package ownership: Manager-led documentation review.
 
-Reason: this is a documentation-only review after delegated production implementation and documentation closeout. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
+Reason: this is a requirements review based on reference workbook models. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, storage, exports, or shared DTO contracts.
 
 Future package rule:
 
@@ -139,6 +139,7 @@ Review risks:
 | Allocation reconciliation | `lib/project-storage.ts`, `components/CostPoolsForm.tsx`, `tests/allocation-reconciliation.test.ts` | Medium | Treat as data/storage behavior, not UI behavior. |
 | Supply calculation | `SUPPLY_CALCULATION_DESIGN.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, `lib/supply-calculation-engine.ts`, future shared types/integration files | High | Phase 2 annual amounts only; tariff/report integration remains blocked until allocation and pass-through decisions are accepted. |
 | Report/export DTOs | `components/ReportsSummary.tsx`, future export code, tariff result types | Medium | PM approval required before adding stakeholder-facing checks or export fields. |
+| Methodology configuration | future configuration docs/types, `types/project.ts`, calculation engine, import mapping, report UI | High | Do not hardcode airport, port, or site-specific workbook behaviour; define contracts before implementation. |
 
 ## Merge Order
 
@@ -158,6 +159,7 @@ Review risks:
 4. Which imported workbook headers are contractual and which remain provisional.
 5. Whether `ReportsSummary.tsx` should be considered report UI only or the start of an export DTO contract.
 6. Supply tariff integration remains deferred until allocation destination and pass-through treatment are signed off.
+7. How to model airport, port, tenant, onward supply, local losses, generation/export, AUoS/PUoS, and site-specific allocation variation without hardcoding workbook-specific logic.
 
 ## Accepted Decisions
 
@@ -198,6 +200,7 @@ Review risks:
 - Remaining supply integration choices are answered in `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`; production integration remains blocked until a separate implementation proposal is prepared and approved.
 - Evidence-only supply presentation and separate supply reconciliation are implemented through PR #43. Tariff-impacting supply integration remains blocked; supply evidence does not feed `calculateTariffs`, network revenue recovery, report totals, imports, storage, exports, shared DTOs, or billing-period daily annualisation.
 - Supply evidence implementation has been reviewed in `docs/SUPPLY_EVIDENCE_REVIEW.md` as evidence-only and non-tariff-impacting. The next safe follow-up is a manual report-page check, not tariff integration.
+- Airport and Port of Tilbury workbooks show that broader commercial use requires configurable methodology support. This is recorded in `docs/MODEL_FLEXIBILITY_REVIEW.md` and does not approve production implementation.
 
 ## QA Staging Warnings
 
@@ -235,8 +238,10 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 Scenario coverage closeout is maintained in `docs/SCENARIO_COVERAGE_CLOSEOUT.md`.
 
+Model flexibility requirements are maintained in `docs/MODEL_FLEXIBILITY_REVIEW.md`.
+
 Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_RULE_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_OPEN_DECISIONS.md`, `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`, `docs/SUPPLY_EVIDENCE_IMPLEMENTATION_PROPOSAL.md`, `docs/SUPPLY_EVIDENCE_REVIEW.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, and `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`.
 
 ## Immediate Next Action
 
-Review and commit the supply evidence closeout review, then open a PR from `codex/supply-evidence-review`.
+Review and commit the model flexibility review, then open a PR from `codex/model-flexibility-review`.
