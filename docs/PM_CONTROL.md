@@ -4,9 +4,9 @@
 
 Date: 2026-06-22
 
-Branch: `codex/scenario-baseline-record`
+Branch: `codex/scn-002-high-fixed-cost`
 
-Working tree status: scenario baseline record package in progress.
+Working tree status: SCN-002 high fixed-cost scenario package in progress.
 
 Latest full checks on `main` after PR #20:
 
@@ -15,9 +15,9 @@ Latest full checks on `main` after PR #20:
 - `npm.cmd test`: passed, 14 test files and 67 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #20 have been merged to `main`. The current branch records the green scenario coverage baseline.
+PRs #1 through #21 have been merged to `main`. The current branch adds high fixed-cost scenario coverage.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: select the next scenario or decision package.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: SCN-002 additional scenario coverage.
 
 ## MVP Definition
 
@@ -166,6 +166,7 @@ Review risks:
 - SCN-001 should remain calculation/test focused and must not introduce production workflow or UI scope.
 - SCN-005 should prove partial and zero recoverability affect only the recoverable tariff revenue requirement.
 - SCN-001 and SCN-005 are implemented and green on `main` after PR #20.
+- SCN-002 should prove high fixed costs produce expected fixed charge sensitivity while still reconciling to the recoverable cost base.
 
 ## QA Staging Warnings
 
@@ -203,4 +204,4 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 ## Immediate Next Action
 
-Review and commit the scenario baseline record package, then open a PR from `codex/scenario-baseline-record`.
+Review and commit the SCN-002 high fixed-cost scenario package, then open a PR from `codex/scn-002-high-fixed-cost`.
