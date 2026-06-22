@@ -8,6 +8,7 @@ import type {
 
 type TariffAuditTracePanelProps = {
   entries?: TariffCalculationTraceEntry[];
+  defaultOpenAll?: boolean;
 };
 
 const traceStageOrder: TariffCalculationTraceStage[] = [
@@ -44,7 +45,10 @@ function getSourceReferences(entry: TariffCalculationTraceEntry) {
   ].filter(Boolean);
 }
 
-export function TariffAuditTracePanel({ entries = [] }: TariffAuditTracePanelProps) {
+export function TariffAuditTracePanel({
+  entries = [],
+  defaultOpenAll = false
+}: TariffAuditTracePanelProps) {
   if (entries.length === 0) {
     return null;
   }
@@ -84,7 +88,7 @@ export function TariffAuditTracePanel({ entries = [] }: TariffAuditTracePanelPro
 
       <div className="divide-y divide-line">
         {groupedEntries.map((group, groupIndex) => (
-          <details key={group.stage} className="group" open={groupIndex === 0}>
+          <details key={group.stage} className="group" open={defaultOpenAll || groupIndex === 0}>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5 hover:bg-field">
               <span>
                 <span className="font-semibold">{group.stage}</span>

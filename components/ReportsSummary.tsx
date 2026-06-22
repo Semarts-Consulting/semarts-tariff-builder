@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { calculateTariffs } from "@/lib/calculation-engine";
+import { TariffAuditTracePanel } from "@/components/TariffAuditTracePanel";
 import {
   getProjectAllocationMethods,
   getProjectById,
@@ -33,6 +34,12 @@ type ReportState = {
   allocationMethods: ProjectAllocationMethods | null;
   calculation: TariffCalculationResult | null;
 };
+
+type ReportReadinessStatus =
+  | "Needs correction"
+  | "Needs review"
+  | "Revenue variance"
+  | "Ready for review";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-GB", {
@@ -68,6 +75,37 @@ function getIssueLabel(issue: TariffCalculationValidationIssue) {
   ].filter(Boolean);
 
   return context.length > 0 ? `${issue.message} ${context.join("; ")}.` : issue.message;
+}
+
+function getReportReadinessStatus(calculation: TariffCalculationResult): ReportReadinessStatus {
+  if (calculation.validationIssues.some((issue) => issue.severity === "Error")) {
+    return "Needs correction";
+  }
+
+  if (calculation.validationIssues.some((issue) => issue.severity === "Warning")) {
+    return "Needs review";
+  }
+
+  return calculation.isRevenueRecovered ? "Ready for review" : "Revenue variance";
+}
+
+function getReadinessDescription(status: ReportReadinessStatus) {
+  switch (status) {
+    case "Needs correction":
+      return "Calculation input problems need correction before stakeholder approval. Outputs remain available for review.";
+    case "Needs review":
+      return "Non-blocking readiness warnings should be reviewed before stakeholder approval. Outputs remain available.";
+    case "Revenue variance":
+      return "Revenue is not fully recovered. Review the variance before stakeholder approval.";
+    case "Ready for review":
+      return "No calculation readiness issues are currently reported.";
+  }
+}
+
+function getReadinessStyle(status: ReportReadinessStatus) {
+  return status === "Ready for review"
+    ? "border-semarts/30 bg-field text-semarts-dark"
+    : "border-amber-200 bg-amber-50 text-amber-900";
 }
 
 export function ReportsSummary({ projectId }: ReportsSummaryProps) {
@@ -148,6 +186,14 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
     () => costPools?.rows.reduce((total, row) => total + row.annualAmount, 0) ?? 0,
     [costPools]
   );
+  const recoverableCost = useMemo(
+    () =>
+      costPools?.rows.reduce(
+        (total, row) => total + row.annualAmount * (row.recoverablePercent / 100),
+        0
+      ) ?? 0,
+    [costPools]
+  );
   const supplyReferenceIssues = useMemo(
     () =>
       getSupplyReferenceReviewIssues(
@@ -160,6 +206,8 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
   if (!project || !dataInputs || !costPools || !allocationMethods) {
     return null;
   }
+
+  const readinessStatus = getReportReadinessStatus(calculation);
 
   function handlePrint() {
     setPrintStatus("Opening print dialog. If it does not appear, press Ctrl+P.");
@@ -259,24 +307,53 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           </section>
         ) : null}
 
-        {calculation.validationIssues.length > 0 || !calculation.isRevenueRecovered ? (
+        <section
+          className={`rounded-md border p-5 text-sm shadow-sm ${getReadinessStyle(
+            readinessStatus
+          )}`}
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-semibold">Report readiness</h2>
+              <p className="mt-2">{getReadinessDescription(readinessStatus)}</p>
+            </div>
+            <span className="rounded-md border border-current px-3 py-1 text-xs font-semibold">
+              {readinessStatus}
+            </span>
+          </div>
+
+          {calculation.validationIssues.length > 0 || !calculation.isRevenueRecovered ? (
+            <div className="mt-4">
+              <h3 className="text-xs font-semibold uppercase">Readiness items</h3>
+              <ul className="mt-3 space-y-2">
+                {!calculation.isRevenueRecovered ? (
+                  <li>
+                    <span className="mr-2 rounded-md border border-current px-2 py-0.5 text-xs font-semibold">
+                      Revenue variance
+                    </span>
+                    Revenue is not fully allocated. Variance{" "}
+                    {formatCurrency(calculation.unallocatedCost)}.
+                  </li>
+                ) : null}
+                {calculation.validationIssues.map((issue, index) => (
+                  <li key={`${issue.code}-${issue.rowId ?? issue.customerClass ?? index}`}>
+                    <span className="mr-2 rounded-md border border-current px-2 py-0.5 text-xs font-semibold">
+                      {issue.severity}
+                    </span>
+                    {getIssueLabel(issue)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </section>
+
+        {readinessStatus !== "Ready for review" ? (
           <section className="rounded-md border border-red-200 bg-red-50 p-5 text-sm text-red-900 shadow-sm">
-            <h2 className="font-semibold">Calculation inputs need review</h2>
+            <h2 className="font-semibold">Calculation inputs require approval review</h2>
             <p className="mt-2">
               This report remains available, but these readiness issues should be reviewed before approval.
             </p>
-            <ul className="mt-3 space-y-1">
-              {!calculation.isRevenueRecovered ? (
-                <li>
-                  Revenue is not fully allocated. Variance {formatCurrency(calculation.unallocatedCost)}.
-                </li>
-              ) : null}
-              {calculation.validationIssues.map((issue, index) => (
-                <li key={`${issue.code}-${issue.rowId ?? issue.customerClass ?? index}`}>
-                  {getIssueLabel(issue)}
-                </li>
-              ))}
-            </ul>
           </section>
         ) : null}
 
@@ -312,7 +389,7 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
         </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
         <div className="rounded-md border border-line bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-ink/50">Revenue requirement</p>
           <p className="mt-2 text-2xl font-semibold">
@@ -322,6 +399,16 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
         <div className="rounded-md border border-line bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-ink/50">Gross costs</p>
           <p className="mt-2 text-2xl font-semibold">{formatCurrency(grossCost)}</p>
+        </div>
+        <div className="rounded-md border border-line bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase text-ink/50">Recoverable cost</p>
+          <p className="mt-2 text-2xl font-semibold">{formatCurrency(recoverableCost)}</p>
+        </div>
+        <div className="rounded-md border border-line bg-white p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase text-ink/50">Allocated cost</p>
+          <p className="mt-2 text-2xl font-semibold">
+            {formatCurrency(calculation.allocatedCost)}
+          </p>
         </div>
         <div className="rounded-md border border-line bg-white p-4 shadow-sm">
           <p className="text-xs font-semibold uppercase text-ink/50">Customers</p>
@@ -461,6 +548,9 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
         <section className="rounded-md border border-line bg-white p-5 shadow-sm">
         <h2 className="font-semibold">Report checks</h2>
         <ul className="mt-3 grid gap-2 text-sm leading-6 text-ink/70 md:grid-cols-2">
+          <li>Readiness status: {readinessStatus}</li>
+          <li>Allocated cost: {formatCurrency(calculation.allocatedCost)}</li>
+          <li>Recoverable cost: {formatCurrency(recoverableCost)}</li>
           <li>Revenue variance: {formatCurrency(calculation.unallocatedCost)}</li>
           <li>Revenue recovered: {calculation.isRevenueRecovered ? "Yes" : "No"}</li>
           <li>Allocation rows needing review: {calculation.unbalancedAllocationCount}</li>
@@ -469,6 +559,8 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           <li>Customer classes included: {calculation.classResults.length}</li>
         </ul>
         </section>
+
+        <TariffAuditTracePanel entries={calculation.auditTrace} defaultOpenAll />
       </div>
     </div>
   );
