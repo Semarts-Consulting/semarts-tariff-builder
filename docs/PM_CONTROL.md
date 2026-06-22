@@ -4,20 +4,33 @@
 
 Date: 2026-06-22
 
-Branch: `codex/scn-002-high-fixed-cost`
+Branch: `codex/scn-003-high-consumption-cost`
 
-Working tree status: SCN-002 high fixed-cost scenario package in progress.
+Working tree status: SCN-003 high consumption-cost scenario package in progress.
 
-Latest full checks on `main` after PR #20:
+Latest full checks on `main` after PR #22:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test`: passed, 14 test files and 67 tests.
+- `npm.cmd test`: passed, 14 test files and 68 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #21 have been merged to `main`. The current branch adds high fixed-cost scenario coverage.
+PRs #1 through #22 have been merged to `main`. The current branch adds high consumption-cost scenario coverage.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: SCN-002 additional scenario coverage.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: SCN-003 additional scenario coverage.
+
+## Operating Mode
+
+Current package ownership: Manager-led.
+
+Reason: SCN-003 is a narrow fixture, regression-test, and coordination-doc package. It does not change production calculation semantics, import behavior, UI/report behavior, or shared DTO contracts.
+
+Future package rule:
+
+- Small docs/test fixture packages may remain Manager-led when faster and low risk.
+- Production code, calculation semantics, import behavior, UI/report changes, or wider regression expansion should be delegated to the relevant delivery thread first.
+- Manager remains responsible for scope control, file ownership, review, merge sequencing, and Git handoff.
+- QA review should be used when changes affect calculation confidence, stakeholder outputs, or release readiness.
 
 ## MVP Definition
 
@@ -167,6 +180,7 @@ Review risks:
 - SCN-005 should prove partial and zero recoverability affect only the recoverable tariff revenue requirement.
 - SCN-001 and SCN-005 are implemented and green on `main` after PR #20.
 - SCN-002 should prove high fixed costs produce expected fixed charge sensitivity while still reconciling to the recoverable cost base.
+- SCN-003 should prove high consumption costs produce expected energy charge sensitivity while still reconciling to the recoverable cost base.
 
 ## QA Staging Warnings
 
@@ -204,4 +218,4 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 ## Immediate Next Action
 
-Review and commit the SCN-002 high fixed-cost scenario package, then open a PR from `codex/scn-002-high-fixed-cost`.
+Review and commit the SCN-003 high consumption-cost scenario package, then open a PR from `codex/scn-003-high-consumption-cost`.
