@@ -556,3 +556,103 @@ export const capacityHeavyScenarioExpected = {
     }
   }
 };
+
+export const validationIssueScenarioDataInputRows: DataInputRow[] = [
+  {
+    id: "input-residential-validation-issue",
+    customerClass: "Residential",
+    customerCount: 0,
+    annualKwh: 10000,
+    peakDemandKw: 50,
+    notes: "Residential class deliberately has no customer count to validate denominator handling."
+  },
+  {
+    id: "input-commercial-validation-issue",
+    customerClass: "Commercial",
+    customerCount: 5,
+    annualKwh: 20000,
+    peakDemandKw: 100,
+    notes: "Commercial class remains valid so partial outputs can still be reviewed."
+  }
+];
+
+export const validationIssueScenarioCostPoolRows: CostPoolRow[] = [
+  {
+    id: "cost-validation-fixed",
+    name: "Fixed network operations",
+    category: "Operations",
+    annualAmount: 5000,
+    recoverablePercent: 100,
+    notes: "Recoverable fixed cost with a missing residential denominator."
+  },
+  {
+    id: "cost-validation-energy",
+    name: "Consumption network costs",
+    category: "Network services",
+    annualAmount: 10000,
+    recoverablePercent: 100,
+    notes: "Recoverable consumption cost with deliberately unbalanced allocation shares."
+  },
+  {
+    id: "cost-validation-demand",
+    name: "Demand network costs",
+    category: "Asset recovery",
+    annualAmount: 6000,
+    recoverablePercent: 100,
+    notes: "Recoverable demand cost deliberately missing an allocation method."
+  }
+];
+
+export const validationIssueScenarioAllocationRows: AllocationMethodRow[] = [
+  {
+    id: "allocation-validation-fixed",
+    costPoolId: "cost-validation-fixed",
+    costPoolName: "Fixed network operations",
+    basis: "Customer count",
+    tariffComponent: "Fixed",
+    requiresReview: true,
+    classShares: [{ customerClass: "Residential", percent: 100 }],
+    notes: "Review warning is deliberate; output should remain calculable."
+  },
+  {
+    id: "allocation-validation-energy",
+    costPoolId: "cost-validation-energy",
+    costPoolName: "Consumption network costs",
+    basis: "Annual kWh",
+    tariffComponent: "Energy",
+    classShares: [
+      { customerClass: "Residential", percent: 60 },
+      { customerClass: "Commercial", percent: 30 }
+    ],
+    notes: "Shares deliberately total 90% to preserve and expose revenue variance."
+  }
+];
+
+export const validationIssueScenarioExpected = {
+  revenueRequirement: 21000,
+  allocatedCost: 14000,
+  unallocatedCost: 7000,
+  unbalancedAllocationCount: 1,
+  classResults: {
+    Residential: {
+      fixedCost: 5000,
+      energyCost: 6000,
+      demandCost: 0,
+      passThroughCost: 0,
+      totalAllocatedCost: 11000,
+      fixedChargePerCustomer: 0,
+      energyChargePerKwh: 0.6,
+      demandChargePerKw: 0
+    },
+    Commercial: {
+      fixedCost: 0,
+      energyCost: 3000,
+      demandCost: 0,
+      passThroughCost: 0,
+      totalAllocatedCost: 3000,
+      fixedChargePerCustomer: 0,
+      energyChargePerKwh: 0.15,
+      demandChargePerKw: 0
+    }
+  }
+};

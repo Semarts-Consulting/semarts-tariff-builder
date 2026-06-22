@@ -20,7 +20,11 @@ import {
   twoClassScenarioAllocationRows,
   twoClassScenarioCostPoolRows,
   twoClassScenarioDataInputRows,
-  twoClassScenarioExpected
+  twoClassScenarioExpected,
+  validationIssueScenarioAllocationRows,
+  validationIssueScenarioCostPoolRows,
+  validationIssueScenarioDataInputRows,
+  validationIssueScenarioExpected
 } from "@/tests/fixtures/additional-scenarios";
 
 describe("additional tariff scenarios", () => {
@@ -394,5 +398,107 @@ describe("additional tariff scenarios", () => {
     );
     expect(residentialDemandRateTrace?.result.unit).toBe("GBP per kW");
     expect(residentialDemandRateTrace?.result.value).toBeCloseTo(50, 4);
+  });
+
+  it("SCN-006 surfaces validation issues without silently correcting outputs", () => {
+    const result = calculateTariffs({
+      projectId: "scn-006-validation-issue",
+      dataInputRows: validationIssueScenarioDataInputRows,
+      costPoolRows: validationIssueScenarioCostPoolRows,
+      allocationRows: validationIssueScenarioAllocationRows
+    });
+
+    expect(result.revenueRequirement).toBe(
+      validationIssueScenarioExpected.revenueRequirement
+    );
+    expect(result.allocatedCost).toBeCloseTo(
+      validationIssueScenarioExpected.allocatedCost,
+      2
+    );
+    expect(result.unallocatedCost).toBeCloseTo(
+      validationIssueScenarioExpected.unallocatedCost,
+      2
+    );
+    expect(result.isRevenueRecovered).toBe(false);
+    expect(result.unbalancedAllocationCount).toBe(
+      validationIssueScenarioExpected.unbalancedAllocationCount
+    );
+
+    expect(result.validationIssues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "Allocation method requires review",
+          severity: "Warning",
+          rowId: "allocation-validation-fixed",
+          costPoolId: "cost-validation-fixed"
+        }),
+        expect.objectContaining({
+          code: "Unbalanced allocation",
+          severity: "Error",
+          rowId: "allocation-validation-energy",
+          costPoolId: "cost-validation-energy"
+        }),
+        expect.objectContaining({
+          code: "Missing allocation method",
+          severity: "Error",
+          rowId: "cost-validation-demand",
+          costPoolId: "cost-validation-demand"
+        }),
+        expect.objectContaining({
+          code: "Missing fixed denominator",
+          severity: "Error",
+          customerClass: "Residential"
+        })
+      ])
+    );
+
+    Object.entries(validationIssueScenarioExpected.classResults).forEach(
+      ([customerClass, expected]) => {
+        const classResult = result.classResults.find(
+          (row) => row.customerClass === customerClass
+        );
+
+        expect(classResult).toBeDefined();
+        expect(classResult?.fixedCost).toBeCloseTo(expected.fixedCost, 2);
+        expect(classResult?.energyCost).toBeCloseTo(expected.energyCost, 2);
+        expect(classResult?.demandCost).toBeCloseTo(expected.demandCost, 2);
+        expect(classResult?.passThroughCost).toBeCloseTo(
+          expected.passThroughCost,
+          2
+        );
+        expect(classResult?.totalAllocatedCost).toBeCloseTo(
+          expected.totalAllocatedCost,
+          2
+        );
+        expect(classResult?.fixedChargePerCustomer).toBeCloseTo(
+          expected.fixedChargePerCustomer,
+          4
+        );
+        expect(classResult?.energyChargePerKwh).toBeCloseTo(
+          expected.energyChargePerKwh,
+          4
+        );
+        expect(classResult?.demandChargePerKw).toBeCloseTo(
+          expected.demandChargePerKw,
+          4
+        );
+      }
+    );
+
+    const auditTrace = result.auditTrace ?? [];
+    const revenueRecoveryTrace = auditTrace.find(
+      (entry) => entry.stage === "Revenue recovery"
+    );
+    expect(revenueRecoveryTrace?.result.unit).toBe("GBP");
+    expect(revenueRecoveryTrace?.result.value).toBeCloseTo(7000, 2);
+
+    const residentialFixedRateTrace = auditTrace.find(
+      (entry) =>
+        entry.stage === "Rate derivation" &&
+        entry.customerClass === "Residential" &&
+        entry.tariffComponent === "Fixed"
+    );
+    expect(residentialFixedRateTrace?.result.unit).toBe("GBP per customer");
+    expect(residentialFixedRateTrace?.result.value).toBe(0);
   });
 });
