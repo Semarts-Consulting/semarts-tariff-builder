@@ -4,9 +4,9 @@
 
 Date: 2026-06-22
 
-Branch: `codex/stakeholder-demo-prep`
+Branch: `codex/demo-rehearsal-notes`
 
-Working tree status: stakeholder-demo preparation package in progress.
+Working tree status: demo rehearsal notes package in progress.
 
 Latest full checks before the docs-only MVP decision and stakeholder-demo preparation packages:
 
@@ -15,9 +15,9 @@ Latest full checks before the docs-only MVP decision and stakeholder-demo prepar
 - `npm.cmd test`: passed, 12 test files and 64 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #10 have been merged to `main`. The current branch prepares the stakeholder-demo path and limitations summary for the accepted-with-limitations internal MVP candidate.
+PRs #1 through #11 have been merged to `main`. The current branch prepares rehearsal notes for presenting the accepted-with-limitations internal MVP candidate.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: stakeholder-demo preparation.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: stakeholder-demo rehearsal and next-step decision.
 
 ## MVP Definition
 
@@ -156,6 +156,7 @@ Review risks:
 - Report readiness mapping is: `Needs correction` for validation errors, `Needs review` for warnings only, `Revenue variance` for unrecovered revenue without validation issues, and `Ready for review` when validation is clear and revenue is recovered.
 - Internal MVP candidate decision is accepted with limitations as of 2026-06-22.
 - Stakeholder-demo preparation should explain the workflow as an internal MVP candidate and must not imply external release readiness.
+- Demo rehearsal should focus on methodology defensibility, audit trace, revenue recovery reconciliation, accepted limitations, and support needed.
 
 ## QA Staging Warnings
 
@@ -183,4 +184,4 @@ Missing MVP-critical regression coverage:
 
 ## Immediate Next Action
 
-Review and commit the stakeholder-demo preparation package, then open a PR from `codex/stakeholder-demo-prep`.
+Review and commit the demo rehearsal notes package, then open a PR from `codex/demo-rehearsal-notes`.
