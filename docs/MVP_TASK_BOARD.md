@@ -5,16 +5,14 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
-| OUT-003 Report readiness UI alignment | UI Flow plus PM/Engine review | `components/ReportsSummary.tsx`, possibly `components/TariffAuditTracePanel.tsx` | OUT-001 contract | Medium | Align rendered report with readiness mapping, warning severity, and audit evidence expectations. |
-| QA-003 Report/export regression tests | QA plus UI review | report/calculation component tests and fixtures | OUT-001 contract | Medium | Cover report sections, warnings, audit trace visibility, and HTML/print actions. |
-| ENG-003 Supply calculation design closure | PM plus Tariff Engine | `SUPPLY_CALCULATION_DESIGN.md`, future service/types | Business answers required | High | No production DTO or engine until assumptions are resolved. |
+| ENG-003 Supply calculation Phase 1 proposal | Tariff Engine plus PM review | future `lib/supply-calculation-engine.ts`, future tests, future type additions if approved | Supply decision pack review | High | Proposal only until decision pack is reviewed; no tariff integration. |
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
 
 ## In Progress
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| Scenario coverage closeout | PM | `docs/SCENARIO_COVERAGE_CLOSEOUT.md`, `docs/ADDITIONAL_SCENARIO_PLAN.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | SCN-006 merged | Low | Record scenario baseline and remaining release risks after PR #25. |
+| Supply calculation decision pack | PM plus Tariff Engine review | `SUPPLY_CALCULATION_DESIGN.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md`, `docs/MVP_LIMITATIONS_CLOSEOUT.md` | PR #28 merged | High | Convert unresolved supply assumptions into sign-off groups before any production implementation. |
 
 ## Review
 
@@ -56,6 +54,9 @@
 | PR-023 SCN-003 high consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Additional scenario coverage for energy charge sensitivity. |
 | PR-024 SCN-004 capacity-heavy scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #24 | Medium | Additional scenario coverage for demand charge sensitivity. |
 | PR-025 SCN-006 validation issue scenario | QA plus Tariff Engine review | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #25 | Medium | Additional scenario coverage for validation warnings/errors without silent correction. |
+| PR-026 Scenario coverage closeout | PM | `docs/SCENARIO_COVERAGE_CLOSEOUT.md`, manager docs | Merged PR #26 | Low | SCN-001 through SCN-006 scenario baseline recorded. |
+| PR-027 Report readiness UI alignment | UI Flow plus PM review | `components/ReportsSummary.tsx`, `components/TariffAuditTracePanel.tsx` | Merged PR #27 | Medium | Readiness labels, severity labels, cost totals, and audit evidence added to rendered report. |
+| PR-028 Report readiness regression tests | QA plus UI review | `tests/report-readiness.test.tsx`, `tests/fixtures/report-readiness.ts`, `vitest.config.ts`, dependency metadata | Merged PR #28 | Medium | Component coverage for report readiness, audit evidence, print, and HTML download. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
 | SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #23 | High | Fixture and regression test for energy charge sensitivity. |

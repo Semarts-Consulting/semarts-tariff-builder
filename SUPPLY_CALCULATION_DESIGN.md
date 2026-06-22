@@ -6,6 +6,8 @@ This note defines how the new MPAN-level supply inputs should be transformed int
 
 It is intentionally a design note, not an implementation. Several business rules still need confirmation before calculation code should be added.
 
+The decision pack in `docs/SUPPLY_CALCULATION_DECISION_PACK.md` is the current gate for moving this design into production work. If the design note and decision pack differ, treat the decision pack as the active delivery control.
+
 ## Current App Inputs
 
 Supply inputs now sit under Cost Inputs in two sections:
@@ -365,6 +367,8 @@ Implement only the normalisation layer:
 - Do not calculate final tariff outputs yet.
 
 This phase is safe because it does not change tariff results. It creates a tested intermediate layer that can be reviewed against the Excel model.
+
+Phase 1 still requires manager approval and Tariff Engine review before implementation starts. The implementation branch must not add tariff integration, stakeholder report totals, or formal export DTO fields.
 
 ## Recommended Phase 2 Implementation
 
