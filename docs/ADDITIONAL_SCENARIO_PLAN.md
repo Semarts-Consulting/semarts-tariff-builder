@@ -2,7 +2,7 @@
 
 Date: 2026-06-22
 
-Status: SCN-001, SCN-002, SCN-003, and SCN-005 implemented; remaining scenarios proposed.
+Status: SCN-001, SCN-002, SCN-003, SCN-004, and SCN-005 implemented; remaining scenarios proposed.
 
 Purpose: define the next representative tariff scenarios to strengthen confidence after the approved MVP demo.
 
@@ -19,14 +19,13 @@ That is enough for the approved internal MVP demo, but not enough for external r
 | SCN-001 | Small two-class site | Validate a simpler residential/commercial network with fewer customer groups | PM plus Tariff Engine/QA | High | No | Yes | Implemented in `tests/fixtures/additional-scenarios.ts` and `tests/additional-scenarios.test.ts` |
 | SCN-002 | High fixed-cost site | Validate fixed charge sensitivity where customer count drives most recovery | PM plus Tariff Engine/QA | High | No | Yes | Implemented in `tests/fixtures/additional-scenarios.ts` and `tests/additional-scenarios.test.ts` |
 | SCN-003 | High consumption-cost site | Validate energy charge sensitivity where annual kWh drives most recovery | PM plus Tariff Engine/QA | High | No | Yes | Implemented in `tests/fixtures/additional-scenarios.ts` and `tests/additional-scenarios.test.ts` |
-| SCN-004 | Capacity-heavy site | Validate demand charge sensitivity where peak demand drives most recovery | PM plus Tariff Engine/QA | Medium | No | To decide | Fixture, calculation test, demand-rate explanation, reconciliation |
+| SCN-004 | Capacity-heavy site | Validate demand charge sensitivity where peak demand drives most recovery | PM plus Tariff Engine/QA | Medium | No | To decide | Implemented in `tests/fixtures/additional-scenarios.ts` and `tests/additional-scenarios.test.ts` |
 | SCN-005 | Non-recoverable cost element | Validate partial recovery and explain excluded/non-recoverable cost | PM plus Tariff Engine/QA | Medium | No | Yes | Implemented in `tests/fixtures/additional-scenarios.ts` and `tests/additional-scenarios.test.ts` |
 | SCN-006 | Validation issue scenario | Validate missing/invalid data warnings without silently correcting assumptions | PM plus Tariff Engine/QA | Medium | No | Yes | Fixture, calculation test, warning evidence, report readiness outcome |
 
 ## Sequencing Recommendation
 
-1. Add SCN-004 if capacity tariffs are expected in near-term stakeholder review.
-2. Add SCN-006 before external release readiness to prove validation behavior.
+1. Add SCN-006 before external release readiness to prove validation behavior.
 
 ## Scenario Acceptance Criteria
 

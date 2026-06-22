@@ -445,3 +445,114 @@ export const highConsumptionCostScenarioExpected = {
     }
   }
 };
+
+export const capacityHeavyScenarioDataInputRows: DataInputRow[] = [
+  {
+    id: "input-residential-capacity-heavy",
+    customerClass: "Residential",
+    customerCount: 40,
+    annualKwh: 80000,
+    peakDemandKw: 100,
+    notes: "Residential customers with lower peak demand on a capacity-heavy network."
+  },
+  {
+    id: "input-commercial-capacity-heavy",
+    customerClass: "Commercial",
+    customerCount: 10,
+    annualKwh: 70000,
+    peakDemandKw: 500,
+    notes: "Commercial users with materially higher peak demand."
+  }
+];
+
+export const capacityHeavyScenarioCostPoolRows: CostPoolRow[] = [
+  {
+    id: "cost-capacity-heavy-fixed",
+    name: "Lower fixed network operations",
+    category: "Operations",
+    annualAmount: 3000,
+    recoverablePercent: 100,
+    notes: "Lower fixed cost recovered by customer count."
+  },
+  {
+    id: "cost-capacity-heavy-energy",
+    name: "Lower consumption network costs",
+    category: "Network services",
+    annualAmount: 3000,
+    recoverablePercent: 100,
+    notes: "Lower consumption-related cost recovered by annual kWh."
+  },
+  {
+    id: "cost-capacity-heavy-demand",
+    name: "High capacity network costs",
+    category: "Asset recovery",
+    annualAmount: 30000,
+    recoverablePercent: 100,
+    notes: "Dominant capacity-related cost recovered by peak demand."
+  }
+];
+
+export const capacityHeavyScenarioAllocationRows: AllocationMethodRow[] = [
+  {
+    id: "allocation-capacity-heavy-fixed",
+    costPoolId: "cost-capacity-heavy-fixed",
+    costPoolName: "Lower fixed network operations",
+    basis: "Customer count",
+    tariffComponent: "Fixed",
+    classShares: [
+      { customerClass: "Residential", percent: 80 },
+      { customerClass: "Commercial", percent: 20 }
+    ],
+    notes: "Fixed cost allocated by customer count."
+  },
+  {
+    id: "allocation-capacity-heavy-energy",
+    costPoolId: "cost-capacity-heavy-energy",
+    costPoolName: "Lower consumption network costs",
+    basis: "Annual kWh",
+    tariffComponent: "Energy",
+    classShares: [
+      { customerClass: "Residential", percent: 53.333333333333336 },
+      { customerClass: "Commercial", percent: 46.666666666666664 }
+    ],
+    notes: "Consumption cost allocated by annual kWh."
+  },
+  {
+    id: "allocation-capacity-heavy-demand",
+    costPoolId: "cost-capacity-heavy-demand",
+    costPoolName: "High capacity network costs",
+    basis: "Peak demand",
+    tariffComponent: "Demand",
+    classShares: [
+      { customerClass: "Residential", percent: 16.666666666666664 },
+      { customerClass: "Commercial", percent: 83.33333333333334 }
+    ],
+    notes: "Demand cost allocated by peak demand."
+  }
+];
+
+export const capacityHeavyScenarioExpected = {
+  revenueRequirement: 36000,
+  classResults: {
+    Residential: {
+      fixedCost: 2400,
+      energyCost: 1600,
+      demandCost: 5000,
+      passThroughCost: 0,
+      totalAllocatedCost: 9000,
+      fixedChargePerCustomer: 60,
+      energyChargePerKwh: 0.02,
+      demandChargePerKw: 50
+    },
+    Commercial: {
+      fixedCost: 600,
+      energyCost: 1400,
+      demandCost: 25000,
+      passThroughCost: 0,
+      totalAllocatedCost: 27000,
+      fixedChargePerCustomer: 60,
+      energyChargePerKwh: 0.02,
+      demandChargePerKw: 50
+    }
+  }
+};
