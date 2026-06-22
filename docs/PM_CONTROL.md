@@ -4,11 +4,11 @@
 
 Date: 2026-06-22
 
-Branch: `codex/demo-project-tariff-seed`
+Branch: `codex/demo-approval-record`
 
-Working tree status: live demo tariff seed package in progress.
+Working tree status: demo approval record package in progress.
 
-Latest full checks on `codex/demo-project-tariff-seed`:
+Latest full checks from PR #15 live demo tariff seed:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
@@ -16,9 +16,9 @@ Latest full checks on `codex/demo-project-tariff-seed`:
 - `npm.cmd test`: passed, 13 test files and 65 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #14 have been merged to `main`. The current branch fixes the live demo by seeding the sample project with representative aggregate customer, cost, and allocation data.
+PRs #1 through #15 have been merged to `main`. The current branch records that the corrected live MVP demo is approved to carry forward.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: stakeholder-demo preparation using the seeded live demo project.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: select the next post-demo package.
 
 ## MVP Definition
 
@@ -161,6 +161,7 @@ Review risks:
 - Accepted limitations do not block stakeholder-demo preparation, provided the demo language avoids external release and formal compliance claims.
 - Final MVP candidate verification baseline is green after live demo tariff seed: lint passed, type-check passed, 13 test files and 65 tests passed, and production build passed.
 - The live `demo-private-network` sample project must include aggregate customer information, recoverable cost pools, and allocation methods sufficient to calculate tariffs in the application.
+- Demo is approved to carry forward after the PR #15 live tariff seed correction.
 
 ## QA Staging Warnings
 
@@ -190,6 +191,8 @@ Controlled follow-up backlog is maintained in `docs/MVP_LIMITATIONS_CLOSEOUT.md`
 
 Final verification baseline is maintained in `docs/MVP_FINAL_BASELINE.md`.
 
+Demo approval is maintained in `docs/MVP_DEMO_APPROVAL.md`.
+
 ## Immediate Next Action
 
-Review and commit the live demo tariff seed package, then open a PR from `codex/demo-project-tariff-seed`.
+Review and commit the demo approval record package, then open a PR from `codex/demo-approval-record`.
