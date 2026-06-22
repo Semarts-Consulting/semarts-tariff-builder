@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  reconcileSupplyEvidence,
   normaliseSupplyCharges,
   normaliseSupplyRate
 } from "@/lib/supply-calculation-engine";
+import type { NormalisedSupplyChargeLine } from "@/lib/supply-calculation-engine";
 import type {
   SupplyContractChargeInput,
   SupplyContractCustomTimeOfUse,
@@ -486,4 +488,85 @@ describe("normaliseSupplyCharges", () => {
       })
     );
   });
+
+  it("reconciles supply evidence separately from tariff recovery", () => {
+    const chargeLines: NormalisedSupplyChargeLine[] = [
+      evidenceLine({
+        id: "fixed-recovery",
+        recoveryTreatment: "Fixed Recovery",
+        status: "Normalised",
+        annualAmount: 100
+      }),
+      evidenceLine({
+        id: "pass-through",
+        recoveryTreatment: "Pass Through",
+        status: "Normalised",
+        annualAmount: 25
+      }),
+      evidenceLine({
+        id: "excluded-pass-through",
+        recoveryTreatment: "Pass Through",
+        status: "Excluded",
+        annualAmount: null
+      }),
+      evidenceLine({
+        id: "invalid",
+        status: "Invalid",
+        annualAmount: null
+      }),
+      evidenceLine({
+        id: "unresolved-business-rule",
+        status: "Needs business rule",
+        annualAmount: null
+      }),
+      evidenceLine({
+        id: "unresolved-volume",
+        status: "Needs volume data",
+        annualAmount: null
+      })
+    ];
+
+    const reconciliation = reconcileSupplyEvidence(chargeLines);
+
+    expect(reconciliation.fixedRecoveryAnnualAmount).toBe(100);
+    expect(reconciliation.passThroughAnnualAmount).toBe(25);
+    expect(reconciliation.normalisedLineCount).toBe(1);
+    expect(reconciliation.excludedLineCount).toBe(1);
+    expect(reconciliation.invalidLineCount).toBe(1);
+    expect(reconciliation.unresolvedLineCount).toBe(2);
+    expect(reconciliation.fixedRecoveryLines.map((line) => line.id)).toEqual([
+      "fixed-recovery"
+    ]);
+    expect(reconciliation.passThroughLines.map((line) => line.id)).toEqual([
+      "pass-through",
+      "excluded-pass-through"
+    ]);
+  });
 });
+
+function evidenceLine(
+  overrides: Partial<NormalisedSupplyChargeLine>
+): NormalisedSupplyChargeLine {
+  return {
+    id: "line",
+    projectId: "project",
+    mpan: "1234567890123",
+    supplyDetailId: "supply-1",
+    source: "Supply Contract",
+    sourceChargeId: null,
+    chargeName: "Evidence line",
+    recoveryTreatment: "Fixed Recovery",
+    chargeType: "Fixed",
+    voltage: "LV",
+    losses: null,
+    unitOfMeasurement: "per year",
+    timeOfUse: null,
+    customTimeOfUse: null,
+    ratePounds: 0,
+    quantity: null,
+    annualAmount: null,
+    status: "Normalised",
+    messages: [],
+    ...overrides
+  };
+}

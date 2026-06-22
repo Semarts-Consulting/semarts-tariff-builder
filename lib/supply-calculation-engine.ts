@@ -63,6 +63,20 @@ export type SupplyCalculationResult = {
   messages: string[];
 };
 
+export type SupplyEvidenceReconciliation = {
+  fixedRecoveryAnnualAmount: number;
+  passThroughAnnualAmount: number;
+  unresolvedLineCount: number;
+  invalidLineCount: number;
+  excludedLineCount: number;
+  normalisedLineCount: number;
+  fixedRecoveryLines: NormalisedSupplyChargeLine[];
+  passThroughLines: NormalisedSupplyChargeLine[];
+  unresolvedLines: NormalisedSupplyChargeLine[];
+  invalidLines: NormalisedSupplyChargeLine[];
+  excludedLines: NormalisedSupplyChargeLine[];
+};
+
 type SupplyDetailValidation = {
   detailMessages: string[];
   fieldMessages: Partial<Record<SupplyDetailRateField, string[]>>;
@@ -109,6 +123,36 @@ export function normaliseSupplyCharges(input: SupplyCalculationInput): SupplyCal
     projectId: input.projectId,
     chargeLines,
     messages: chargeLines.flatMap((line) => line.messages)
+  };
+}
+
+export function reconcileSupplyEvidence(
+  chargeLines: NormalisedSupplyChargeLine[]
+): SupplyEvidenceReconciliation {
+  const fixedRecoveryLines = chargeLines.filter(
+    (line) => line.recoveryTreatment === "Fixed Recovery" && line.status === "Normalised"
+  );
+  const passThroughLines = chargeLines.filter(
+    (line) => line.recoveryTreatment === "Pass Through"
+  );
+  const unresolvedLines = chargeLines.filter(
+    (line) => line.status === "Needs business rule" || line.status === "Needs volume data"
+  );
+  const invalidLines = chargeLines.filter((line) => line.status === "Invalid");
+  const excludedLines = chargeLines.filter((line) => line.status === "Excluded");
+
+  return {
+    fixedRecoveryAnnualAmount: sumAnnualAmounts(fixedRecoveryLines),
+    passThroughAnnualAmount: sumAnnualAmounts(passThroughLines),
+    unresolvedLineCount: unresolvedLines.length,
+    invalidLineCount: invalidLines.length,
+    excludedLineCount: excludedLines.length,
+    normalisedLineCount: fixedRecoveryLines.length,
+    fixedRecoveryLines,
+    passThroughLines,
+    unresolvedLines,
+    invalidLines,
+    excludedLines
   };
 }
 
@@ -371,6 +415,10 @@ function statusForMessages(
   fallbackStatus: Exclude<SupplyNormalisationStatus, "Invalid">
 ): SupplyNormalisationStatus {
   return messages.length > 0 ? "Invalid" : fallbackStatus;
+}
+
+function sumAnnualAmounts(lines: NormalisedSupplyChargeLine[]) {
+  return lines.reduce((total, line) => total + (line.annualAmount ?? 0), 0);
 }
 
 function statusForSupplyContractCharge(
