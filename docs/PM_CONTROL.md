@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/supply-phase-2-approval-record`
+Branch: `codex/supply-phase-2-implementation-proposal`
 
-Working tree status: supply Phase 2 approval record in progress.
+Working tree status: supply Phase 2 implementation proposal in progress.
 
-Latest full checks on `main` after PR #33:
+Latest full checks on `main` after PR #34:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 16 test files and 89 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #33 have been merged to `main`. The current branch records owner approval of Supply Phase 2 Option A.
+PRs #1 through #34 have been merged to `main`. The current branch defines the Supply Phase 2 implementation proposal.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply Phase 2 approval record.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply Phase 2 implementation proposal.
 
 ## Operating Mode
 
 Current package ownership: Manager-led.
 
-Reason: this is a documentation-only approval record. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
+Reason: this is a documentation-only implementation proposal. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
 
 Future package rule:
 
@@ -191,6 +191,7 @@ Review risks:
 - Supply Phase 2 should be annual amount calculation only unless the user explicitly approves tariff integration as a separate package.
 - Supply Phase 2 decision brief should be approved, amended, or rejected by the user before Tariff Engine prepares implementation.
 - User approved Supply Phase 2 Option A on 2026-06-22. Tariff Engine may prepare an annual-amount-only implementation proposal. Tariff integration, report totals, export fields, imports, and storage remain out of scope.
+- Supply Phase 2 implementation proposal is documented in `docs/SUPPLY_PHASE_2_IMPLEMENTATION_PROPOSAL.md`; implementation ownership is Tariff Engine with QA and PM review.
 
 ## QA Staging Warnings
 
@@ -232,4 +233,4 @@ Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECIS
 
 ## Immediate Next Action
 
-Review and commit the supply Phase 2 approval record, then open a PR from `codex/supply-phase-2-approval-record`.
+Review and commit the supply Phase 2 implementation proposal, then open a PR from `codex/supply-phase-2-implementation-proposal`.
