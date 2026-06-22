@@ -5,7 +5,6 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
-| SCN-003 High consumption-cost scenario | Tariff Engine plus QA | future scenario fixture and tests | `docs/ADDITIONAL_SCENARIO_PLAN.md` | High | Next scenario candidate; validates energy charge sensitivity. |
 | OUT-003 Report readiness UI alignment | UI Flow plus PM/Engine review | `components/ReportsSummary.tsx`, possibly `components/TariffAuditTracePanel.tsx` | OUT-001 contract | Medium | Align rendered report with readiness mapping, warning severity, and audit evidence expectations. |
 | QA-003 Report/export regression tests | QA plus UI review | report/calculation component tests and fixtures | OUT-001 contract | Medium | Cover report sections, warnings, audit trace visibility, and HTML/print actions. |
 | ENG-003 Supply calculation design closure | PM plus Tariff Engine | `SUPPLY_CALCULATION_DESIGN.md`, future service/types | Business answers required | High | No production DTO or engine until assumptions are resolved. |
@@ -15,8 +14,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| _None_ |  |  |  |  |  |
-| SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, `docs/ADDITIONAL_SCENARIO_PLAN.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | Scenario baseline recorded | High | Add fixture and regression test for fixed charge sensitivity. |
+| SCN-003 High consumption-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, `docs/ADDITIONAL_SCENARIO_PLAN.md`, `docs/MVP_TASK_BOARD.md`, `docs/PM_CONTROL.md` | SCN-002 merged | High | Add fixture and regression test for energy charge sensitivity. |
 
 ## Review
 
@@ -54,7 +52,9 @@
 | PR-017 Post-demo feedback log | PM plus user sign-off owner | `docs/POST_DEMO_FEEDBACK_LOG.md`, manager docs | Merged PR #17 | Medium | Feedback log and triage rules added. |
 | PR-019 SCN-001 small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Additional scenario coverage for simple residential/commercial site. |
 | PR-020 SCN-005 non-recoverable cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #20 | Medium | Additional scenario coverage for partial and zero recoverability. |
+| PR-022 SCN-002 high fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Additional scenario coverage for fixed charge sensitivity. |
 | SCN-001 Small two-class scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #19 | High | Fixture and regression test for simpler residential/commercial site. |
+| SCN-002 High fixed-cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #22 | High | Fixture and regression test for fixed charge sensitivity. |
 | SCN-005 Non-recoverable cost scenario | Tariff Engine plus QA | `tests/fixtures/additional-scenarios.ts`, `tests/additional-scenarios.test.ts`, manager docs | Merged PR #20 | Medium | Fixture and regression test for partial and zero recoverability. |
 | MVP-004 Stakeholder-demo preparation | PM plus user sign-off owner | `docs/MVP_STAKEHOLDER_DEMO_PREP.md`, `docs/MVP_DEMO_REHEARSAL_NOTES.md`, `docs/MVP_LIMITATIONS_CLOSEOUT.md`, `docs/MVP_FINAL_BASELINE.md`, `docs/MVP_TIMELINE_TRACKER.md`, `docs/PM_CONTROL.md` | Accepted-with-limitations MVP decision and green final baseline | Medium | Focused walkthrough, rehearsal notes, limitation closeout, final verification baseline, and live demo approval completed. |
 | MVP-005 Demo approval to proceed | User sign-off owner plus PM support | `docs/MVP_DEMO_APPROVAL.md`, `docs/MVP_TIMELINE_TRACKER.md`, `docs/PM_CONTROL.md` | PR #15 live demo tariff seed | High | User approved the demo to carry forward after validating the seeded tariff workflow. |
