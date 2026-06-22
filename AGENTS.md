@@ -69,3 +69,22 @@ Identify assumptions made.
 Identify edge cases.
 Summarise all changes.
 Highlight any remaining risks.
+
+Git and Codex Workflow
+
+Never work directly on main.
+Start every task by reporting the current branch and Git status.
+Stop if the working tree has unrelated changes.
+Use codex/* feature branches for Codex work.
+Keep workflow and documentation setup commits separate from product changes.
+Run lint, type-check where available, tests, and build where practical before commits.
+Commit only passing checkpoints.
+Stage only intended files.
+Push only after approval.
+Create PRs for review.
+Never merge into main.
+Never force push.
+Stop if Git state, tariff methodology, business logic, or scope is unclear.
+Do not change tariff calculation, import, storage, export, shared DTO, report, or methodology behaviour as part of workflow setup.
+Manager approval is required before changing calculation contracts, imported data shapes, validation result shapes, export DTOs, or methodology configuration contracts.
+If Codex cannot run Git safely, provide exact user commands instead of improvising.
