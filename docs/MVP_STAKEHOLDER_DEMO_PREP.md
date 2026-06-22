@@ -2,7 +2,7 @@
 
 Date: 2026-06-22
 
-Status: in progress.
+Status: in progress; rehearsal notes prepared.
 
 Purpose: prepare a focused stakeholder walkthrough for the accepted-with-limitations internal MVP candidate without expanding MVP scope.
 
@@ -68,3 +68,7 @@ Avoid these claims:
 - User to confirm the stakeholder-demo audience and expected depth.
 - User to confirm whether the demo should focus on business sign-off, investor/ExCo confidence, or operational user workflow.
 - PM to split any feedback into narrow post-MVP packages rather than expanding the demo scope.
+
+## Rehearsal Material
+
+Use `docs/MVP_DEMO_REHEARSAL_NOTES.md` as the short presenter script and question guide.
