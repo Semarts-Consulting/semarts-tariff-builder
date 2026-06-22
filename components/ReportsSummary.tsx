@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { calculateTariffs } from "@/lib/calculation-engine";
+import {
+  normaliseSupplyCharges,
+  reconcileSupplyEvidence
+} from "@/lib/supply-calculation-engine";
 import { TariffAuditTracePanel } from "@/components/TariffAuditTracePanel";
 import {
   getProjectAllocationMethods,
@@ -108,6 +112,10 @@ function getReadinessStyle(status: ReportReadinessStatus) {
     : "border-amber-200 bg-amber-50 text-amber-900";
 }
 
+function formatOptionalCurrency(value: number | null) {
+  return value === null ? "Not calculated" : formatCurrency(value);
+}
+
 export function ReportsSummary({ projectId }: ReportsSummaryProps) {
   const reportRef = useRef<HTMLDivElement>(null);
   const [printStatus, setPrintStatus] = useState("");
@@ -168,6 +176,7 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
   const costPools = reportState.costPools;
   const allocationMethods = reportState.allocationMethods;
   const calculation = reportState.calculation ?? emptyCalculation(projectId);
+  const methodologyInputs = useMemo(() => getProjectMethodologyInputs(projectId), [projectId]);
 
   const dataTotals = useMemo(
     () =>
@@ -197,10 +206,26 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
   const supplyReferenceIssues = useMemo(
     () =>
       getSupplyReferenceReviewIssues(
-        getProjectMethodologyInputs(projectId).supplyDetails,
+        methodologyInputs.supplyDetails,
         supplyReferenceData
       ),
-    [projectId, supplyReferenceData]
+    [methodologyInputs.supplyDetails, supplyReferenceData]
+  );
+  const supplyCalculation = useMemo(
+    () =>
+      normaliseSupplyCharges({
+        projectId,
+        supplyDetails: methodologyInputs.supplyDetails
+      }),
+    [methodologyInputs.supplyDetails, projectId]
+  );
+  const supplyEvidence = useMemo(
+    () => reconcileSupplyEvidence(supplyCalculation.chargeLines),
+    [supplyCalculation.chargeLines]
+  );
+  const supplyContractEvidenceRows = useMemo(
+    () => supplyCalculation.chargeLines.filter((line) => line.source === "Supply Contract"),
+    [supplyCalculation.chargeLines]
   );
 
   if (!project || !dataInputs || !costPools || !allocationMethods) {
@@ -558,6 +583,133 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           <li>Cost pools included: {costPools.rows.length}</li>
           <li>Customer classes included: {calculation.classResults.length}</li>
         </ul>
+        </section>
+
+        <section className="rounded-md border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-semibold">Supply evidence only</h2>
+              <p className="mt-2 leading-6">
+                These supply inputs are shown as evidence only. They do not change network revenue
+                requirement, recoverable cost, revenue recovery, or tariff rates in this report.
+              </p>
+            </div>
+            <span className="rounded-md border border-current px-3 py-1 text-xs font-semibold">
+              Not tariff-impacting
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-md border border-amber-200 bg-white/60 p-3">
+              <p className="text-xs font-semibold uppercase text-amber-900/70">Supply MPANs</p>
+              <p className="mt-1 text-lg font-semibold">{methodologyInputs.supplyDetails.length}</p>
+            </div>
+            <div className="rounded-md border border-amber-200 bg-white/60 p-3">
+              <p className="text-xs font-semibold uppercase text-amber-900/70">
+                Fixed evidence annual amount
+              </p>
+              <p className="mt-1 text-lg font-semibold">
+                {formatCurrency(supplyEvidence.fixedRecoveryAnnualAmount)}
+              </p>
+            </div>
+            <div className="rounded-md border border-amber-200 bg-white/60 p-3">
+              <p className="text-xs font-semibold uppercase text-amber-900/70">
+                Pass-through evidence amount
+              </p>
+              <p className="mt-1 text-lg font-semibold">
+                {formatCurrency(supplyEvidence.passThroughAnnualAmount)}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 rounded-md border border-amber-200 bg-white/60 p-4">
+            <h3 className="font-semibold">Current limitation</h3>
+            <p className="mt-2 leading-6">
+              Supported annual supply amounts are calculated as separate evidence only. Customer
+              applicability and reporting category are not derived from the current report data, so
+              this report does not infer them from charge names.
+            </p>
+          </div>
+
+          <div className="mt-5">
+            <h3 className="font-semibold">Pass-through supply evidence</h3>
+            {supplyEvidence.passThroughLines.length > 0 ? (
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full min-w-[720px] border-collapse text-sm">
+                  <thead className="text-left text-xs uppercase text-amber-900/70">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">MPAN</th>
+                      <th className="px-3 py-2 font-semibold">Charge</th>
+                      <th className="px-3 py-2 font-semibold">Voltage</th>
+                      <th className="px-3 py-2 font-semibold">Annual evidence</th>
+                      <th className="px-3 py-2 font-semibold">Evidence status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {supplyEvidence.passThroughLines.map((row) => (
+                      <tr key={row.id} className="border-t border-amber-200">
+                        <td className="px-3 py-2">{row.mpan || "Not recorded"}</td>
+                        <td className="px-3 py-2">{row.chargeName}</td>
+                        <td className="px-3 py-2">{row.voltage}</td>
+                        <td className="px-3 py-2">
+                          {formatOptionalCurrency(row.annualAmount)}
+                        </td>
+                        <td className="px-3 py-2">
+                          Evidence only; excluded from network tariff recovery totals.
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="mt-2 text-amber-900/80">No pass-through supply rows recorded.</p>
+            )}
+          </div>
+
+          <div className="mt-5">
+            <h3 className="font-semibold">Recorded supply contract charge evidence</h3>
+            {supplyContractEvidenceRows.length > 0 ? (
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full min-w-[920px] border-collapse text-sm">
+                  <thead className="text-left text-xs uppercase text-amber-900/70">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">MPAN</th>
+                      <th className="px-3 py-2 font-semibold">Charge</th>
+                      <th className="px-3 py-2 font-semibold">Type</th>
+                      <th className="px-3 py-2 font-semibold">Rate evidence</th>
+                      <th className="px-3 py-2 font-semibold">Annual evidence</th>
+                      <th className="px-3 py-2 font-semibold">Losses</th>
+                      <th className="px-3 py-2 font-semibold">Time of use</th>
+                      <th className="px-3 py-2 font-semibold">Annual amount status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {supplyContractEvidenceRows.map((line) => (
+                      <tr key={line.id} className="border-t border-amber-200">
+                        <td className="px-3 py-2">{line.mpan || "Not recorded"}</td>
+                        <td className="px-3 py-2">{line.chargeName || "Unnamed supply charge"}</td>
+                        <td className="px-3 py-2">{line.chargeType}</td>
+                        <td className="px-3 py-2">
+                          {formatCurrency(line.ratePounds)} {line.unitOfMeasurement}
+                        </td>
+                        <td className="px-3 py-2">
+                          {formatOptionalCurrency(line.annualAmount)}
+                        </td>
+                        <td className="px-3 py-2">{line.losses ?? "Not recorded"}</td>
+                        <td className="px-3 py-2">{line.timeOfUse ?? "Not recorded"}</td>
+                        <td className="px-3 py-2">{line.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="mt-2 text-amber-900/80">
+                No supply contract charge evidence recorded.
+              </p>
+            )}
+          </div>
         </section>
 
         <TariffAuditTracePanel entries={calculation.auditTrace} defaultOpenAll />

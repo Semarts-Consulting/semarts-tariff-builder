@@ -7,6 +7,7 @@ import type {
   ProjectCostPools,
   ProjectDataInputs,
   ProjectMethodologyInputs,
+  SupplyDetailsInput,
   SupplyReferenceData
 } from "@/types/project";
 
@@ -128,6 +129,61 @@ const emptySupplyReferenceData: SupplyReferenceData = {
   lastUpdated
 };
 
+const supplyEvidenceRows: SupplyDetailsInput[] = [
+  {
+    id: "supply-evidence-1",
+    mpan: "1234567890123",
+    supplyCapacityKva: 100,
+    voltage: "LV",
+    transmission: "Pass Through",
+    distribution: "Fixed",
+    tnuosNonLocationalChargePerDay: 0,
+    tnuosTriadChargePerKw: 0,
+    duosFixedChargePerDay: 40,
+    duosImportCapacityPencePerKvaPerDay: 50,
+    duosRedUnitPencePerKwh: 10,
+    duosAmberUnitPencePerKwh: 5,
+    duosGreenUnitPencePerKwh: 1,
+    duosSuperRedUnitPencePerKwh: 25,
+    supplyContractCharges: [
+      {
+        id: "supply-fixed-annual",
+        chargeName: "Supplier standing charge",
+        losses: "CM",
+        chargeType: "Fixed",
+        unitOfMeasurement: "per year",
+        timeOfUse: "All times",
+        customTimeOfUse: {
+          daysOfWeek: [],
+          appliesOnBankHolidays: false,
+          months: [],
+          startTime: "",
+          endTime: ""
+        },
+        rateUnit: "\u00a3",
+        rate: 1200
+      },
+      {
+        id: "supply-consumption",
+        chargeName: "Supplier unit charge",
+        losses: "GSP",
+        chargeType: "Consumption",
+        unitOfMeasurement: "per kWh",
+        timeOfUse: "All times",
+        customTimeOfUse: {
+          daysOfWeek: [],
+          appliesOnBankHolidays: false,
+          months: [],
+          startTime: "",
+          endTime: ""
+        },
+        rateUnit: "p",
+        rate: 15
+      }
+    ]
+  }
+];
+
 function createScenario(
   projectId: string,
   name: string,
@@ -155,7 +211,7 @@ function createScenario(
     },
     methodologyInputs: {
       projectId,
-      supplyDetails: []
+      supplyDetails: projectId === "report-ready-project" ? supplyEvidenceRows : []
     },
     supplyReferenceData: emptySupplyReferenceData
   };

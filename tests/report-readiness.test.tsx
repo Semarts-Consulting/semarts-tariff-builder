@@ -31,7 +31,8 @@ vi.mock("@/lib/project-storage", () => ({
     mockState.scenariosByProjectId.get(projectId)?.allocationMethods,
   getProjectMethodologyInputs: (projectId: string) =>
     mockState.scenariosByProjectId.get(projectId)?.methodologyInputs,
-  getSupplyReferenceData: () => reportReadinessScenarios[0].supplyReferenceData
+  getSupplyReferenceData: () => reportReadinessScenarios[0].supplyReferenceData,
+  getDnoNetworkAreaForMpan: () => undefined
 }));
 
 vi.mock("@/lib/supabase-sync", () => ({
@@ -107,6 +108,29 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(text).toContain("Network standing charge recoverable cost");
     expect(text).toContain("annualAmount * recoverablePercent / 100");
     expect(text).toContain("Source row: cost-standing-network");
+  });
+
+  it("renders supply evidence without changing network tariff totals", async () => {
+    const container = await renderReport("report-ready-project");
+    const text = getText(container);
+
+    expect(text).toContain("Supply evidence only");
+    expect(text).toContain("Not tariff-impacting");
+    expect(text).toContain(
+      "They do not change network revenue requirement, recoverable cost, revenue recovery, or tariff rates"
+    );
+    expect(text).toContain("Supplier standing charge");
+    expect(text).toContain("Supplier unit charge");
+    expect(text).toContain("Transmission pass-through");
+    expect(text).toContain("Evidence only; excluded from network tariff recovery totals.");
+    expect(text).toContain("Needs volume data");
+    expect(text).toContain("Fixed evidence annual amount");
+    expect(text).toContain("19,596.00");
+    expect(text).toContain("Pass-through evidence amount");
+    expect(text).toContain("0.00");
+    expect(text).toContain("Revenue requirement");
+    expect(text).toContain("12,500.00");
+    expect(text).toContain("Revenue variance:");
   });
 
   it("renders non-ready status, validation severity labels, and revenue variance", async () => {
