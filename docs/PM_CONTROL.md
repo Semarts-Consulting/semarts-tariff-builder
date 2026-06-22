@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/supply-phase-2-signoff-pack`
+Branch: `codex/supply-phase-2-decision-brief`
 
-Working tree status: supply Phase 2 sign-off pack in progress.
+Working tree status: supply Phase 2 decision brief in progress.
 
-Latest full checks on `main` after PR #31:
+Latest full checks on `main` after PR #32:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 16 test files and 89 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #31 have been merged to `main`. The current branch prepares supply Phase 2 business-rule sign-off.
+PRs #1 through #32 have been merged to `main`. The current branch prepares the owner-facing Phase 2 decision brief.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply Phase 2 sign-off pack.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply Phase 2 decision brief.
 
 ## Operating Mode
 
 Current package ownership: Manager-led.
 
-Reason: this is a documentation-only business sign-off package. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
+Reason: this is a documentation-only owner decision package. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
 
 Future package rule:
 
@@ -137,7 +137,7 @@ Review risks:
 | Tariff calculation result shape | `types/project.ts`, `lib/calculation-engine.ts`, `components/TariffCalculationsSummary.tsx`, `components/ReportsSummary.tsx` | High | Tariff Engine owns semantics; UI can render only after contract approval. |
 | Validation result semantics | `types/project.ts`, form components, calculation engine, reports | High | Do not mix form save-blocking validation with calculation validation in one package. |
 | Allocation reconciliation | `lib/project-storage.ts`, `components/CostPoolsForm.tsx`, `tests/allocation-reconciliation.test.ts` | Medium | Treat as data/storage behavior, not UI behavior. |
-| Supply calculation | `SUPPLY_CALCULATION_DESIGN.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `lib/supply-calculation-engine.ts`, future shared types/integration files | High | Phase 1 normalisation only; annual amounts and tariff/report integration remain blocked until Phase 2 decisions are accepted. |
+| Supply calculation | `SUPPLY_CALCULATION_DESIGN.md`, `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`, `lib/supply-calculation-engine.ts`, future shared types/integration files | High | Phase 1 normalisation only; annual amounts and tariff/report integration remain blocked until Phase 2 decisions are accepted. |
 | Report/export DTOs | `components/ReportsSummary.tsx`, future export code, tariff result types | Medium | PM approval required before adding stakeholder-facing checks or export fields. |
 
 ## Merge Order
@@ -157,7 +157,7 @@ Review risks:
 3. Whether a future machine-readable export DTO is required for first commercial release after MVP rendered report output.
 4. Which imported workbook headers are contractual and which remain provisional.
 5. Whether `ReportsSummary.tsx` should be considered report UI only or the start of an export DTO contract.
-6. Supply annual amount calculation and tariff/report integration remain deferred until the decision groups in `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md` are accepted.
+6. Supply annual amount calculation and tariff/report integration remain deferred until the owner accepts or amends `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`.
 
 ## Accepted Decisions
 
@@ -189,6 +189,7 @@ Review risks:
 - Supply calculation has proceeded only to reviewed Phase 1 normalisation; further production calculation remains gated by the decision pack.
 - Supply Phase 1 normalisation is merged through PR #30 as a disconnected pure service. It does not calculate annual amounts and must not feed tariff outputs, report totals, storage, imports, or export DTOs until the remaining business decisions are signed off.
 - Supply Phase 2 should be annual amount calculation only unless the user explicitly approves tariff integration as a separate package.
+- Supply Phase 2 decision brief should be approved, amended, or rejected by the user before Tariff Engine prepares implementation.
 
 ## QA Staging Warnings
 
@@ -226,8 +227,8 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 Scenario coverage closeout is maintained in `docs/SCENARIO_COVERAGE_CLOSEOUT.md`.
 
-Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md` and `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`.
+Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECISION_PACK.md`, `docs/SUPPLY_PHASE_2_SIGNOFF_PACK.md`, and `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`.
 
 ## Immediate Next Action
 
-Review and commit the supply Phase 2 sign-off pack, then open a PR from `codex/supply-phase-2-signoff-pack`.
+Review and commit the supply Phase 2 decision brief, then open a PR from `codex/supply-phase-2-decision-brief`.

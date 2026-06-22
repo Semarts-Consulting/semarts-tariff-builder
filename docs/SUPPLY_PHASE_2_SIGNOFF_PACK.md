@@ -6,6 +6,8 @@ Status: prepared for business review.
 
 Purpose: capture the business-rule decisions required before supply annual amount calculation or tariff integration starts.
 
+Plain-English decision route: `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md`.
+
 ## Delivery Position
 
 Supply Phase 1 normalisation is merged as a disconnected pure service. It can normalise supply rows, convert rates, and identify unresolved calculation statuses.
@@ -70,6 +72,7 @@ Phase 2 can be accepted only if:
 User sign-off owner:
 
 - Confirm the minimum Phase 2 decision answers.
+- Use `docs/SUPPLY_PHASE_2_DECISION_BRIEF.md` to approve, amend, or reject the recommended minimum decision set.
 - Confirm whether Phase 2 should calculate annual amounts only, or whether tariff integration is wanted immediately after.
 
 Tariff Engine:
