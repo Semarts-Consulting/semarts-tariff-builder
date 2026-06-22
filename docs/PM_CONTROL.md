@@ -4,9 +4,9 @@
 
 Date: 2026-06-22
 
-Branch: `codex/post-demo-feedback-log`
+Branch: `codex/additional-scenario-plan`
 
-Working tree status: post-demo feedback log package in progress.
+Working tree status: additional scenario plan package in progress.
 
 Latest full checks from PR #15 live demo tariff seed:
 
@@ -16,9 +16,9 @@ Latest full checks from PR #15 live demo tariff seed:
 - `npm.cmd test`: passed, 13 test files and 65 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #16 have been merged to `main`. The current branch prepares the feedback log for post-demo triage.
+PRs #1 through #17 have been merged to `main`. The current branch defines the additional scenario backlog before new fixtures or tests are added.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: post-demo feedback capture.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: additional scenario planning.
 
 ## MVP Definition
 
@@ -163,6 +163,7 @@ Review risks:
 - The live `demo-private-network` sample project must include aggregate customer information, recoverable cost pools, and allocation methods sufficient to calculate tariffs in the application.
 - Demo is approved to carry forward after the PR #15 live tariff seed correction.
 - Post-demo feedback must be triaged into narrow defects, decisions, scenarios, enhancements, or out-of-scope items before implementation.
+- Additional tariff scenarios should be planned before implementation; start with simple two-class and non-recoverable cost scenarios unless stakeholder feedback changes priority.
 
 ## QA Staging Warnings
 
@@ -196,6 +197,8 @@ Demo approval is maintained in `docs/MVP_DEMO_APPROVAL.md`.
 
 Post-demo feedback is maintained in `docs/POST_DEMO_FEEDBACK_LOG.md`.
 
+Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
+
 ## Immediate Next Action
 
-Review and commit the post-demo feedback log package, then open a PR from `codex/post-demo-feedback-log`.
+Review and commit the additional scenario plan package, then open a PR from `codex/additional-scenario-plan`.

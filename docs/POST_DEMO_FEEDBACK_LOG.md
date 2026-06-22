@@ -47,3 +47,5 @@ After feedback is captured, select one next package:
 - Supply calculation decision pack.
 - Report/export DTO decision pack.
 - Release-readiness regression pack.
+
+The proposed additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.

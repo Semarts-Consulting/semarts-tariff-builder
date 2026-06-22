@@ -16,7 +16,7 @@ External release readiness requires additional evidence and decisions.
 
 | ID | Limitation | Owner | Priority | Blocks stakeholder demo? | Blocks external release? | Next action |
 | --- | --- | --- | --- | --- | --- | --- |
-| LIM-001 | Representative scenario covers one site and three customer groups only | PM plus QA | High | No | Yes | Define additional representative and stakeholder-specific scenarios after demo feedback |
+| LIM-001 | Representative scenario covers one site and three customer groups only | PM plus QA | High | No | Yes | Use `docs/ADDITIONAL_SCENARIO_PLAN.md` to sequence additional representative and stakeholder-specific scenarios |
 | LIM-002 | Formal machine-readable export DTOs are outside MVP scope | PM plus UI/Engine | Medium | No | To decide | Confirm whether the next commercial milestone needs a stable export data contract |
 | LIM-003 | Formal report/export audit trace remains post-MVP or MVP+ | PM plus UI/Engine | Medium | No | To decide | Decide whether formal export audit trace is required before external release |
 | LIM-004 | Supply calculation is deferred pending business assumptions | PM plus Tariff Engine | High | No, if stated clearly | Yes, if supply tariffs are in release scope | Resolve open business questions before production implementation |
