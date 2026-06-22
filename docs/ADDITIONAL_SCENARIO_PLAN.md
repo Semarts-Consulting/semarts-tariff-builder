@@ -2,7 +2,7 @@
 
 Date: 2026-06-22
 
-Status: SCN-001 and SCN-005 implemented; remaining scenarios proposed.
+Status: SCN-001 and SCN-005 implemented and green on `main`; remaining scenarios proposed.
 
 Purpose: define the next representative tariff scenarios to strengthen confidence after the approved MVP demo.
 

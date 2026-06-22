@@ -4,21 +4,20 @@
 
 Date: 2026-06-22
 
-Branch: `codex/scn-005-non-recoverable-cost`
+Branch: `codex/scenario-baseline-record`
 
-Working tree status: SCN-005 non-recoverable cost scenario package in progress.
+Working tree status: scenario baseline record package in progress.
 
-Latest full checks from PR #15 live demo tariff seed:
+Latest full checks on `main` after PR #20:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test -- tests/demo-project-defaults.test.ts`: passed, 1 test.
-- `npm.cmd test`: passed, 13 test files and 65 tests.
+- `npm.cmd test`: passed, 14 test files and 67 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #19 have been merged to `main`. The current branch adds non-recoverable cost scenario coverage.
+PRs #1 through #20 have been merged to `main`. The current branch records the green scenario coverage baseline.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: SCN-005 additional scenario coverage.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: select the next scenario or decision package.
 
 ## MVP Definition
 
@@ -166,6 +165,7 @@ Review risks:
 - Additional tariff scenarios should be planned before implementation; start with simple two-class and non-recoverable cost scenarios unless stakeholder feedback changes priority.
 - SCN-001 should remain calculation/test focused and must not introduce production workflow or UI scope.
 - SCN-005 should prove partial and zero recoverability affect only the recoverable tariff revenue requirement.
+- SCN-001 and SCN-005 are implemented and green on `main` after PR #20.
 
 ## QA Staging Warnings
 
@@ -203,4 +203,4 @@ Additional scenario backlog is maintained in `docs/ADDITIONAL_SCENARIO_PLAN.md`.
 
 ## Immediate Next Action
 
-Review and commit the SCN-005 non-recoverable cost scenario package, then open a PR from `codex/scn-005-non-recoverable-cost`.
+Review and commit the scenario baseline record package, then open a PR from `codex/scenario-baseline-record`.
