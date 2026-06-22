@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/supply-evidence-proposal`
+Branch: `codex/supply-evidence-closeout`
 
-Working tree status: supply evidence implementation proposal in progress.
+Working tree status: supply evidence implementation closeout in progress.
 
-Latest full checks on `main` after PR #41:
+Latest full checks on `main` after PR #43:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test`: passed, 16 test files and 96 tests.
+- `npm.cmd test`: passed, 16 test files and 98 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #41 have been merged to `main`. The current branch defines the proposed evidence-only supply presentation and separate reconciliation implementation package.
+PRs #1 through #43 have been merged to `main`. The current branch closes out the evidence-only supply presentation implementation.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply evidence implementation proposal.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: supply evidence implementation closeout.
 
 ## Operating Mode
 
-Current package ownership: Manager-led documentation proposal.
+Current package ownership: Manager-led documentation closeout.
 
-Reason: this is a documentation-only implementation proposal. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
+Reason: this is a documentation-only closeout after delegated production implementation. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, or shared DTO contracts.
 
 Future package rule:
 
@@ -87,7 +87,7 @@ Observed work:
 - Deferred supply calculation DTO and scaffold work was removed from the active package.
 - Tariff Engine accepts `validationIssues`, `Warning` severity, the current issue-code set, and `isRevenueRecovered` tolerance for MVP after documentation alignment.
 - Calculation warnings include default-created allocation methods requiring review, without changing tariff outputs or audit trace values.
-- Supply Phase 2 annual amount calculation is merged in `lib/supply-calculation-engine.ts` with focused tests. It remains disconnected from tariff outputs, reports, storage, imports, and shared project DTOs.
+- Supply Phase 2 annual amount calculation is merged in `lib/supply-calculation-engine.ts` with focused tests. Supply evidence reconciliation is service-local and feeds evidence-only report presentation without changing tariff outputs, storage, imports, exports, or shared project DTOs.
 
 Review risks:
 
@@ -196,7 +196,7 @@ Review risks:
 - Supply tariff integration decisioning is documented in `docs/SUPPLY_TARIFF_INTEGRATION_DECISION_PACK.md`; no implementation should start until the user accepts or amends it.
 - Supply rule decisions for losses, Triad, DUoS, annualisation, input validity, and time-of-use are recorded in `docs/SUPPLY_RULE_DECISIONS.md`. Tariff integration remains blocked pending allocation destination, customer applicability, reporting category, pass-through flag, and reconciliation decisions.
 - Remaining supply integration choices are answered in `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`; production integration remains blocked until a separate implementation proposal is prepared and approved.
-- Evidence-only supply presentation and separate supply reconciliation are proposed in `docs/SUPPLY_EVIDENCE_IMPLEMENTATION_PROPOSAL.md`; production implementation should be delegated after proposal review.
+- Evidence-only supply presentation and separate supply reconciliation are implemented through PR #43. Tariff-impacting supply integration remains blocked; supply evidence does not feed `calculateTariffs`, network revenue recovery, report totals, imports, storage, exports, shared DTOs, or billing-period daily annualisation.
 
 ## QA Staging Warnings
 
@@ -218,7 +218,7 @@ Missing MVP-critical regression coverage:
 - Report readiness/export contract tests.
 - Report rendering, warning visibility, audit trace visibility, and HTML/print action tests.
 - Local/cloud storage reconciliation failure cases.
-- Supply Phase 2 annual amount tests are present; tariff integration tests remain intentionally deferred until allocation and pass-through rules are approved.
+- Supply Phase 2 annual amount and evidence-only report tests are present; tariff-impacting supply integration tests remain intentionally deferred until a separate tariff-impact proposal is approved.
 - Broader UI/browser regression evidence before external release readiness.
 - Additional representative/stakeholder-specific tariff scenarios beyond the internal MVP candidate.
 
@@ -238,4 +238,4 @@ Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECIS
 
 ## Immediate Next Action
 
-Review and commit the supply evidence implementation proposal, then open a PR from `codex/supply-evidence-proposal`.
+Review and commit the supply evidence implementation closeout, then open a PR from `codex/supply-evidence-closeout`.
