@@ -2,6 +2,7 @@ import {
   createDemoProjectAllocationMethods,
   createDemoProjectCostPools,
   createDemoProjectDataInputs,
+  createDemoProjectMethodologyInputs,
   demoProjectId,
   sampleProjects
 } from "@/lib/sample-data";
@@ -696,9 +697,20 @@ export function getStoredMethodologyInputs() {
 }
 
 export function getProjectMethodologyInputs(projectId: string) {
+  const storedInputs = getStoredMethodologyInputs().find(
+    (inputs) => inputs.projectId === projectId
+  );
+
+  if (storedInputs) {
+    return storedInputs;
+  }
+
+  if (projectId === demoProjectId) {
+    return createDemoProjectMethodologyInputs();
+  }
+
   return (
-    getStoredMethodologyInputs().find((inputs) => inputs.projectId === projectId) ??
-    createDefaultMethodologyInputs(projectId)
+    storedInputs ?? createDefaultMethodologyInputs(projectId)
   );
 }
 

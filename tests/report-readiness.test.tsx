@@ -149,6 +149,9 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(text).toContain("Loss adjustment evidence");
     expect(text).toContain("Raw HH consumption:");
     expect(text).toContain("Loss-adjusted HH consumption:");
+    expect(text).toContain("Monthly consumption coverage");
+    expect(text).toContain("Missing meter-periods:");
+    expect(text).toContain("Unknown meter records:");
     expect(text).toContain("Responsibility category evidence");
     expect(text).toContain("Tenant");
     expect(text).toContain("Plant Room");
@@ -251,6 +254,7 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(html).toContain("Submeter and loss evidence only");
     expect(html).toContain("Boundary to submeter reconciliation");
     expect(html).toContain("Loss adjustment evidence");
+    expect(html).toContain("Monthly consumption coverage");
   });
 
   it("downloads non-ready HTML containing readiness issues and revenue variance", async () => {

@@ -57,11 +57,12 @@ The representative automated scenario in `tests/fixtures/mvp-candidate-scenario.
 | --- | --- | --- | --- |
 | Project opens | `/projects/demo-private-network` | Project shell shows project name, tariff year, billing period, and status | Accepted |
 | Inputs visible | `/projects/demo-private-network/data-inputs` | Customer classes, customer counts, annual kWh, and peak demand can be reviewed | Accepted |
+| Site submeter evidence visible | `/projects/demo-private-network/data-inputs` > Site Submeters | Submeter register, HH consumption, TLM rows, validation panels, and monthly coverage review can be reviewed as evidence-only inputs | Added after submeter evidence foundation |
 | Costs visible | `/projects/demo-private-network/cost-pools` | Recoverable cost pools and recoverable percentages can be reviewed | Accepted |
 | Allocations visible | `/projects/demo-private-network/allocation-methods` | Allocation basis, tariff component, class shares, and review indicators can be reviewed | Accepted |
 | Calculation outputs visible | `/projects/demo-private-network/tariff-calculations` | Revenue requirement, allocated cost, variance, class tariff outputs, and warnings are visible | Accepted |
 | Audit trace visible | `/projects/demo-private-network/tariff-calculations` | Calculation audit trace panel shows revenue requirement, allocation, class total, rate derivation, and revenue recovery entries | Accepted |
-| Report view visible | `/projects/demo-private-network/reports` | Stakeholder report view shows tariff schedule, methodology summary, readiness warnings, and print/download actions | Accepted |
+| Report view visible | `/projects/demo-private-network/reports` | Stakeholder report view shows tariff schedule, methodology summary, submeter/loss evidence, readiness warnings, and print/download actions | Accepted |
 | Reconciliation understandable | Calculation and report views | Reviewer can trace recoverable cost base to allocated outputs and revenue recovery status | Accepted |
 
 ## Acceptance Questions

@@ -2,7 +2,7 @@
 
 Date: 2026-06-22
 
-Status: decision answers approved; implementation proposal still required.
+Status: decision answers approved; supply energy p/kWh tariff integration now separately approved by user direction on 2026-06-23.
 
 Purpose: define the decisions required before supply annual amounts can feed tariff outputs, reports, or exports.
 
@@ -12,7 +12,7 @@ Supply Phase 2 annual amount calculation is merged inside the disconnected suppl
 
 The service can calculate annual amounts for approved fixed and kVA capacity charge lines, but those values do not currently affect tariff revenue requirement, allocation, customer class outputs, report totals, or export data.
 
-Tariff integration must not start until a separate implementation proposal is prepared and approved.
+The user subsequently approved using the BRS and POTLL methodology explanation to create a supply p/kWh cost that works into the end tariff as the Energy / kWh component. That implementation is limited to explicit optional supply energy rows in the tariff engine.
 
 Related calculation-rule decisions are recorded in `docs/SUPPLY_RULE_DECISIONS.md`.
 
@@ -42,11 +42,10 @@ Recommended starting point:
 
 This approach preserves the current tariff methodology while allowing commercial review of supply charges.
 
-## Explicitly Out Of Scope Until Approved
+## Remaining Explicitly Out Of Scope Until Approved
 
 - Adding supply annual amounts to `CostPoolRow`.
-- Changing `calculateTariffs` revenue requirement.
-- Changing tariff class output rates.
+- Inferring supply tariff rows automatically from supply evidence records.
 - Changing revenue recovery status.
 - Changing report totals.
 - Adding export DTO fields.

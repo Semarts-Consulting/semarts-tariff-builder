@@ -794,4 +794,89 @@ describe("calculateTariffs", () => {
       })
     );
   });
+
+  it("adds explicit supply p/kWh rows into the energy tariff and revenue requirement", () => {
+    const result = calculateTariffs({
+      projectId: "project",
+      dataInputRows: [
+        {
+          id: "lv-input",
+          customerClass: "LV",
+          customerCount: 1,
+          annualKwh: 100000,
+          peakDemandKw: 100,
+          notes: "LV customer class"
+        }
+      ],
+      costPoolRows: [],
+      allocationRows: [],
+      supplyEnergyRows: [
+        {
+          id: "brs-lv-supply",
+          customerClass: "LV",
+          pencePerKwh: 22.3211,
+          sourceRowIds: ["brs-forecasted-energy-costs"],
+          notes: "BRS LV supply cost"
+        }
+      ]
+    });
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.revenueRequirement).toBeCloseTo(22321.1, 2);
+    expect(result.allocatedCost).toBeCloseTo(22321.1, 2);
+    expect(result.unallocatedCost).toBeCloseTo(0, 2);
+    expect(result.isRevenueRecovered).toBe(true);
+    const lvResult = result.classResults.find((row) => row.customerClass === "LV");
+
+    expect(lvResult).toBeDefined();
+    expect(lvResult?.energyCost).toBeCloseTo(22321.1, 2);
+    expect(lvResult?.energyChargePerKwh).toBeCloseTo(0.223211, 6);
+    expect(lvResult?.totalAllocatedCost).toBeCloseTo(22321.1, 2);
+    expect(result.auditTrace).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "revenue-requirement:supply-energy:brs-lv-supply",
+          stage: "Revenue requirement",
+          customerClass: "LV",
+          tariffComponent: "Energy"
+        }),
+        expect.objectContaining({
+          id: "supply-energy:brs-lv-supply:LV",
+          stage: "Cost allocation",
+          formula: "supplyPencePerKwh / 100 * annualKwh",
+          sourceRowIds: expect.arrayContaining([
+            "brs-lv-supply",
+            "lv-input",
+            "brs-forecasted-energy-costs"
+          ])
+        })
+      ])
+    );
+  });
+
+  it("rejects supply p/kWh rows for unknown customer classes", () => {
+    const result = calculateTariffs({
+      projectId: "project",
+      dataInputRows,
+      costPoolRows: [],
+      allocationRows: [],
+      supplyEnergyRows: [
+        {
+          id: "unknown-supply",
+          customerClass: "Unknown",
+          pencePerKwh: 1,
+          sourceRowIds: [],
+          notes: ""
+        }
+      ]
+    });
+
+    expect(result.validationIssues).toContainEqual(
+      expect.objectContaining({
+        code: "Unknown customer class",
+        rowId: "unknown-supply",
+        customerClass: "Unknown"
+      })
+    );
+  });
 });

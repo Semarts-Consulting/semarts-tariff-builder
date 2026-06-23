@@ -3,8 +3,11 @@ import { calculateTariffs } from "@/lib/calculation-engine";
 import {
   getProjectAllocationMethods,
   getProjectCostPools,
-  getProjectDataInputs
+  getProjectDataInputs,
+  getProjectMethodologyInputs
 } from "@/lib/project-storage";
+import { calculateLossAdjustedHalfHourlyConsumption } from "@/lib/loss-adjusted-consumption";
+import { reconcileSubmeterConsumptionToBoundary } from "@/lib/submeter-reconciliation";
 import { demoProjectId } from "@/lib/sample-data";
 
 describe("demo project defaults", () => {
@@ -85,5 +88,34 @@ describe("demo project defaults", () => {
         }
       ])
     );
+  });
+
+  it("seeds evidence-only submeter and TLM data for walkthrough use", () => {
+    const methodologyInputs = getProjectMethodologyInputs(demoProjectId);
+
+    expect(methodologyInputs.siteSubmeters).toHaveLength(4);
+    expect(methodologyInputs.submeterConsumption).toHaveLength(4);
+    expect(methodologyInputs.halfHourlyImports).toHaveLength(1);
+    expect(methodologyInputs.transmissionLossMultipliers).toHaveLength(48);
+
+    const reconciliation = reconcileSubmeterConsumptionToBoundary({
+      boundaryMeterRows: methodologyInputs.halfHourlyImports,
+      submeterRows: methodologyInputs.siteSubmeters,
+      consumptionRows: methodologyInputs.submeterConsumption
+    });
+
+    expect(reconciliation.boundaryMeterImportTotalKwh).toBe(120);
+    expect(reconciliation.totalSubmeterConsumptionKwh).toBe(120);
+    expect(reconciliation.status).toBe("Green");
+
+    const lossAdjusted = calculateLossAdjustedHalfHourlyConsumption({
+      consumptionRows: methodologyInputs.submeterConsumption,
+      multipliers: methodologyInputs.transmissionLossMultipliers
+    });
+
+    expect(lossAdjusted.warnings).toEqual([]);
+    expect(lossAdjusted.rawConsumptionKwh).toBe(120);
+    expect(lossAdjusted.lossAdjustedConsumptionKwh).toBeCloseTo(122.4, 4);
+    expect(methodologyInputs.notes).toContain("evidence-only");
   });
 });

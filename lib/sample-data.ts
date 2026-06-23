@@ -6,6 +6,7 @@ import type {
   ProjectAllocationMethods,
   ProjectCostPools,
   ProjectDataInputs,
+  ProjectMethodologyInputs,
   ProjectSection
 } from "@/types/project";
 
@@ -146,6 +147,33 @@ const demoAllocationMethodRows: AllocationMethodRow[] = [
   }
 ];
 
+const demoSettlementDate = "2026-04-01";
+const demoMethodologyUpdatedAt = "22 June 2026";
+
+function createDemoSubmeterConsumption(
+  id: string,
+  meter: string,
+  consumptionValue: number,
+  periodValue: number
+) {
+  return {
+    id,
+    meter,
+    format: "Half-hourly" as const,
+    periodStart: demoSettlementDate,
+    periodEnd: demoSettlementDate,
+    consumptionValue,
+    unit: "kWh" as const,
+    sourceType: "Demo HH import",
+    sourceFileName: "demo-submeter-consumption.xlsx",
+    uploadedAt: "2026-06-22T09:00:00.000Z",
+    importBatchId: "demo-submeter-evidence",
+    rowFingerprint: `${meter}|${demoSettlementDate}|${consumptionValue}`,
+    validationStatus: "Validated" as const,
+    settlementPeriodKwh: Array.from({ length: 48 }, () => periodValue)
+  };
+}
+
 function cloneDataInputRows(): DataInputRow[] {
   return demoDataInputRows.map((row) => ({ ...row }));
 }
@@ -188,6 +216,133 @@ export function createDemoProjectAllocationMethods(): ProjectAllocationMethods {
     assumptions:
       "Allocation bases mirror the representative MVP scenario and are accepted for internal demo use.",
     lastUpdated: "22 June 2026"
+  };
+}
+
+export function createDemoProjectMethodologyInputs(): ProjectMethodologyInputs {
+  return {
+    projectId: demoProjectId,
+    assumptions: {
+      weightedAverageCostOfCapitalPercent: 0,
+      cpiPercent: 0,
+      annualRevenue: 0,
+      annualUtilityRecoveries: 0,
+      averageAssetAgeYears: 0,
+      averageMeteringAssetAgeYears: 0,
+      potllEhvLossPercent: 0,
+      potllHvLossPercent: 0,
+      potllLvLossPercent: 0,
+      referenceYearStart: "",
+      referenceYearEnd: "",
+      tariffYearStart: "",
+      tariffYearEnd: ""
+    },
+    directCosts: [],
+    employeeCosts: [],
+    indirectOverheads: [],
+    supplyDetails: [],
+    supplyCharges: {
+      dayUnitRatePencePerKwh: 0,
+      nightUnitRatePencePerKwh: 0,
+      climateChangeLevyPencePerKwh: 0,
+      duosFixedChargePerDay: 0,
+      duosImportCapacityPencePerKvaPerDay: 0,
+      duosSuperRedUnitPencePerKwh: 0,
+      tnuosNonLocationalChargePerDay: 0,
+      tnuosTriadChargePerKw: 0,
+      procurementCost: 0,
+      consultancyCost: 0,
+      validationCost: 0,
+      profitPercent: 0
+    },
+    tenants: [],
+    assets: [],
+    potllSupplies: [],
+    halfHourlyImports: [
+      {
+        id: "demo-boundary-import",
+        mpan: "1590000000001",
+        date: demoSettlementDate,
+        totalKwh: 120,
+        settlementPeriodKwh: Array.from({ length: 48 }, () => 2.5),
+        sourceFileName: "demo-boundary-import.csv",
+        uploadedAt: "2026-06-22T09:00:00.000Z",
+        importBatchId: "demo-submeter-evidence",
+        rowFingerprint: "demo-boundary-import|2026-04-01|120"
+      }
+    ],
+    siteSubmeters: [
+      {
+        id: "demo-submeter-residential",
+        meter: "DEMO-MTR-RES",
+        location: "Residential block / utility riser",
+        responsibility: "Tenant",
+        tenantName: "Residential tenants",
+        notes: "Representative tenant submeter evidence.",
+        sourceFileName: "demo-submeter-register.xlsx",
+        uploadedAt: "2026-06-22T09:00:00.000Z",
+        importBatchId: "demo-submeter-evidence",
+        rowFingerprint: "DEMO-MTR-RES|Residential block / utility riser|Tenant|Residential tenants"
+      },
+      {
+        id: "demo-submeter-small-business",
+        meter: "DEMO-MTR-SB",
+        location: "Retail parade / meter cupboard",
+        responsibility: "Tenant",
+        tenantName: "Small business tenants",
+        notes: "Representative commercial occupier submeter evidence.",
+        sourceFileName: "demo-submeter-register.xlsx",
+        uploadedAt: "2026-06-22T09:00:00.000Z",
+        importBatchId: "demo-submeter-evidence",
+        rowFingerprint: "DEMO-MTR-SB|Retail parade / meter cupboard|Tenant|Small business tenants"
+      },
+      {
+        id: "demo-submeter-common-area",
+        meter: "DEMO-MTR-COMMON",
+        location: "Landlord common services",
+        responsibility: "Landlord",
+        tenantName: "",
+        notes: "Common-area evidence retained outside tariff denominators.",
+        sourceFileName: "demo-submeter-register.xlsx",
+        uploadedAt: "2026-06-22T09:00:00.000Z",
+        importBatchId: "demo-submeter-evidence",
+        rowFingerprint: "DEMO-MTR-COMMON|Landlord common services|Landlord|"
+      },
+      {
+        id: "demo-submeter-network-operator",
+        meter: "DEMO-MTR-NETOPS",
+        location: "Network operator panel room",
+        responsibility: "Network Operator",
+        tenantName: "",
+        notes: "Internal network operator evidence only.",
+        sourceFileName: "demo-submeter-register.xlsx",
+        uploadedAt: "2026-06-22T09:00:00.000Z",
+        importBatchId: "demo-submeter-evidence",
+        rowFingerprint: "DEMO-MTR-NETOPS|Network operator panel room|Network Operator|"
+      }
+    ],
+    submeterConsumption: [
+      createDemoSubmeterConsumption("demo-consumption-residential", "DEMO-MTR-RES", 48, 1),
+      createDemoSubmeterConsumption("demo-consumption-small-business", "DEMO-MTR-SB", 36, 0.75),
+      createDemoSubmeterConsumption("demo-consumption-common", "DEMO-MTR-COMMON", 24, 0.5),
+      createDemoSubmeterConsumption("demo-consumption-network-operator", "DEMO-MTR-NETOPS", 12, 0.25)
+    ],
+    transmissionLossMultipliers: Array.from({ length: 48 }, (_, index) => ({
+      id: `demo-tlm-${index + 1}`,
+      settlementDate: demoSettlementDate,
+      settlementPeriod: index + 1,
+      transmissionLossMultiplier: 1.02,
+      gspGroup: "",
+      effectiveFromDate: demoSettlementDate,
+      source: "Demo structured TLM evidence",
+      retrievedAt: "2026-06-22T09:00:00.000Z",
+      version: "demo-v1",
+      importBatchId: "demo-submeter-evidence",
+      rowFingerprint: `demo-tlm|${demoSettlementDate}|${index + 1}|1.02`
+    })),
+    notes:
+      "Demo submeter, boundary import and TLM records are evidence-only and do not change tariff outputs.",
+    lastUpdated: demoMethodologyUpdatedAt
   };
 }
 

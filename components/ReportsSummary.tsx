@@ -8,6 +8,10 @@ import {
 } from "@/lib/supply-calculation-engine";
 import { calculateLossAdjustedHalfHourlyConsumption } from "@/lib/loss-adjusted-consumption";
 import { defaultMeterResponsibilityAllocationRules } from "@/lib/meter-responsibility-rules";
+import {
+  createMonthlyExpectedConsumptionPeriods,
+  reviewConsumptionPeriodCoverage
+} from "@/lib/submeter-consumption-coverage";
 import { reconcileSubmeterConsumptionToBoundary } from "@/lib/submeter-reconciliation";
 import { TariffAuditTracePanel } from "@/components/TariffAuditTracePanel";
 import {
@@ -117,6 +121,10 @@ function getReadinessStyle(status: ReportReadinessStatus) {
 
 function formatOptionalCurrency(value: number | null) {
   return value === null ? "Not calculated" : formatCurrency(value);
+}
+
+function monthKey(value: string) {
+  return value.slice(0, 7);
 }
 
 export function ReportsSummary({ projectId }: ReportsSummaryProps) {
@@ -250,6 +258,42 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
         multipliers: methodologyInputs.transmissionLossMultipliers
       }),
     [methodologyInputs.submeterConsumption, methodologyInputs.transmissionLossMultipliers]
+  );
+  const monthlyCoveragePeriods = useMemo(() => {
+    const monthlyRows = methodologyInputs.submeterConsumption.filter(
+      (row) => row.format === "Monthly"
+    );
+
+    if (monthlyRows.length === 0) {
+      return [];
+    }
+
+    const startMonth = monthlyRows
+      .map((row) => monthKey(row.periodStart))
+      .filter(Boolean)
+      .sort()[0];
+    const endMonth = monthlyRows
+      .map((row) => monthKey(row.periodEnd))
+      .filter(Boolean)
+      .sort()
+      .at(-1);
+
+    return startMonth && endMonth
+      ? createMonthlyExpectedConsumptionPeriods({ startMonth, endMonth })
+      : [];
+  }, [methodologyInputs.submeterConsumption]);
+  const consumptionCoverage = useMemo(
+    () =>
+      reviewConsumptionPeriodCoverage({
+        submeters: methodologyInputs.siteSubmeters,
+        consumptionRows: methodologyInputs.submeterConsumption,
+        expectedPeriods: monthlyCoveragePeriods
+      }),
+    [
+      methodologyInputs.siteSubmeters,
+      methodologyInputs.submeterConsumption,
+      monthlyCoveragePeriods
+    ]
   );
   const responsibilityCounts = useMemo(
     () =>
@@ -702,6 +746,16 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
                   </li>
                   <li>Adjusted settlement periods: {lossAdjustmentEvidence.adjustedPeriods.length}</li>
                   <li>Warnings: {lossAdjustmentEvidence.warnings.length}</li>
+                </ul>
+              </div>
+
+              <div className="rounded-md border border-blue-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Monthly consumption coverage</h3>
+                <ul className="mt-3 space-y-2 leading-6">
+                  <li>Expected periods per meter: {monthlyCoveragePeriods.length}</li>
+                  <li>Missing meter-periods: {consumptionCoverage.totalMissingPeriods}</li>
+                  <li>Duplicate meter-periods: {consumptionCoverage.totalDuplicatePeriods}</li>
+                  <li>Unknown meter records: {consumptionCoverage.unknownMeterRecordIds.length}</li>
                 </ul>
               </div>
             </div>
