@@ -677,6 +677,9 @@ export function createDefaultMethodologyInputs(projectId: string): ProjectMethod
     assets: [],
     potllSupplies: [],
     halfHourlyImports: [],
+    siteSubmeters: [],
+    submeterConsumption: [],
+    transmissionLossMultipliers: [],
     notes: "",
     lastUpdated: todayLabel()
   };

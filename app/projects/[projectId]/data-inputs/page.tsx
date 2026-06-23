@@ -1,11 +1,16 @@
 import { SectionHeader } from "@/components/SectionHeader";
+import { SiteSubmeterInputsForm } from "@/components/SiteSubmeterInputsForm";
 import {
   WorkbookAssumptionsForm,
   WorkbookBoundaryMeterDataForm,
   WorkbookCostInputsForm
 } from "@/components/WorkbookMethodologyForms";
 
-type DataInputSection = "selections" | "boundary-meter-data" | "asset-data";
+type DataInputSection =
+  | "selections"
+  | "boundary-meter-data"
+  | "asset-data"
+  | "site-submeters";
 
 const sectionCopy: Record<DataInputSection, { title: string; description: string }> = {
   selections: {
@@ -19,11 +24,20 @@ const sectionCopy: Record<DataInputSection, { title: string; description: string
   "asset-data": {
     title: "Asset data",
     description: "Capture the asset register that feeds annuity, depreciation and asset cost calculations."
+  },
+  "site-submeters": {
+    title: "Site submeters",
+    description:
+      "Maintain site submeter ownership, consumption records and transmission loss multiplier inputs."
   }
 };
 
 function getSection(value: string | string[] | undefined): DataInputSection {
-  return value === "boundary-meter-data" || value === "asset-data" ? value : "selections";
+  return value === "boundary-meter-data" ||
+    value === "asset-data" ||
+    value === "site-submeters"
+    ? value
+    : "selections";
 }
 
 export default async function DataInputsPage({
@@ -50,6 +64,7 @@ export default async function DataInputsPage({
       {section === "asset-data" ? (
         <WorkbookCostInputsForm projectId={projectId} section="asset-data" />
       ) : null}
+      {section === "site-submeters" ? <SiteSubmeterInputsForm projectId={projectId} /> : null}
     </div>
   );
 }

@@ -18,13 +18,14 @@ No production tariff calculation, import parser, storage, export, shared DTO, re
 | WB-002 TLM/local losses evidence | Proves loss-adjusted evidence does not uplift `annualKwh` passed to tariff calculations. | None. Loss evidence remains local fixture metadata. |
 | WB-003 port tenant recovery forecast | Proves tenant forecasts and recovery evidence do not automatically become tariff customer classes, cost pools, or revenue requirements. | None. Tenant recovery evidence remains local fixture metadata. |
 | WB-004 generation/export evidence | Proves generation/export volumes and credit evidence do not net consumption, reduce recoverable cost, or change revenue requirement. | None. Generation/export evidence remains local fixture metadata. |
+| WB-005 asset-cost allocation | Proves only approved chargeable electrical distribution asset annual amounts feed tariff cost pools. | None. Asset evidence remains local fixture metadata and no asset valuation logic is introduced. |
 | WB-006 weak mapping confidence | Proves low-confidence, unresolved, evidence-only, and manual-review workbook rows do not feed tariff inputs. | None. Mapping evidence remains local fixture metadata. |
 
 ## Completed Proposal-Only Coverage
 
 | Scenario | Status | Reason Implementation Is Gated |
 | --- | --- | --- |
-| WB-005 asset-cost allocation | Decision pack prepared | Owner must approve whether test-only fixture coverage may use pre-set annual asset amounts. |
+| _None_ |  |  |
 
 ## Validation Evidence
 
@@ -42,7 +43,7 @@ Before production implementation, the owner should decide:
 1. Whether TLM/local losses should ever affect tariff billing volumes.
 2. Whether generation/export values should net consumption or create export credits.
 3. How tenant references map to tariff classes and recovery schedules.
-4. Whether WB-005 may proceed as test-only fixture coverage using pre-set annual asset amounts.
+4. Which production asset categories are chargeable through electricity tariffs.
 5. Whether medium-confidence workbook mappings may feed calculations after review.
 6. How unresolved workbook evidence should affect report readiness.
 
@@ -65,5 +66,4 @@ Do not move straight into production implementation.
 Recommended next phase:
 
 1. Review this closeout and the individual scenario documents.
-2. Review `docs/WB_005_ASSET_DECISION_PACK.md` and approve, hold, or request a wider production methodology decision.
-3. Prepare a decision pack for production workbook source mapping only after WB-005 test-only coverage is agreed or explicitly held.
+2. Prepare a decision pack for production workbook source mapping now that workbook-derived test-only coverage is complete.

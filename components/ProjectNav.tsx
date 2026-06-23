@@ -20,7 +20,8 @@ const modelSections = [
     items: [
       { title: "Selections", section: "selections" },
       { title: "Boundary Meter Data", section: "boundary-meter-data" },
-      { title: "Asset Data", section: "asset-data" }
+      { title: "Asset Data", section: "asset-data" },
+      { title: "Site Submeters", section: "site-submeters" }
     ]
   },
   {

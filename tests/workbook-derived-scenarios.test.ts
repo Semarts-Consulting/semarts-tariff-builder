@@ -21,6 +21,11 @@ import {
   wb004GenerationExportScenarioCostPoolRows,
   wb004GenerationExportScenarioDataInputRows,
   wb004GenerationExportScenarioExpected,
+  wb005AssetAllocationScenarioAllocationRows,
+  wb005AssetAllocationScenarioCostPoolRows,
+  wb005AssetAllocationScenarioDataInputRows,
+  wb005AssetAllocationScenarioExpected,
+  wb005AssetEvidenceRows,
   wb006WeakMappingScenarioAllocationRows,
   wb006WeakMappingScenarioCostPoolRows,
   wb006WeakMappingScenarioDataInputRows,
@@ -512,6 +517,97 @@ describe("workbook-derived tariff scenarios", () => {
         );
         expect(classResult?.energyChargePerKwh).toBeCloseTo(
           expected.energyChargePerKwh,
+          4
+        );
+      }
+    );
+  });
+
+  it("WB-005 uses only approved pre-set asset annual amounts as tariff inputs", () => {
+    const calculationAssetAmount = sumBy(
+      wb005AssetEvidenceRows.filter(
+        (row) => row.treatment === "Calculation input"
+      ),
+      (row) => row.annualChargeAmount ?? 0
+    );
+    const excludedOrReviewAssetAmount = sumBy(
+      wb005AssetEvidenceRows.filter(
+        (row) => row.treatment !== "Calculation input"
+      ),
+      (row) => row.annualChargeAmount ?? 0
+    );
+    const reviewIssueCount = wb005AssetEvidenceRows.filter(
+      (row) => row.validationIssue !== null
+    ).length;
+
+    expect(calculationAssetAmount).toBe(
+      wb005AssetAllocationScenarioExpected.calculationAnnualAssetAmount
+    );
+    expect(excludedOrReviewAssetAmount).toBe(
+      wb005AssetAllocationScenarioExpected.excludedOrReviewAnnualAssetAmount
+    );
+    expect(reviewIssueCount).toBe(
+      wb005AssetAllocationScenarioExpected.reviewIssueCount
+    );
+
+    const calculationCostPoolNames = new Set(
+      wb005AssetAllocationScenarioCostPoolRows.map((row) => row.name)
+    );
+    wb005AssetEvidenceRows.forEach((assetRow) => {
+      if (assetRow.treatment === "Calculation input") {
+        expect(assetRow.isElectricalDistributionAsset).toBe(true);
+        expect(assetRow.isChargeableOnElectricityTariff).toBe(true);
+        expect(assetRow.annualChargeAmount).not.toBeNull();
+      } else {
+        expect(calculationCostPoolNames.has(assetRow.assetDescription)).toBe(
+          false
+        );
+      }
+    });
+
+    const result = calculateTariffs({
+      projectId: "wb-005-asset-allocation",
+      dataInputRows: wb005AssetAllocationScenarioDataInputRows,
+      costPoolRows: wb005AssetAllocationScenarioCostPoolRows,
+      allocationRows: wb005AssetAllocationScenarioAllocationRows
+    });
+
+    expect(result.validationIssues).toEqual([]);
+    expect(result.revenueRequirement).toBe(
+      wb005AssetAllocationScenarioExpected.revenueRequirement
+    );
+    expect(result.allocatedCost).toBeCloseTo(result.revenueRequirement, 2);
+    expect(result.unallocatedCost).toBeCloseTo(0, 2);
+    expect(result.isRevenueRecovered).toBe(true);
+
+    Object.entries(wb005AssetAllocationScenarioExpected.classResults).forEach(
+      ([customerClass, expected]) => {
+        const classResult = result.classResults.find(
+          (row) => row.customerClass === customerClass
+        );
+
+        expect(classResult).toBeDefined();
+        expect(classResult?.fixedCost).toBeCloseTo(expected.fixedCost, 2);
+        expect(classResult?.energyCost).toBeCloseTo(expected.energyCost, 2);
+        expect(classResult?.demandCost).toBeCloseTo(expected.demandCost, 2);
+        expect(classResult?.passThroughCost).toBeCloseTo(
+          expected.passThroughCost,
+          2
+        );
+        expect(classResult?.totalAllocatedCost).toBeCloseTo(
+          expected.totalAllocatedCost,
+          2
+        );
+        expect(classResult?.fixedChargePerCustomer).toBeCloseTo(
+          expected.fixedChargePerCustomer,
+          4
+        );
+        expect(classResult?.energyChargePerKwh).toBeCloseTo(
+          expected.energyChargePerKwh,
+          4
+        );
+        expect(classResult?.demandChargePerKw).toBeCloseTo(
+          expected.demandChargePerKw,
           4
         );
       }
