@@ -133,6 +133,33 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(text).toContain("Revenue variance:");
   });
 
+  it("renders submeter reconciliation and loss evidence without changing tariff totals", async () => {
+    const container = await renderReport("report-ready-project");
+    const text = getText(container);
+
+    expect(text).toContain("Submeter and loss evidence only");
+    expect(text).toContain("Not tariff-impacting");
+    expect(text).toContain(
+      "They do not change the aggregate customer-class tariff inputs, network revenue requirement, tariff rates, or report totals"
+    );
+    expect(text).toContain("Boundary to submeter reconciliation");
+    expect(text).toContain("Boundary import total:");
+    expect(text).toContain("Included submeter total:");
+    expect(text).toContain("Reconciliation status");
+    expect(text).toContain("Loss adjustment evidence");
+    expect(text).toContain("Raw HH consumption:");
+    expect(text).toContain("Loss-adjusted HH consumption:");
+    expect(text).toContain("Responsibility category evidence");
+    expect(text).toContain("Tenant");
+    expect(text).toContain("Plant Room");
+    expect(text).toContain("Evidence warnings");
+    expect(text).toContain("Submeter consumption UNKNOWN: Unknown meter.");
+    expect(text).toContain("Missing TLM for 2026-04-01 settlement period 48.");
+    expect(text).toContain("Revenue requirement");
+    expect(text).toContain("12,500.00");
+    expect(text).toContain("Revenue variance:");
+  });
+
   it("renders non-ready status, validation severity labels, and revenue variance", async () => {
     const container = await renderReport("report-non-ready-project");
     const text = getText(container);
@@ -221,6 +248,9 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(html).toContain("Supply evidence only");
     expect(html).toContain("Not tariff-impacting");
     expect(html).toContain("Supplier standing charge");
+    expect(html).toContain("Submeter and loss evidence only");
+    expect(html).toContain("Boundary to submeter reconciliation");
+    expect(html).toContain("Loss adjustment evidence");
   });
 
   it("downloads non-ready HTML containing readiness issues and revenue variance", async () => {

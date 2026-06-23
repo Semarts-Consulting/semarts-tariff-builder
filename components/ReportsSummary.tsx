@@ -6,6 +6,9 @@ import {
   normaliseSupplyCharges,
   reconcileSupplyEvidence
 } from "@/lib/supply-calculation-engine";
+import { calculateLossAdjustedHalfHourlyConsumption } from "@/lib/loss-adjusted-consumption";
+import { defaultMeterResponsibilityAllocationRules } from "@/lib/meter-responsibility-rules";
+import { reconcileSubmeterConsumptionToBoundary } from "@/lib/submeter-reconciliation";
 import { TariffAuditTracePanel } from "@/components/TariffAuditTracePanel";
 import {
   getProjectAllocationMethods,
@@ -227,6 +230,43 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
     () => supplyCalculation.chargeLines.filter((line) => line.source === "Supply Contract"),
     [supplyCalculation.chargeLines]
   );
+  const submeterEvidence = useMemo(
+    () =>
+      reconcileSubmeterConsumptionToBoundary({
+        boundaryMeterRows: methodologyInputs.halfHourlyImports,
+        submeterRows: methodologyInputs.siteSubmeters,
+        consumptionRows: methodologyInputs.submeterConsumption
+      }),
+    [
+      methodologyInputs.halfHourlyImports,
+      methodologyInputs.siteSubmeters,
+      methodologyInputs.submeterConsumption
+    ]
+  );
+  const lossAdjustmentEvidence = useMemo(
+    () =>
+      calculateLossAdjustedHalfHourlyConsumption({
+        consumptionRows: methodologyInputs.submeterConsumption,
+        multipliers: methodologyInputs.transmissionLossMultipliers
+      }),
+    [methodologyInputs.submeterConsumption, methodologyInputs.transmissionLossMultipliers]
+  );
+  const responsibilityCounts = useMemo(
+    () =>
+      defaultMeterResponsibilityAllocationRules.map((rule) => ({
+        responsibility: rule.responsibility,
+        treatment: rule.treatment,
+        count: methodologyInputs.siteSubmeters.filter(
+          (row) => row.responsibility === rule.responsibility
+        ).length
+      })),
+    [methodologyInputs.siteSubmeters]
+  );
+  const hasSubmeterEvidence =
+    methodologyInputs.siteSubmeters.length > 0 ||
+    methodologyInputs.submeterConsumption.length > 0 ||
+    methodologyInputs.transmissionLossMultipliers.length > 0 ||
+    methodologyInputs.halfHourlyImports.length > 0;
 
   if (!project || !dataInputs || !costPools || !allocationMethods) {
     return null;
@@ -584,6 +624,130 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           <li>Customer classes included: {calculation.classResults.length}</li>
         </ul>
         </section>
+
+        {hasSubmeterEvidence ? (
+          <section className="rounded-md border border-blue-200 bg-blue-50 p-5 text-sm text-blue-950 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-semibold">Submeter and loss evidence only</h2>
+                <p className="mt-2 leading-6">
+                  These records support reconciliation and audit review. They do not change the
+                  aggregate customer-class tariff inputs, network revenue requirement, tariff rates,
+                  or report totals in this report.
+                </p>
+              </div>
+              <span className="rounded-md border border-current px-3 py-1 text-xs font-semibold">
+                Not tariff-impacting
+              </span>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-4">
+              <div className="rounded-md border border-blue-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-blue-900/70">Submeters</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {methodologyInputs.siteSubmeters.length}
+                </p>
+              </div>
+              <div className="rounded-md border border-blue-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-blue-900/70">
+                  Consumption records
+                </p>
+                <p className="mt-1 text-lg font-semibold">
+                  {methodologyInputs.submeterConsumption.length}
+                </p>
+              </div>
+              <div className="rounded-md border border-blue-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-blue-900/70">TLM rows</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {methodologyInputs.transmissionLossMultipliers.length}
+                </p>
+              </div>
+              <div className="rounded-md border border-blue-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-blue-900/70">
+                  Reconciliation status
+                </p>
+                <p className="mt-1 text-lg font-semibold">{submeterEvidence.status}</p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-md border border-blue-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Boundary to submeter reconciliation</h3>
+                <ul className="mt-3 space-y-2 leading-6">
+                  <li>
+                    Boundary import total:{" "}
+                    {formatNumber(submeterEvidence.boundaryMeterImportTotalKwh)} kWh
+                  </li>
+                  <li>
+                    Included submeter total:{" "}
+                    {formatNumber(submeterEvidence.totalSubmeterConsumptionKwh)} kWh
+                  </li>
+                  <li>
+                    Variance: {formatNumber(submeterEvidence.varianceKwh)} kWh (
+                    {formatNumber(submeterEvidence.variancePercent)}%)
+                  </li>
+                  <li>
+                    Excluded records: {formatNumber(submeterEvidence.excludedRecords.length)}
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-md border border-blue-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Loss adjustment evidence</h3>
+                <ul className="mt-3 space-y-2 leading-6">
+                  <li>Raw HH consumption: {formatNumber(lossAdjustmentEvidence.rawConsumptionKwh)} kWh</li>
+                  <li>
+                    Loss-adjusted HH consumption:{" "}
+                    {formatNumber(lossAdjustmentEvidence.lossAdjustedConsumptionKwh)} kWh
+                  </li>
+                  <li>Adjusted settlement periods: {lossAdjustmentEvidence.adjustedPeriods.length}</li>
+                  <li>Warnings: {lossAdjustmentEvidence.warnings.length}</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-5 overflow-x-auto">
+              <h3 className="font-semibold">Responsibility category evidence</h3>
+              <table className="mt-3 w-full min-w-[720px] border-collapse text-sm">
+                <thead className="text-left text-xs uppercase text-blue-900/70">
+                  <tr>
+                    <th className="px-3 py-2 font-semibold">Responsibility</th>
+                    <th className="px-3 py-2 font-semibold">Meters</th>
+                    <th className="px-3 py-2 font-semibold">Current treatment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {responsibilityCounts.map((row) => (
+                    <tr key={row.responsibility} className="border-t border-blue-200">
+                      <td className="px-3 py-2">{row.responsibility}</td>
+                      <td className="px-3 py-2">{row.count}</td>
+                      <td className="px-3 py-2">{row.treatment}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {submeterEvidence.excludedRecords.length > 0 ||
+            lossAdjustmentEvidence.warnings.length > 0 ? (
+              <div className="mt-5 rounded-md border border-blue-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Evidence warnings</h3>
+                <ul className="mt-3 space-y-2 leading-6">
+                  {submeterEvidence.excludedRecords.slice(0, 8).map((row) => (
+                    <li key={`${row.source}-${row.id}`}>
+                      {row.source} {row.reference || row.id}: {row.reason}.
+                    </li>
+                  ))}
+                  {lossAdjustmentEvidence.warnings.slice(0, 8).map((warning, index) => (
+                    <li key={`${warning.rowId}-${warning.code}-${index}`}>
+                      {warning.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
 
         <section className="rounded-md border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">

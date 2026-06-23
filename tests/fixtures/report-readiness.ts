@@ -7,8 +7,12 @@ import type {
   ProjectCostPools,
   ProjectDataInputs,
   ProjectMethodologyInputs,
+  SiteSubmeterRecord,
   SupplyDetailsInput,
-  SupplyReferenceData
+  SupplyReferenceData,
+  SubmeterConsumptionRecord,
+  TransmissionLossMultiplierInput,
+  HalfHourlyImportRow
 } from "@/types/project";
 
 export type ReportReadinessScenario = {
@@ -16,7 +20,15 @@ export type ReportReadinessScenario = {
   dataInputs: ProjectDataInputs;
   costPools: ProjectCostPools;
   allocationMethods: ProjectAllocationMethods;
-  methodologyInputs: Pick<ProjectMethodologyInputs, "projectId" | "supplyDetails">;
+  methodologyInputs: Pick<
+    ProjectMethodologyInputs,
+    | "projectId"
+    | "supplyDetails"
+    | "siteSubmeters"
+    | "submeterConsumption"
+    | "transmissionLossMultipliers"
+    | "halfHourlyImports"
+  >;
   supplyReferenceData: SupplyReferenceData;
 };
 
@@ -184,6 +196,110 @@ const supplyEvidenceRows: SupplyDetailsInput[] = [
   }
 ];
 
+const submeterRows: SiteSubmeterRecord[] = [
+  {
+    id: "submeter-tenant",
+    meter: "MTR-TENANT",
+    location: "Terminal retail",
+    responsibility: "Tenant",
+    tenantName: "Retail tenant",
+    notes: "",
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: ""
+  },
+  {
+    id: "submeter-plant-room",
+    meter: "MTR-PLANT",
+    location: "Plant room",
+    responsibility: "Plant Room",
+    tenantName: "",
+    notes: "",
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: ""
+  }
+];
+
+const boundaryRows: HalfHourlyImportRow[] = [
+  {
+    id: "boundary-report",
+    mpan: "1234567890123",
+    date: "2026-04-01",
+    totalKwh: 120,
+    settlementPeriodKwh: Array.from({ length: 48 }, () => 2.5),
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: ""
+  }
+];
+
+const submeterConsumptionRows: SubmeterConsumptionRecord[] = [
+  {
+    id: "submeter-hh-tenant",
+    meter: "MTR-TENANT",
+    format: "Half-hourly",
+    periodStart: "2026-04-01",
+    periodEnd: "2026-04-01",
+    consumptionValue: 48,
+    unit: "kWh",
+    sourceType: "HH import",
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: "",
+    validationStatus: "Validated",
+    settlementPeriodKwh: Array.from({ length: 48 }, () => 1)
+  },
+  {
+    id: "submeter-monthly-plant",
+    meter: "MTR-PLANT",
+    format: "Monthly",
+    periodStart: "2026-04-01",
+    periodEnd: "2026-04-30",
+    consumptionValue: 70,
+    unit: "kWh",
+    sourceType: "Manual",
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: "",
+    validationStatus: "Pending review"
+  },
+  {
+    id: "submeter-unknown",
+    meter: "UNKNOWN",
+    format: "Monthly",
+    periodStart: "2026-04-01",
+    periodEnd: "2026-04-30",
+    consumptionValue: 5,
+    unit: "kWh",
+    sourceType: "Manual",
+    sourceFileName: "",
+    uploadedAt: "",
+    importBatchId: "",
+    rowFingerprint: "",
+    validationStatus: "Needs correction"
+  }
+];
+
+const tlmRows: TransmissionLossMultiplierInput[] = Array.from({ length: 47 }, (_, index) => ({
+  id: `tlm-report-${index + 1}`,
+  settlementDate: "2026-04-01",
+  settlementPeriod: index + 1,
+  transmissionLossMultiplier: 1.02,
+  gspGroup: "",
+  effectiveFromDate: "2026-04-01",
+  source: "Report fixture",
+  retrievedAt: lastUpdated,
+  version: "fixture",
+  importBatchId: "",
+  rowFingerprint: ""
+}));
+
 function createScenario(
   projectId: string,
   name: string,
@@ -211,7 +327,12 @@ function createScenario(
     },
     methodologyInputs: {
       projectId,
-      supplyDetails: projectId === "report-ready-project" ? supplyEvidenceRows : []
+      supplyDetails: projectId === "report-ready-project" ? supplyEvidenceRows : [],
+      siteSubmeters: projectId === "report-ready-project" ? submeterRows : [],
+      submeterConsumption:
+        projectId === "report-ready-project" ? submeterConsumptionRows : [],
+      transmissionLossMultipliers: projectId === "report-ready-project" ? tlmRows : [],
+      halfHourlyImports: projectId === "report-ready-project" ? boundaryRows : []
     },
     supplyReferenceData: emptySupplyReferenceData
   };
