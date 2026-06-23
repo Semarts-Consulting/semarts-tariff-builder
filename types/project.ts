@@ -424,6 +424,73 @@ export type HalfHourlyImportRow = {
   rowFingerprint: string;
 };
 
+export type SiteSubmeterResponsibility =
+  | "Tenant"
+  | "Network Operator"
+  | "Landlord"
+  | "Shared Asset"
+  | "EV Asset"
+  | "Plant Room"
+  | "Infrastructure"
+  | "Other Internal Use";
+
+export type SiteSubmeterRecord = {
+  id: string;
+  meter: string;
+  location: string;
+  responsibility: SiteSubmeterResponsibility;
+  tenantName: string;
+  notes: string;
+  sourceFileName: string;
+  uploadedAt: string;
+  importBatchId: string;
+  rowFingerprint: string;
+};
+
+export type SubmeterConsumptionFormat =
+  | "Half-hourly"
+  | "Monthly"
+  | "Quarterly"
+  | "Annual";
+
+export type SubmeterConsumptionUnit = "kWh";
+
+export type SubmeterConsumptionValidationStatus =
+  | "Pending review"
+  | "Validated"
+  | "Needs correction";
+
+export type SubmeterConsumptionRecord = {
+  id: string;
+  meter: string;
+  format: SubmeterConsumptionFormat;
+  periodStart: string;
+  periodEnd: string;
+  consumptionValue: number;
+  unit: SubmeterConsumptionUnit;
+  sourceType: string;
+  sourceFileName: string;
+  uploadedAt: string;
+  importBatchId: string;
+  rowFingerprint: string;
+  validationStatus: SubmeterConsumptionValidationStatus;
+  settlementPeriodKwh?: number[];
+};
+
+export type TransmissionLossMultiplierInput = {
+  id: string;
+  settlementDate: string;
+  settlementPeriod: number;
+  transmissionLossMultiplier: number;
+  gspGroup: string;
+  effectiveFromDate: string;
+  source: string;
+  retrievedAt: string;
+  version: string;
+  importBatchId: string;
+  rowFingerprint: string;
+};
+
 export type ProjectMethodologyInputs = {
   projectId: string;
   assumptions: TariffAssumptions;
@@ -436,6 +503,9 @@ export type ProjectMethodologyInputs = {
   assets: AssetInput[];
   potllSupplies: PotllSupplyInput[];
   halfHourlyImports: HalfHourlyImportRow[];
+  siteSubmeters: SiteSubmeterRecord[];
+  submeterConsumption: SubmeterConsumptionRecord[];
+  transmissionLossMultipliers: TransmissionLossMultiplierInput[];
   notes: string;
   lastUpdated: string;
 };
