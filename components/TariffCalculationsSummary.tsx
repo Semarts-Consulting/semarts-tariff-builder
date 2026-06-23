@@ -4,6 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { calculateTariffs } from "@/lib/calculation-engine";
 import { TariffAuditTracePanel } from "@/components/TariffAuditTracePanel";
 import {
+  calculateSupplyEnergyApplication,
+  type SupplyEnergyApplicationInput,
+  type SupplyEnergyNetworkLevel
+} from "@/lib/supply-energy-application";
+import {
   getProjectAllocationMethods,
   getProjectCostPools,
   getProjectDataInputs,
@@ -22,6 +27,23 @@ type TariffCalculationsSummaryProps = {
   projectId: string;
 };
 
+const defaultSupplyEnergyApplication: SupplyEnergyApplicationInput = {
+  id: "current-supply-energy-application",
+  customerClass: "",
+  nbpPencePerKwh: 0,
+  gspPencePerKwh: 0,
+  siteMeterPencePerKwh: 0,
+  cmPencePerKwh: 0,
+  transmissionLossMultiplier: 1,
+  dnoDistributionLossFactor: 1,
+  ehvLossMultiplier: 1,
+  hvLossMultiplier: 1,
+  lvLossMultiplier: 1,
+  networkLevel: "Site Meter",
+  profitMultiplier: 1,
+  sourceLabel: "Manual supply energy review"
+};
+
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-GB", {
     style: "currency",
@@ -34,6 +56,12 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat("en-GB", {
     maximumFractionDigits: 4
   }).format(value);
+}
+
+function parseNumber(value: string) {
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function emptyResult(projectId: string): TariffCalculationResult {
@@ -62,6 +90,9 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
   const [calculationResult, setCalculationResult] = useState<TariffCalculationResult>(() =>
     emptyResult(projectId)
   );
+  const [supplyEnergyApplication, setSupplyEnergyApplication] =
+    useState<SupplyEnergyApplicationInput>(defaultSupplyEnergyApplication);
+  const [applySupplyEnergy, setApplySupplyEnergy] = useState(false);
   const [supplyReferenceData, setSupplyReferenceData] = useState<SupplyReferenceData>(() =>
     getSupplyReferenceData()
   );
@@ -70,7 +101,13 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
     const dataInputs = getProjectDataInputs(projectId);
     const costPools = getProjectCostPools(projectId);
     const allocationMethods = getProjectAllocationMethods(projectId);
+    const selectedCustomerClass =
+      dataInputs.rows[0]?.customerClass ?? defaultSupplyEnergyApplication.customerClass;
 
+    setSupplyEnergyApplication((current) => ({
+      ...current,
+      customerClass: current.customerClass || selectedCustomerClass
+    }));
     setCalculationResult(
       calculateTariffs({
         projectId,
@@ -105,6 +142,33 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
     () => calculationResult.classResults.some((row) => row.totalAllocatedCost > 0),
     [calculationResult.classResults]
   );
+  const projectCalculationInputs = useMemo(
+    () => ({
+      dataInputs: getProjectDataInputs(projectId),
+      costPools: getProjectCostPools(projectId),
+      allocationMethods: getProjectAllocationMethods(projectId)
+    }),
+    [projectId]
+  );
+  const supplyEnergyResult = useMemo(
+    () => calculateSupplyEnergyApplication(supplyEnergyApplication),
+    [supplyEnergyApplication]
+  );
+  const recalculatedResult = useMemo(
+    () =>
+      calculateTariffs({
+        projectId,
+        dataInputRows: projectCalculationInputs.dataInputs.rows,
+        costPoolRows: projectCalculationInputs.costPools.rows,
+        allocationRows: projectCalculationInputs.allocationMethods.rows,
+        supplyEnergyRows: applySupplyEnergy ? [supplyEnergyResult.tariffRow] : []
+      }),
+    [applySupplyEnergy, projectCalculationInputs, projectId, supplyEnergyResult.tariffRow]
+  );
+
+  useEffect(() => {
+    setCalculationResult(recalculatedResult);
+  }, [recalculatedResult]);
   const supplyReferenceIssues = useMemo(
     () =>
       getSupplyReferenceReviewIssues(
@@ -187,6 +251,196 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
         </div>
       ) : null}
 
+      <div className="rounded-md border border-line bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h2 className="font-semibold">Supply energy / kWh application</h2>
+            <p className="mt-2 text-sm leading-6 text-ink/70">
+              Build a supply p/kWh rate from component loss positions, review the calculated customer
+              rate, then explicitly include it in the Energy / kWh tariff calculation for this view.
+            </p>
+          </div>
+          <label className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-semibold">
+            <input
+              type="checkbox"
+              checked={applySupplyEnergy}
+              onChange={(event) => setApplySupplyEnergy(event.target.checked)}
+            />
+            Apply to tariff
+          </label>
+        </div>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <label className="text-sm font-medium">
+            Customer class
+            <select
+              value={supplyEnergyApplication.customerClass}
+              className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
+              onChange={(event) =>
+                setSupplyEnergyApplication((current) => ({
+                  ...current,
+                  customerClass: event.target.value
+                }))
+              }
+            >
+              {projectCalculationInputs.dataInputs.rows.map((row) => (
+                <option key={row.id}>{row.customerClass}</option>
+              ))}
+            </select>
+          </label>
+          <NumberInput
+            label="NBP p/kWh"
+            value={supplyEnergyApplication.nbpPencePerKwh}
+            onChange={(value) =>
+              setSupplyEnergyApplication((current) => ({
+                ...current,
+                nbpPencePerKwh: value
+              }))
+            }
+          />
+          <NumberInput
+            label="GSP p/kWh"
+            value={supplyEnergyApplication.gspPencePerKwh}
+            onChange={(value) =>
+              setSupplyEnergyApplication((current) => ({
+                ...current,
+                gspPencePerKwh: value
+              }))
+            }
+          />
+          <NumberInput
+            label="CM / site p/kWh"
+            value={
+              supplyEnergyApplication.cmPencePerKwh +
+              supplyEnergyApplication.siteMeterPencePerKwh
+            }
+            onChange={(value) =>
+              setSupplyEnergyApplication((current) => ({
+                ...current,
+                cmPencePerKwh: value,
+                siteMeterPencePerKwh: 0
+              }))
+            }
+          />
+          <NumberInput
+            label="TLM"
+            value={supplyEnergyApplication.transmissionLossMultiplier}
+            step="0.000001"
+            onChange={(value) =>
+              setSupplyEnergyApplication((current) => ({
+                ...current,
+                transmissionLossMultiplier: value || 1
+              }))
+            }
+          />
+          <NumberInput
+            label="DNO loss factor"
+            value={supplyEnergyApplication.dnoDistributionLossFactor}
+            step="0.000001"
+            onChange={(value) =>
+              setSupplyEnergyApplication((current) => ({
+                ...current,
+                dnoDistributionLossFactor: value || 1
+              }))
+            }
+          />
+          <label className="text-sm font-medium">
+            Network level
+            <select
+              value={supplyEnergyApplication.networkLevel}
+              className="mt-1 w-full rounded-md border border-line bg-white px-3 py-2 text-sm"
+              onChange={(event) =>
+                setSupplyEnergyApplication((current) => ({
+                  ...current,
+                  networkLevel: event.target.value as SupplyEnergyNetworkLevel
+                }))
+              }
+            >
+              <option>Site Meter</option>
+              <option>EHV</option>
+              <option>HV</option>
+              <option>LV</option>
+            </select>
+          </label>
+          <NumberInput
+            label="EHV loss"
+            value={supplyEnergyApplication.ehvLossMultiplier}
+            step="0.000001"
+            onChange={(value) =>
+              setSupplyEnergyApplication((current) => ({
+                ...current,
+                ehvLossMultiplier: value || 1
+              }))
+            }
+          />
+          <NumberInput
+            label="HV loss"
+            value={supplyEnergyApplication.hvLossMultiplier}
+            step="0.000001"
+            onChange={(value) =>
+              setSupplyEnergyApplication((current) => ({
+                ...current,
+                hvLossMultiplier: value || 1
+              }))
+            }
+          />
+          <NumberInput
+            label="LV loss"
+            value={supplyEnergyApplication.lvLossMultiplier}
+            step="0.000001"
+            onChange={(value) =>
+              setSupplyEnergyApplication((current) => ({
+                ...current,
+                lvLossMultiplier: value || 1
+              }))
+            }
+          />
+          <NumberInput
+            label="Profit multiplier"
+            value={supplyEnergyApplication.profitMultiplier}
+            step="0.000001"
+            onChange={(value) =>
+              setSupplyEnergyApplication((current) => ({
+                ...current,
+                profitMultiplier: value || 1
+              }))
+            }
+          />
+          <label className="text-sm font-medium md:col-span-2">
+            Source label
+            <input
+              value={supplyEnergyApplication.sourceLabel}
+              className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm"
+              onChange={(event) =>
+                setSupplyEnergyApplication((current) => ({
+                  ...current,
+                  sourceLabel: event.target.value
+                }))
+              }
+            />
+          </label>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-4">
+          <SummaryMetric
+            label="Site meter p/kWh"
+            value={`${formatNumber(supplyEnergyResult.supplyCost.siteMeterPencePerKwh)} p/kWh`}
+          />
+          <SummaryMetric
+            label="Private loss multiplier"
+            value={formatNumber(supplyEnergyResult.supplyCost.privateNetworkLossMultiplier)}
+          />
+          <SummaryMetric
+            label="Customer p/kWh"
+            value={`${formatNumber(supplyEnergyResult.supplyCost.finalPencePerKwh)} p/kWh`}
+          />
+          <SummaryMetric
+            label="Tariff impact"
+            value={applySupplyEnergy ? "Included" : "Preview only"}
+          />
+        </div>
+      </div>
+
       <div className="overflow-hidden rounded-md border border-line bg-white shadow-sm">
         <div className="border-b border-line p-4">
           <h2 className="font-semibold">Indicative tariff outputs</h2>
@@ -235,11 +489,46 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
           <li>Recoverable cost equals annual cost multiplied by recoverable percentage.</li>
           <li>Allocated cost follows each cost pool allocation method and customer-class share.</li>
           <li>Energy rates include energy and pass-through components divided by annual kWh.</li>
+          <li>Supply energy p/kWh is included only when explicitly applied in this calculation view.</li>
           <li>Rows needing review indicate allocation rules that do not total 100%.</li>
         </ul>
       </div>
 
       <TariffAuditTracePanel entries={calculationResult.auditTrace} />
+    </div>
+  );
+}
+
+function NumberInput({
+  label,
+  value,
+  step = "0.0001",
+  onChange
+}: {
+  label: string;
+  value: number;
+  step?: string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="text-sm font-medium">
+      {label}
+      <input
+        type="number"
+        value={value}
+        step={step}
+        className="mt-1 w-full rounded-md border border-line px-3 py-2 text-sm"
+        onChange={(event) => onChange(parseNumber(event.target.value))}
+      />
+    </label>
+  );
+}
+
+function SummaryMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-line bg-field p-3">
+      <p className="text-xs font-semibold uppercase text-ink/50">{label}</p>
+      <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
   );
 }
