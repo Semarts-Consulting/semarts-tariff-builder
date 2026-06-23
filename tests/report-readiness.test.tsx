@@ -218,5 +218,56 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(html).toContain("Ready for review");
     expect(html).toContain("Tariff schedule");
     expect(html).toContain("Calculation audit trace");
+    expect(html).toContain("Supply evidence only");
+    expect(html).toContain("Not tariff-impacting");
+    expect(html).toContain("Supplier standing charge");
+  });
+
+  it("downloads non-ready HTML containing readiness issues and revenue variance", async () => {
+    let downloadedBlob: Blob | undefined;
+    let downloadedFileName = "";
+    const createObjectUrlMock = vi.fn((blob: Blob) => {
+      downloadedBlob = blob;
+      return "blob:non-ready-report";
+    });
+    const revokeObjectUrlMock = vi.fn();
+
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createObjectUrlMock
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectUrlMock
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function click(
+      this: HTMLAnchorElement
+    ) {
+      downloadedFileName = this.download;
+    });
+
+    const container = await renderReport("report-non-ready-project");
+
+    await act(async () => {
+      getButton(container, "Download HTML").dispatchEvent(
+        new MouseEvent("click", { bubbles: true })
+      );
+    });
+
+    expect(createObjectUrlMock).toHaveBeenCalledOnce();
+    expect(revokeObjectUrlMock).toHaveBeenCalledWith("blob:non-ready-report");
+    expect(downloadedFileName).toBe("report-non-ready-project-tariff-report.html");
+    expect(downloadedBlob).toBeDefined();
+
+    const html = await downloadedBlob?.text();
+    expect(html).toContain("<!doctype html>");
+    expect(html).toContain("Non-ready report project tariff report");
+    expect(html).toContain("Needs correction");
+    expect(html).toContain("Readiness items");
+    expect(html).toContain("Revenue variance");
+    expect(html).toContain("Allocation method was created automatically");
+    expect(html).toContain("Allocation class shares must total 100%.");
+    expect(html).toContain("Allocation methods require at least one customer-class share.");
+    expect(html).toContain("Revenue recovered: No");
   });
 });

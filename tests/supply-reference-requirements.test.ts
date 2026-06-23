@@ -77,6 +77,50 @@ describe("getSupplyReferenceRequirementQueue", () => {
     });
     expect(queue[0].mpans).toEqual(["1000000000000", "1000000000001"]);
   });
+
+  it("deduplicates formatted MPANs after normalisation", () => {
+    const inputs = createDefaultMethodologyInputs(project.id);
+    inputs.supplyDetails = [
+      createSupply("10 0000 0000 000"),
+      createSupply("1000000000000")
+    ];
+
+    const queue = getSupplyReferenceRequirementQueue({
+      projects: [project],
+      methodologyInputs: [inputs],
+      referenceData: withPendingReferenceData()
+    });
+
+    expect(queue).toHaveLength(1);
+    expect(queue[0].mpans).toEqual(["1000000000000"]);
+  });
+
+  it("queues unknown DNO requirements without source document metadata", () => {
+    const inputs = createDefaultMethodologyInputs(project.id);
+    inputs.supplyDetails = [createSupply("9900000000000")];
+
+    const queue = getSupplyReferenceRequirementQueue({
+      projects: [project],
+      methodologyInputs: [inputs],
+      referenceData: createDefaultSupplyReferenceData()
+    });
+
+    expect(queue).toEqual([
+      {
+        id: "99|unknown-year|Unknown",
+        distributorId: "99",
+        networkArea: "Unknown",
+        chargingYear: "",
+        requiresTimeOfUseReview: true,
+        requiresLossesReview: true,
+        sourceDocumentTitle: "",
+        sourceDocumentUrl: "",
+        sourceNotes: "",
+        mpans: ["9900000000000"],
+        projectNames: ["Test project"]
+      }
+    ]);
+  });
 });
 
 describe("getSupplyReferenceExtractionTaskId", () => {

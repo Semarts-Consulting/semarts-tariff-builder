@@ -94,6 +94,41 @@ describe("getSupplyReferenceReviewIssues", () => {
     });
   });
 
+  it("normalises formatted MPANs before checking reference review status", () => {
+    const referenceData = withPendingDistributor(createDefaultSupplyReferenceData(), "10");
+
+    const issues = getSupplyReferenceReviewIssues(
+      [createSupply("10 0000 0000 000")],
+      referenceData
+    );
+
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      mpan: "1000000000000",
+      distributorId: "10",
+      networkArea: "Eastern England",
+      chargingYear: "2026/27"
+    });
+  });
+
+  it("flags valid MPANs that do not match a configured DNO network area", () => {
+    const referenceData = createDefaultSupplyReferenceData();
+
+    const issues = getSupplyReferenceReviewIssues([createSupply("9900000000000")], referenceData);
+
+    expect(issues).toEqual([
+      {
+        supplyId: "supply-9900000000000",
+        mpan: "9900000000000",
+        distributorId: "99",
+        networkArea: "Unknown",
+        chargingYear: "",
+        status: "Missing",
+        message: "MPAN 9900000000000 does not match a configured DNO/network area."
+      }
+    ]);
+  });
+
   it("ignores incomplete MPANs because input validation handles them separately", () => {
     const referenceData = createDefaultSupplyReferenceData();
 
@@ -129,5 +164,27 @@ describe("getSupplyReferenceRequirements", () => {
     );
 
     expect(requirements).toHaveLength(0);
+  });
+
+  it("requires TOU and losses review for a valid MPAN with no configured DNO network area", () => {
+    const referenceData = createDefaultSupplyReferenceData();
+
+    const requirements = getSupplyReferenceRequirements(
+      [createSupply("9900000000000")],
+      referenceData
+    );
+
+    expect(requirements).toEqual([
+      {
+        supplyId: "supply-9900000000000",
+        mpan: "9900000000000",
+        distributorId: "99",
+        networkArea: "Unknown",
+        chargingYear: "",
+        requiresTimeOfUseReview: true,
+        requiresLossesReview: true,
+        message: "MPAN 9900000000000 does not match a configured DNO/network area."
+      }
+    ]);
   });
 });

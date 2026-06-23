@@ -37,6 +37,7 @@ function createOverheadRow(
 describe("indirect overhead import", () => {
   it("validates the expected template headers", () => {
     expect(validateIndirectOverheadHeaders(indirectOverheadHeaders)).toBe(true);
+    expect(validateIndirectOverheadHeaders([" description ", "ANNUAL COST"])).toBe(true);
     expect(validateIndirectOverheadHeaders(["Annual Cost", "Description"])).toBe(false);
   });
 
@@ -57,6 +58,28 @@ describe("indirect overhead import", () => {
       sourceFileName: "overheads.xlsx",
       importBatchId: "overhead-batch-1"
     });
+  });
+
+  it("skips blank workbook rows while preserving later validation row numbers", () => {
+    const result = parseIndirectOverheadRows(
+      [
+        indirectOverheadHeaders,
+        ["", ""],
+        createWorkbookRow({ description: "", annualCost: "not a number" }),
+        createWorkbookRow({ description: "Insurance overhead", annualCost: "9,500.25" })
+      ],
+      "overheads.xlsx",
+      "2026-06-21T10:00:00.000Z",
+      "overhead-batch-1"
+    );
+
+    expect(result.parsedRows).toHaveLength(1);
+    expect(result.parsedRows[0]).toMatchObject({
+      description: "Insurance overhead",
+      annualCost: 9500.25
+    });
+    expect(result.errors).toContain("Row 3: Description is required.");
+    expect(result.errors).toContain("Row 3: Annual Cost must be zero or greater.");
   });
 
   it("returns row-level errors without importing invalid rows", () => {

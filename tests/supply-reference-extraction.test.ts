@@ -129,4 +129,47 @@ describe("parseSupplyReferenceExtractionWorkbook", () => {
       ])
     );
   });
+
+  it("skips blank rows and normalises confidence values", () => {
+    const result = parseSupplyReferenceExtractionWorkbook({
+      fileName: "source.xlsx",
+      uploadedAt: "2026-06-21T00:00:00.000Z",
+      touRows: [
+        [...supplyReferenceTouCandidateHeaders],
+        ["", "", "", "", "", "", "", "", "", ""],
+        [
+          "10",
+          "2026/27",
+          "Green",
+          "Monday",
+          "Yes",
+          "March",
+          "00:00",
+          "07:00",
+          "",
+          85
+        ]
+      ],
+      lossRows: [
+        [...supplyReferenceLossCandidateHeaders],
+        ["", "", "", "", "", "", "", ""],
+        ["10", "2026/27", "HV", "HV losses", 1.5, 1.015, "", 1.5]
+      ]
+    });
+
+    expect(result.errors).toEqual([]);
+    expect(result.touCandidates).toHaveLength(1);
+    expect(result.lossCandidates).toHaveLength(1);
+    expect(result.touCandidates[0]).toMatchObject({
+      bandName: "Green",
+      appliesOnBankHolidays: true,
+      sourceReference: "source.xlsx",
+      confidence: 0.85
+    });
+    expect(result.lossCandidates[0]).toMatchObject({
+      voltage: "HV",
+      sourceReference: "source.xlsx",
+      confidence: 0.015
+    });
+  });
 });

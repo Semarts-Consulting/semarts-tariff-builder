@@ -4,26 +4,26 @@
 
 Date: 2026-06-22
 
-Branch: `codex/workbook-derived-scenario-plan`
+Branch: Git not used during long-run working-tree session.
 
-Working tree status: workbook-derived scenario plan in progress.
+Working tree status: WB-001, WB-002, WB-003, WB-004, and WB-006 test-only workbook-derived scenario coverage, WB-005 proposal, and non-ready report export regression completed in the working tree.
 
-Latest full checks on `main` after PR #51:
+Latest full checks in the current working tree after long-run packages:
 
 - `npm.cmd run lint`: passed.
 - `npx.cmd tsc --noEmit --incremental false`: passed.
-- `npm.cmd test`: passed, 16 test files and 98 tests.
+- `npm.cmd test`: passed, 19 test files and 126 tests.
 - `npm.cmd run build`: passed.
 
-PRs #1 through #51 have been merged to `main`. The current branch plans representative workbook-derived scenarios before any implementation work.
+PRs #1 through #52 have been merged to `main`. Current uncommitted working-tree work is docs/test-only and has not used Git.
 
-MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: workbook-derived scenario plan.
+MVP timeline tracking is maintained in `docs/MVP_TIMELINE_TRACKER.md` and must be reported in future handoffs. Current active milestone: workbook-derived scenario coverage and post-MVP defensibility hardening.
 
 ## Operating Mode
 
-Current package ownership: Manager-led documentation proposal.
+Current package ownership: Manager-led docs/test-only packages.
 
-Reason: this is a documentation-only scenario planning package before any fixture, test, import, or calculation implementation. It does not change production calculation semantics, import behavior, UI/report behavior, test fixtures, storage, exports, or shared DTO contracts.
+Reason: the current work adds local fixtures, regression tests, and planning documents only. It does not change production calculation semantics, import behavior, UI/report behavior, storage, exports, or shared DTO contracts.
 
 Future package rule:
 
@@ -210,6 +210,14 @@ Review risks:
 - Methodology configuration contract concepts are proposed in `docs/METHODOLOGY_CONFIGURATION_CONTRACT_PROPOSAL.md`. They are non-binding until owner and workstream review.
 - Workbook source mapping concepts are proposed in `docs/WORKBOOK_SOURCE_MAPPING_PROPOSAL.md`. They are non-binding until Data Import, QA, and PM review.
 - Representative workbook-derived scenarios are planned in `docs/WORKBOOK_DERIVED_SCENARIO_PLAN.md`. No fixtures or tests are approved by that plan alone.
+- WB-001 airport customer-class scenario expectations are proposed in `docs/WB_001_AIRPORT_CUSTOMER_CLASS_SCENARIO.md`. No fixtures, tests, imports, calculations, storage, reports, exports, shared DTOs, or UI changes are approved by that proposal alone.
+- WB-001 is implemented as test-only workbook-derived scenario coverage in `tests/fixtures/workbook-derived-scenarios.ts` and `tests/workbook-derived-scenarios.test.ts`. It uses existing `peakDemandKw`/Demand calculation behaviour for approved capacity values and does not change production contracts.
+- WB-006 is implemented as test-only weak mapping confidence coverage. Low-confidence, unresolved, evidence-only, and manual-review rows remain local fixture metadata and do not feed tariff calculation inputs.
+- WB-002 is implemented as test-only TLM/local loss evidence coverage. Loss-adjusted evidence remains local fixture metadata and does not uplift `annualKwh` passed into `calculateTariffs`.
+- WB-003 is implemented as test-only port tenant recovery forecast coverage. Tenant names, tariff model references, customer references, SA numbers, forecast kWh, and forecast recovery amounts remain local fixture metadata and do not automatically become tariff customer classes, cost pools, or revenue requirements.
+- WB-004 is implemented as test-only generation/export evidence coverage. Generation/export volumes and credit evidence remain local fixture metadata and do not net consumption, reduce recoverable cost, or change revenue requirement.
+- WB-005 asset allocation remains proposal-only. Asset chargeability and annual amount treatment require owner approval before any fixture or production implementation.
+- Non-ready report HTML export coverage now asserts readiness issues, revenue variance, and validation messages are preserved in downloaded stakeholder report HTML.
 
 ## QA Staging Warnings
 
@@ -263,4 +271,4 @@ Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECIS
 
 ## Immediate Next Action
 
-Review and commit the workbook-derived scenario plan, then provide normal-PowerShell push and PR commands for `codex/workbook-derived-scenario-plan`.
+Review the long-run working-tree changes, restore Git process when appropriate, and split the docs/test-only work into reviewable commits. Do not start production methodology, import, storage, report total, export, shared DTO, or UI behaviour changes until the relevant decision pack is approved.

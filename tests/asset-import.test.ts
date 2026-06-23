@@ -67,6 +67,18 @@ function createAssetRow(overrides: Partial<AssetInput> = {}): AssetInput {
 describe("asset import", () => {
   it("validates the expected template headers", () => {
     expect(validateAssetHeaders(assetDataHeaders)).toBe(true);
+    expect(
+      validateAssetHeaders([
+        " description ",
+        "ASSET CATEGORY",
+        " electrical distribution asset? ",
+        "chargeable on electricity tariff?",
+        " hv / lv ",
+        "NETWORK LEVEL",
+        " life years ",
+        "asset value"
+      ])
+    ).toBe(true);
     expect(validateAssetHeaders(["Description", "Asset Value"])).toBe(false);
   });
 
@@ -107,6 +119,38 @@ describe("asset import", () => {
       sourceFileName: "assets.xlsx",
       importBatchId: "asset-batch-1"
     });
+  });
+
+  it("skips blank workbook rows while preserving validation row numbers", () => {
+    const result = parseAssetRows(
+      [
+        assetDataHeaders,
+        ["", "", "", "", "", "", "", ""],
+        createWorkbookRow({
+          description: "",
+          assetCategory: "",
+          isChargeableOnElectricityTariff: "Maybe"
+        }),
+        createWorkbookRow({
+          description: "Switchgear B",
+          priorYearAssetValue: 75000
+        })
+      ],
+      "assets.xlsx",
+      "2026-06-21T10:00:00.000Z",
+      "asset-batch-1"
+    );
+
+    expect(result.parsedRows).toHaveLength(1);
+    expect(result.parsedRows[0]).toMatchObject({
+      description: "Switchgear B",
+      priorYearAssetValue: 75000
+    });
+    expect(result.errors).toContain("Row 3: Description is required.");
+    expect(result.errors).toContain("Row 3: Asset Category is required.");
+    expect(result.errors).toContain(
+      "Row 3: Chargeable on electricity tariff must be Yes or No."
+    );
   });
 
   it("returns row-level errors without importing invalid rows", () => {

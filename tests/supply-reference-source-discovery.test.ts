@@ -29,4 +29,27 @@ describe("discoverUkpnSourceLinks", () => {
     expect(result.matchedLinks).toHaveLength(0);
     expect(result.notes).toContain("review the source page manually");
   });
+
+  it("deduplicates resolved URLs and decodes HTML entities in titles and links", () => {
+    const result = discoverUkpnSourceLinks(
+      `
+        <a href="/documents/duos-charges-2026-27.pdf?name=charges&amp;year=2026">DUoS &amp; charges 2026/27</a>
+        <a href="https://www.ukpowernetworks.co.uk/documents/duos-charges-2026-27.pdf?name=charges&amp;year=2026">Duplicate DUoS charges</a>
+        <a href="/documents/charging-statement-2027.pdf">Charging &amp; Statement 2027</a>
+      `,
+      "https://www.ukpowernetworks.co.uk/our-company/distribution-use-of-system-charges"
+    );
+
+    expect(result.matchedLinks).toEqual([
+      {
+        title: "Charging & Statement 2027",
+        url: "https://www.ukpowernetworks.co.uk/documents/charging-statement-2027.pdf"
+      },
+      {
+        title: "Duplicate DUoS charges",
+        url: "https://www.ukpowernetworks.co.uk/documents/duos-charges-2026-27.pdf?name=charges&year=2026"
+      }
+    ]);
+    expect(result.notes).toContain("UKPN source discovery found 2");
+  });
 });
