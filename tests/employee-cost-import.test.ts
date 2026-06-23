@@ -45,6 +45,7 @@ function createEmployeeCostRow(overrides: Partial<EmployeeCostInput> = {}): Empl
 describe("employee cost import", () => {
   it("validates the expected template headers", () => {
     expect(validateEmployeeCostHeaders(employeeCostHeaders)).toBe(true);
+    expect(validateEmployeeCostHeaders([" role ", "ROLE TYPE", " fte ", " % time "])).toBe(true);
     expect(validateEmployeeCostHeaders(["Role Type", "Role", "FTE", "% Time"])).toBe(false);
   });
 
@@ -73,6 +74,29 @@ describe("employee cost import", () => {
       sourceFileName: "employee-costs.xlsx",
       importBatchId: "employee-cost-batch-1"
     });
+  });
+
+  it("skips blank workbook rows while preserving later validation row numbers", () => {
+    const result = parseEmployeeCostRows(
+      [
+        employeeCostHeaders,
+        ["", "", "", ""],
+        createWorkbookRow({ role: "", fte: "not a number" }),
+        createWorkbookRow({ role: "Network Analyst", fte: "1.5", timePercent: "25" })
+      ],
+      "employee-costs.xlsx",
+      "2026-06-21T10:00:00.000Z",
+      "employee-cost-batch-1"
+    );
+
+    expect(result.parsedRows).toHaveLength(1);
+    expect(result.parsedRows[0]).toMatchObject({
+      role: "Network Analyst",
+      fte: 1.5,
+      timePercent: 25
+    });
+    expect(result.errors).toContain("Row 3: Role is required.");
+    expect(result.errors).toContain("Row 3: FTE must be zero or greater.");
   });
 
   it("returns row-level errors without importing invalid rows", () => {

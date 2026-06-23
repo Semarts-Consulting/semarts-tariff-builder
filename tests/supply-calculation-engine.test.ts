@@ -542,6 +542,55 @@ describe("normaliseSupplyCharges", () => {
       "excluded-pass-through"
     ]);
   });
+
+  it("keeps invalid, unresolved, and excluded fixed recovery lines out of evidence totals", () => {
+    const chargeLines: NormalisedSupplyChargeLine[] = [
+      evidenceLine({
+        id: "normalised-fixed",
+        recoveryTreatment: "Fixed Recovery",
+        status: "Normalised",
+        annualAmount: 100
+      }),
+      evidenceLine({
+        id: "invalid-fixed",
+        recoveryTreatment: "Fixed Recovery",
+        status: "Invalid",
+        annualAmount: 999
+      }),
+      evidenceLine({
+        id: "unresolved-fixed",
+        recoveryTreatment: "Fixed Recovery",
+        status: "Needs business rule",
+        annualAmount: 500
+      }),
+      evidenceLine({
+        id: "excluded-fixed",
+        recoveryTreatment: "Fixed Recovery",
+        status: "Excluded",
+        annualAmount: 250
+      })
+    ];
+
+    const reconciliation = reconcileSupplyEvidence(chargeLines);
+
+    expect(reconciliation.fixedRecoveryAnnualAmount).toBe(100);
+    expect(reconciliation.normalisedLineCount).toBe(1);
+    expect(reconciliation.invalidLineCount).toBe(1);
+    expect(reconciliation.unresolvedLineCount).toBe(1);
+    expect(reconciliation.excludedLineCount).toBe(1);
+    expect(reconciliation.fixedRecoveryLines.map((line) => line.id)).toEqual([
+      "normalised-fixed"
+    ]);
+    expect(reconciliation.invalidLines.map((line) => line.id)).toEqual([
+      "invalid-fixed"
+    ]);
+    expect(reconciliation.unresolvedLines.map((line) => line.id)).toEqual([
+      "unresolved-fixed"
+    ]);
+    expect(reconciliation.excludedLines.map((line) => line.id)).toEqual([
+      "excluded-fixed"
+    ]);
+  });
 });
 
 function evidenceLine(

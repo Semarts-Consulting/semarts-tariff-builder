@@ -47,6 +47,14 @@ function createImportRow(overrides: Partial<HalfHourlyImportRow> = {}): HalfHour
 describe("boundary meter import", () => {
   it("validates the expected template headers", () => {
     expect(validateBoundaryHeaders(boundaryMeterHeaders)).toBe(true);
+    expect(
+      validateBoundaryHeaders([
+        " mpan ",
+        "DATE",
+        " total kwh ",
+        ...Array.from({ length: 48 }, (_, index) => ` ${index + 1} `)
+      ])
+    ).toBe(true);
     expect(validateBoundaryHeaders(["Date", "MPAN", "Total kWh"])).toBe(false);
   });
 
@@ -68,6 +76,28 @@ describe("boundary meter import", () => {
       importBatchId: "batch-1"
     });
     expect(result.parsedRows[1]?.date).toBe("2026-04-02");
+  });
+
+  it("skips blank workbook rows while preserving later validation row numbers", () => {
+    const result = parseBoundaryMeterRows(
+      [
+        boundaryMeterHeaders,
+        ["", "", "", ...Array.from({ length: 48 }, () => "")],
+        createWorkbookRow({ mpan: "", totalKwh: Number.NaN }),
+        createWorkbookRow({ mpan: "1234567890123", totalKwh: 48 })
+      ],
+      "hh.xlsx",
+      "2026-06-21T10:00:00.000Z",
+      "batch-1"
+    );
+
+    expect(result.parsedRows).toHaveLength(1);
+    expect(result.parsedRows[0]).toMatchObject({
+      mpan: "1234567890123",
+      totalKwh: 48
+    });
+    expect(result.errors).toContain("Row 3: MPAN is required.");
+    expect(result.errors).toContain("Row 3: Total kWh must be numeric.");
   });
 
   it("returns row-level errors while preserving existing short-row import behavior", () => {

@@ -41,6 +41,7 @@ function createDirectCostRow(overrides: Partial<DirectCostInput> = {}): DirectCo
 describe("direct cost import", () => {
   it("validates the expected template headers", () => {
     expect(validateDirectCostHeaders(directCostHeaders)).toBe(true);
+    expect(validateDirectCostHeaders([" description ", "COST BY TYPE", " annual value "])).toBe(true);
     expect(validateDirectCostHeaders(["Cost by Type", "Description", "Annual Value"])).toBe(false);
   });
 
@@ -62,6 +63,28 @@ describe("direct cost import", () => {
       sourceFileName: "direct-costs.xlsx",
       importBatchId: "direct-cost-batch-1"
     });
+  });
+
+  it("skips blank workbook rows without changing later row numbers", () => {
+    const result = parseDirectCostRows(
+      [
+        directCostHeaders,
+        ["", "", ""],
+        createWorkbookRow({ description: "", annualValue: "not a number" }),
+        createWorkbookRow({ description: "Security contractor", annualValue: "12,500.50" })
+      ],
+      "direct-costs.xlsx",
+      "2026-06-21T10:00:00.000Z",
+      "direct-cost-batch-1"
+    );
+
+    expect(result.parsedRows).toHaveLength(1);
+    expect(result.parsedRows[0]).toMatchObject({
+      description: "Security contractor",
+      annualValue: 12500.5
+    });
+    expect(result.errors).toContain("Row 3: Description is required.");
+    expect(result.errors).toContain("Row 3: Annual Value must be zero or greater.");
   });
 
   it("returns row-level errors without importing invalid rows", () => {

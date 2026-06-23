@@ -532,6 +532,32 @@ describe("calculateTariffs", () => {
     );
   });
 
+  it("validates duplicate customer classes after trimming whitespace", () => {
+    const result = calculateTariffs({
+      projectId: "project",
+      dataInputRows: [
+        dataInputRows[0],
+        {
+          ...dataInputRows[1],
+          id: "duplicate-residential-whitespace",
+          customerClass: " Residential "
+        }
+      ],
+      costPoolRows: [costPoolRows[0]],
+      allocationRows: [balancedAllocationRows[0]]
+    });
+
+    expect(result.classResults.map((row) => row.customerClass)).toEqual(["Residential"]);
+    expect(result.validationIssues).toContainEqual(
+      expect.objectContaining({
+        code: "Duplicate customer class",
+        severity: "Error",
+        customerClass: "Residential",
+        rowId: "duplicate-residential-whitespace"
+      })
+    );
+  });
+
   it("validates missing customer classes in data inputs", () => {
     const result = calculateTariffs({
       projectId: "project",
@@ -663,6 +689,33 @@ describe("calculateTariffs", () => {
           customerClass: " "
         })
       ])
+    );
+  });
+
+  it("validates duplicate allocation shares after trimming customer-class whitespace", () => {
+    const result = calculateTariffs({
+      projectId: "project",
+      dataInputRows,
+      costPoolRows: [costPoolRows[0]],
+      allocationRows: [
+        {
+          ...balancedAllocationRows[0],
+          classShares: [
+            { customerClass: "Residential", percent: 50 },
+            { customerClass: " Residential ", percent: 50 }
+          ]
+        }
+      ]
+    });
+
+    expect(result.validationIssues).toContainEqual(
+      expect.objectContaining({
+        code: "Duplicate allocation share",
+        severity: "Error",
+        rowId: "allocation-fixed",
+        customerClass: "Residential",
+        costPoolId: "fixed-cost"
+      })
     );
   });
 
