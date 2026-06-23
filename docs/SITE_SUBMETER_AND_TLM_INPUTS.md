@@ -43,6 +43,18 @@ Each record includes:
 
 Monthly, quarterly and annual records are stored in their original form. They are not profiled into half-hourly data in this package. Any future conversion should be implemented as a transparent calculation with an explicit profiling basis and audit trace.
 
+## Import Templates
+
+The Site Submeters screen provides downloadable Excel templates for:
+
+- Site submeter register.
+- Submeter consumption.
+- Transmission Loss Multipliers.
+
+The templates use the exact headers expected by the import parsers. Each template contains clearly marked example rows using `EXAMPLE-DELETE-ME` or `Example row - delete or replace before import` placeholders. These rows are safe synthetic examples only and should be deleted or replaced before importing real project data.
+
+CSV support is not included in the current package because the existing app import pattern is Excel workbook based. CSV can be added later using the same parser contracts if users prefer CSV templates.
+
 ## Transmission Loss Multipliers
 
 Transmission Loss Multiplier records include:

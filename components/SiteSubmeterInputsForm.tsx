@@ -2,11 +2,19 @@
 
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { readSheet } from "read-excel-file/browser";
+import writeXlsxFile from "write-excel-file/browser";
+import type { SheetData } from "write-excel-file/browser";
 import { isProjectArchived } from "@/lib/project-state";
 import {
   getProjectMethodologyInputs,
   saveProjectMethodologyInputs
 } from "@/lib/project-storage";
+import {
+  createSiteSubmeterRegisterTemplate,
+  createSubmeterConsumptionTemplate,
+  createTransmissionLossMultiplierTemplate
+} from "@/lib/submeter-import-templates";
+import type { WorkbookTemplate } from "@/lib/submeter-import-templates";
 import {
   consumptionFormats,
   createSiteSubmeterRecord,
@@ -63,6 +71,16 @@ function inputClass() {
 
 function selectClass() {
   return "w-full rounded-md border border-line bg-white px-2 py-1 text-sm";
+}
+
+function workbookRowsToSheetData(template: WorkbookTemplate): SheetData {
+  return template.rows.map((row, rowIndex) =>
+    row.map((value) => ({
+      value,
+      type: typeof value === "number" ? Number : String,
+      fontWeight: rowIndex === 0 ? "bold" : undefined
+    }))
+  );
 }
 
 export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProps) {
@@ -276,6 +294,13 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
     event.target.value = "";
   }
 
+  async function downloadTemplate(template: WorkbookTemplate) {
+    const file = await writeXlsxFile(workbookRowsToSheetData(template), {
+      sheet: template.sheetName
+    });
+    await file.toFile(template.fileName);
+  }
+
   return (
     <div className="mt-8 space-y-6">
       <section className="rounded-md border border-line bg-white p-5">
@@ -300,6 +325,21 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
               className="rounded-md bg-semarts px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
               Add meter
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                downloadTemplate(createSiteSubmeterRegisterTemplate()).catch((error: unknown) => {
+                  setImportMessages([
+                    error instanceof Error
+                      ? `Template download failed: ${error.message}`
+                      : "Template download failed."
+                  ]);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+            >
+              Download template
             </button>
             <label className="rounded-md border border-line px-3 py-2 text-sm font-semibold">
               Import Excel
@@ -435,6 +475,21 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
               className="rounded-md bg-semarts px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
               Add consumption
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                downloadTemplate(createSubmeterConsumptionTemplate()).catch((error: unknown) => {
+                  setImportMessages([
+                    error instanceof Error
+                      ? `Template download failed: ${error.message}`
+                      : "Template download failed."
+                  ]);
+                });
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+            >
+              Download template
             </button>
             <label className="rounded-md border border-line px-3 py-2 text-sm font-semibold">
               Import Excel
@@ -629,6 +684,23 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
               className="rounded-md bg-semarts px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
               Add TLM
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                downloadTemplate(createTransmissionLossMultiplierTemplate()).catch(
+                  (error: unknown) => {
+                    setImportMessages([
+                      error instanceof Error
+                        ? `Template download failed: ${error.message}`
+                        : "Template download failed."
+                    ]);
+                  }
+                );
+              }}
+              className="rounded-md border border-line px-3 py-2 text-sm font-semibold hover:border-semarts"
+            >
+              Download template
             </button>
             <label className="rounded-md border border-line px-3 py-2 text-sm font-semibold">
               Import Excel
