@@ -216,7 +216,7 @@ Review risks:
 - WB-002 is implemented as test-only TLM/local loss evidence coverage. Loss-adjusted evidence remains local fixture metadata and does not uplift `annualKwh` passed into `calculateTariffs`.
 - WB-003 is implemented as test-only port tenant recovery forecast coverage. Tenant names, tariff model references, customer references, SA numbers, forecast kWh, and forecast recovery amounts remain local fixture metadata and do not automatically become tariff customer classes, cost pools, or revenue requirements.
 - WB-004 is implemented as test-only generation/export evidence coverage. Generation/export volumes and credit evidence remain local fixture metadata and do not net consumption, reduce recoverable cost, or change revenue requirement.
-- WB-005 asset allocation remains proposal-only. Asset chargeability and annual amount treatment require owner approval before any fixture or production implementation.
+- WB-005 asset allocation has a decision pack in `docs/WB_005_ASSET_DECISION_PACK.md`. Recommended next step is owner approval for test-only fixture coverage using pre-set annual asset amounts only. Production asset valuation, annuity calculation, import parsing, storage, shared DTOs, report totals, exports, UI, and calculation behaviour remain blocked.
 - Non-ready report HTML export coverage now asserts readiness issues, revenue variance, and validation messages are preserved in downloaded stakeholder report HTML.
 
 ## QA Staging Warnings

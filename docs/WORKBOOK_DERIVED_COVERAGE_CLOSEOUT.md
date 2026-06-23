@@ -24,7 +24,7 @@ No production tariff calculation, import parser, storage, export, shared DTO, re
 
 | Scenario | Status | Reason Implementation Is Gated |
 | --- | --- | --- |
-| WB-005 asset-cost allocation | Proposal-only | Asset chargeability and annual amount treatment require owner approval. |
+| WB-005 asset-cost allocation | Decision pack prepared | Owner must approve whether test-only fixture coverage may use pre-set annual asset amounts. |
 
 ## Validation Evidence
 
@@ -42,7 +42,7 @@ Before production implementation, the owner should decide:
 1. Whether TLM/local losses should ever affect tariff billing volumes.
 2. Whether generation/export values should net consumption or create export credits.
 3. How tenant references map to tariff classes and recovery schedules.
-4. Which assets are chargeable through electricity tariffs.
+4. Whether WB-005 may proceed as test-only fixture coverage using pre-set annual asset amounts.
 5. Whether medium-confidence workbook mappings may feed calculations after review.
 6. How unresolved workbook evidence should affect report readiness.
 
@@ -65,5 +65,5 @@ Do not move straight into production implementation.
 Recommended next phase:
 
 1. Review this closeout and the individual scenario documents.
-2. Decide whether WB-005 asset allocation can be implemented as test-only coverage.
-3. Prepare a decision pack for production workbook source mapping only after the remaining test-only scenarios are agreed.
+2. Review `docs/WB_005_ASSET_DECISION_PACK.md` and approve, hold, or request a wider production methodology decision.
+3. Prepare a decision pack for production workbook source mapping only after WB-005 test-only coverage is agreed or explicitly held.
