@@ -93,6 +93,21 @@ export type WorkbookDerivedTenantRecoveryRow = {
   validationIssue: string | null;
 };
 
+export type WorkbookDerivedAssetEvidenceRow = {
+  id: string;
+  sourceWorkbook: string;
+  assetDescription: string;
+  assetCategory: string;
+  voltage: string;
+  localClass: string;
+  isElectricalDistributionAsset: boolean;
+  isChargeableOnElectricityTariff: boolean;
+  annualChargeAmount: number | null;
+  mappingConfidence: WorkbookMappingConfidence;
+  treatment: WorkbookMappingTreatment;
+  validationIssue: string | null;
+};
+
 export const wb001AirportScenarioDataInputRows: DataInputRow[] = [
   {
     id: "wb001-input-terminal-retail",
@@ -743,6 +758,158 @@ export const wb003PortTenantScenarioExpected = {
       fixedChargePerCustomer: 0,
       energyChargePerKwh: 0.06,
       demandChargePerKw: 0
+    }
+  }
+};
+
+export const wb005AssetAllocationScenarioDataInputRows: DataInputRow[] = [
+  {
+    id: "wb005-input-hv-users",
+    customerClass: "HV users",
+    customerCount: 4,
+    annualKwh: 500000,
+    peakDemandKw: 600,
+    notes:
+      "Reviewed customer class used to allocate pre-set annual asset charge amounts."
+  },
+  {
+    id: "wb005-input-lv-users",
+    customerClass: "LV users",
+    customerCount: 16,
+    annualKwh: 300000,
+    peakDemandKw: 200,
+    notes:
+      "Reviewed customer class used to allocate pre-set annual asset charge amounts."
+  }
+];
+
+export const wb005AssetAllocationScenarioCostPoolRows: CostPoolRow[] = [
+  {
+    id: "wb005-cost-chargeable-hv-asset",
+    name: "Chargeable HV distribution asset annual amount",
+    category: "Asset recovery",
+    annualAmount: 64000,
+    recoverablePercent: 100,
+    notes:
+      "Pre-set annual amount for test-only coverage. Not calculated from asset value, life, WACC, CPI, age, depreciation, or annuity factors."
+  }
+];
+
+export const wb005AssetAllocationScenarioAllocationRows: AllocationMethodRow[] = [
+  {
+    id: "wb005-allocation-chargeable-hv-asset",
+    costPoolId: "wb005-cost-chargeable-hv-asset",
+    costPoolName: "Chargeable HV distribution asset annual amount",
+    basis: "Peak demand",
+    tariffComponent: "Demand",
+    classShares: [
+      { customerClass: "HV users", percent: 75 },
+      { customerClass: "LV users", percent: 25 }
+    ],
+    notes:
+      "Asset annual amount is allocated by existing peak demand basis for test-only coverage."
+  }
+];
+
+export const wb005AssetEvidenceRows: WorkbookDerivedAssetEvidenceRow[] = [
+  {
+    id: "wb005-asset-chargeable-hv-distribution",
+    sourceWorkbook: "Airport and port asset model pattern",
+    assetDescription: "HV distribution ring main",
+    assetCategory: "Electrical distribution",
+    voltage: "HV",
+    localClass: "Network asset",
+    isElectricalDistributionAsset: true,
+    isChargeableOnElectricityTariff: true,
+    annualChargeAmount: 64000,
+    mappingConfidence: "High",
+    treatment: "Calculation input",
+    validationIssue: null
+  },
+  {
+    id: "wb005-asset-lv-metering-review",
+    sourceWorkbook: "Airport and port asset model pattern",
+    assetDescription: "LV metering cabinet",
+    assetCategory: "Metering",
+    voltage: "LV",
+    localClass: "Metering asset",
+    isElectricalDistributionAsset: true,
+    isChargeableOnElectricityTariff: true,
+    annualChargeAmount: 8000,
+    mappingConfidence: "Medium",
+    treatment: "Manual review required",
+    validationIssue:
+      "Metering asset annual amount needs review before it can feed tariff recovery."
+  },
+  {
+    id: "wb005-asset-non-electrical-building",
+    sourceWorkbook: "Airport and port asset model pattern",
+    assetDescription: "Substation building fabric",
+    assetCategory: "Building",
+    voltage: "N/A",
+    localClass: "Civil asset",
+    isElectricalDistributionAsset: false,
+    isChargeableOnElectricityTariff: false,
+    annualChargeAmount: 12000,
+    mappingConfidence: "High",
+    treatment: "Excluded pending review",
+    validationIssue: "Non-electrical building asset is not approved for tariff recovery."
+  },
+  {
+    id: "wb005-asset-shared-site-infrastructure",
+    sourceWorkbook: "Airport and port asset model pattern",
+    assetDescription: "Shared site infrastructure",
+    assetCategory: "Shared infrastructure",
+    voltage: "Mixed",
+    localClass: "Shared use",
+    isElectricalDistributionAsset: true,
+    isChargeableOnElectricityTariff: false,
+    annualChargeAmount: 15000,
+    mappingConfidence: "Low",
+    treatment: "Evidence-only",
+    validationIssue: "Shared-use infrastructure treatment is not approved."
+  },
+  {
+    id: "wb005-asset-unresolved-row",
+    sourceWorkbook: "Airport and port asset model pattern",
+    assetDescription: "Unresolved asset row",
+    assetCategory: "Unknown",
+    voltage: "Unknown",
+    localClass: "Unknown",
+    isElectricalDistributionAsset: false,
+    isChargeableOnElectricityTariff: false,
+    annualChargeAmount: null,
+    mappingConfidence: "Unresolved",
+    treatment: "Excluded pending review",
+    validationIssue: "Asset row cannot be mapped to chargeability or voltage."
+  }
+];
+
+export const wb005AssetAllocationScenarioExpected = {
+  revenueRequirement: 64000,
+  calculationAnnualAssetAmount: 64000,
+  excludedOrReviewAnnualAssetAmount: 35000,
+  reviewIssueCount: 4,
+  classResults: {
+    "HV users": {
+      fixedCost: 0,
+      energyCost: 0,
+      demandCost: 48000,
+      passThroughCost: 0,
+      totalAllocatedCost: 48000,
+      fixedChargePerCustomer: 0,
+      energyChargePerKwh: 0,
+      demandChargePerKw: 80
+    },
+    "LV users": {
+      fixedCost: 0,
+      energyCost: 0,
+      demandCost: 16000,
+      passThroughCost: 0,
+      totalAllocatedCost: 16000,
+      fixedChargePerCustomer: 0,
+      energyChargePerKwh: 0,
+      demandChargePerKw: 80
     }
   }
 };

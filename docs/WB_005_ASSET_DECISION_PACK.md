@@ -2,7 +2,7 @@
 
 Date: 2026-06-23
 
-Status: decision pack for owner review.
+Status: Option A approved for test-only fixture coverage.
 
 ## Purpose
 
@@ -120,8 +120,10 @@ Before handoff, run:
 
 ## Decision Record
 
-Pending owner decision:
+Decision accepted:
 
-- Approve Option A: test-only fixture with pre-set annual asset amounts.
-- Hold under Option B.
-- Request separate production methodology decision pack before any fixture or implementation.
+- Option A approved: test-only fixture with pre-set annual asset amounts.
+
+Implementation constraint:
+
+- The approved fixture must not calculate annual asset amounts from asset value, age, life, WACC, CPI, depreciation, or annuity factors.
