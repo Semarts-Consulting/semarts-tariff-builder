@@ -11,7 +11,7 @@ This package creates the input foundation only. It does not make submeter consum
 Each submeter record includes:
 
 - Meter: the primary identifier and intended unique key.
-- Location: free-text location for this phase, to be linked to site, area or customer hierarchy later if that hierarchy is formalised.
+- Location: free-text location for this phase, to be linked to the Utilityhub-aligned Customer > Site > Building > Location > Meter hierarchy later.
 - Responsibility: controlled category covering Tenant, Network Operator, Landlord, Shared Asset, EV Asset, Plant Room, Infrastructure and Other Internal Use.
 - Tenant Name: required only when responsibility is Tenant.
 - Notes and import metadata: source file, uploaded timestamp, import batch and row fingerprint.
@@ -120,7 +120,8 @@ These calculations remain out of scope until the methodology rules, source hiera
 
 ## Known Limitations
 
-- Location is currently free text rather than a formal site hierarchy link. The intended future hierarchy should mirror Semarts Utilityhub rather than create a separate Tariff Builder-only hierarchy.
+- Location is currently free text rather than a formal Utilityhub hierarchy link. The intended future hierarchy mirrors Semarts Utilityhub: Customer > Site > Building > Location > Meter.
+- Utilityhub currently stores Building under the existing `areaId` key and Location under the existing meter `siteId` key during its MVP compatibility phase. Tariff Builder should use an explicit mapping layer rather than duplicating or renaming those records prematurely.
 - Tenant linkage is a tenant-name field, not a formal customer record relationship.
 - Excel import is supported; CSV can be added using the same parser contracts if required.
 - TLM automatic refresh depends on confirmation of the authoritative Elexon source.
@@ -128,7 +129,7 @@ These calculations remain out of scope until the methodology rules, source hiera
 
 ## Suggested Next Steps
 
-1. Align the future customer/location hierarchy with Semarts Utilityhub once the shared hierarchy contract is available.
+1. Review Utilityhub hierarchy mapping results before adding persistent hierarchy IDs to Tariff Builder methodology records.
 2. Confirm the authoritative Elexon TLM feed and expected GSP group handling.
 3. Decide when submeter consumption should feed tariff calculations.
 4. Add reconciliation between submeter consumption and boundary meter import once business rules are agreed.
