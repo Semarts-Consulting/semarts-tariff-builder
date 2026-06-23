@@ -45,13 +45,15 @@ Monthly, quarterly and annual records are stored in their original form. They ar
 
 ## Import Templates
 
-The Site Submeters screen provides downloadable Excel templates for:
+The Site Submeters screen provides downloadable Excel templates and Excel import flows for:
 
 - Site submeter register.
 - Submeter consumption.
 - Transmission Loss Multipliers.
 
 The templates use the exact headers expected by the import parsers. Each template contains clearly marked example rows using `EXAMPLE-DELETE-ME` or `Example row - delete or replace before import` placeholders. These rows are safe synthetic examples only and should be deleted or replaced before importing real project data.
+
+Imports append by default. They do not silently replace existing rows. If an imported register meter, consumption period, or TLM settlement period appears to duplicate an existing row, the row is still imported and the screen displays a review message so the user can decide whether to correct, remove, or retain the duplicate.
 
 CSV support is not included in the current package because the existing app import pattern is Excel workbook based. CSV can be added later using the same parser contracts if users prefer CSV templates.
 
@@ -91,6 +93,15 @@ Implemented validation covers:
 
 Validation is visible in the Site Submeters Data Inputs screen and covered by tests.
 
+The Site Submeters screen and report evidence also show monthly consumption coverage review metrics where monthly records are present:
+
+- Expected monthly periods per registered meter.
+- Missing meter-periods.
+- Duplicate meter-periods.
+- Unknown meter records.
+
+These checks are evidence and readiness signals only. They do not block save, delete data, or alter tariff calculations.
+
 ## Calculation Readiness
 
 The data shape is designed to support later calculations such as:
@@ -109,7 +120,7 @@ These calculations remain out of scope until the methodology rules, source hiera
 
 ## Known Limitations
 
-- Location is currently free text rather than a formal site hierarchy link.
+- Location is currently free text rather than a formal site hierarchy link. The intended future hierarchy should mirror Semarts Utilityhub rather than create a separate Tariff Builder-only hierarchy.
 - Tenant linkage is a tenant-name field, not a formal customer record relationship.
 - Excel import is supported; CSV can be added using the same parser contracts if required.
 - TLM automatic refresh depends on confirmation of the authoritative Elexon source.
@@ -117,7 +128,7 @@ These calculations remain out of scope until the methodology rules, source hiera
 
 ## Suggested Next Steps
 
-1. Confirm whether location should reference an existing site/customer hierarchy or remain free text for MVP.
+1. Align the future customer/location hierarchy with Semarts Utilityhub once the shared hierarchy contract is available.
 2. Confirm the authoritative Elexon TLM feed and expected GSP group handling.
 3. Decide when submeter consumption should feed tariff calculations.
 4. Add reconciliation between submeter consumption and boundary meter import once business rules are agreed.

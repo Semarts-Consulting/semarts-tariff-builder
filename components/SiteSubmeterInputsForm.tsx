@@ -16,6 +16,16 @@ import {
 } from "@/lib/submeter-import-templates";
 import type { WorkbookTemplate } from "@/lib/submeter-import-templates";
 import {
+  createImportConflictMessages,
+  findSubmeterConsumptionImportConflicts,
+  findSubmeterRegisterImportConflicts,
+  findTransmissionLossMultiplierImportConflicts
+} from "@/lib/submeter-import-review";
+import {
+  createMonthlyExpectedConsumptionPeriods,
+  reviewConsumptionPeriodCoverage
+} from "@/lib/submeter-consumption-coverage";
+import {
   filterSiteSubmeters,
   filterSubmeterConsumption,
   filterTransmissionLossMultipliers,
@@ -69,6 +79,33 @@ function parseSettlementPeriodText(value: string) {
     .split(",")
     .map((item) => Number(item.trim()))
     .filter((item) => Number.isFinite(item));
+}
+
+function monthKey(value: string) {
+  return value.slice(0, 7);
+}
+
+function coverageSummaryRows({
+  expectedPeriodCount,
+  missingPeriodCount,
+  duplicatePeriodCount,
+  unknownMeterRecordCount
+}: {
+  expectedPeriodCount: number;
+  missingPeriodCount: number;
+  duplicatePeriodCount: number;
+  unknownMeterRecordCount: number;
+}) {
+  if (expectedPeriodCount === 0) {
+    return ["No monthly consumption period range available yet."];
+  }
+
+  return [
+    `Expected monthly periods per registered meter: ${expectedPeriodCount}`,
+    `Missing meter-periods: ${missingPeriodCount}`,
+    `Duplicate meter-periods: ${duplicatePeriodCount}`,
+    `Unknown meter records: ${unknownMeterRecordCount}`
+  ];
 }
 
 function inputClass() {
@@ -142,6 +179,38 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
   const consumptionTotals = useMemo(
     () => getConsumptionTotalByMeter(inputs.submeterConsumption),
     [inputs.submeterConsumption]
+  );
+  const monthlyCoveragePeriods = useMemo(() => {
+    const monthlyRows = inputs.submeterConsumption.filter((row) => row.format === "Monthly");
+
+    if (monthlyRows.length === 0) {
+      return [];
+    }
+
+    const startMonth = monthlyRows
+      .map((row) => monthKey(row.periodStart))
+      .filter(Boolean)
+      .sort()[0];
+    const endMonth = monthlyRows
+      .map((row) => monthKey(row.periodEnd))
+      .filter(Boolean)
+      .sort()
+      .at(-1);
+
+    if (!startMonth || !endMonth) {
+      return [];
+    }
+
+    return createMonthlyExpectedConsumptionPeriods({ startMonth, endMonth });
+  }, [inputs.submeterConsumption]);
+  const consumptionCoverage = useMemo(
+    () =>
+      reviewConsumptionPeriodCoverage({
+        submeters: inputs.siteSubmeters,
+        consumptionRows: inputs.submeterConsumption,
+        expectedPeriods: monthlyCoveragePeriods
+      }),
+    [inputs.siteSubmeters, inputs.submeterConsumption, monthlyCoveragePeriods]
   );
   const submeterIssueRowIds = useMemo(
     () => new Set(submeterIssues.map((issue) => issue.rowId).filter(isPresentText)),
@@ -267,19 +336,19 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
       return;
     }
 
+    const conflicts = findSubmeterRegisterImportConflicts({
+      existingRows: inputs.siteSubmeters,
+      importedRows: result.parsedRows
+    });
+
     save(
       {
         ...inputs,
-        siteSubmeters: [
-          ...inputs.siteSubmeters.filter(
-            (existing) => !result.parsedRows.some((row) => row.meter === existing.meter)
-          ),
-          ...result.parsedRows
-        ]
+        siteSubmeters: [...inputs.siteSubmeters, ...result.parsedRows]
       },
       `Imported ${result.parsedRows.length} submeter rows.`
     );
-    setImportMessages([]);
+    setImportMessages(createImportConflictMessages(conflicts).slice(0, 10));
   }
 
   async function importConsumption(file: File) {
@@ -295,26 +364,19 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
       return;
     }
 
+    const conflicts = findSubmeterConsumptionImportConflicts({
+      existingRows: inputs.submeterConsumption,
+      importedRows: result.parsedRows
+    });
+
     save(
       {
         ...inputs,
-        submeterConsumption: [
-          ...inputs.submeterConsumption.filter(
-            (existing) =>
-              !result.parsedRows.some(
-                (row) =>
-                  row.meter === existing.meter &&
-                  row.format === existing.format &&
-                  row.periodStart === existing.periodStart &&
-                  row.periodEnd === existing.periodEnd
-              )
-          ),
-          ...result.parsedRows
-        ]
+        submeterConsumption: [...inputs.submeterConsumption, ...result.parsedRows]
       },
       `Imported ${result.parsedRows.length} consumption rows.`
     );
-    setImportMessages([]);
+    setImportMessages(createImportConflictMessages(conflicts).slice(0, 10));
   }
 
   async function importTlm(file: File) {
@@ -328,25 +390,22 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
       return;
     }
 
+    const conflicts = findTransmissionLossMultiplierImportConflicts({
+      existingRows: inputs.transmissionLossMultipliers,
+      importedRows: result.parsedRows
+    });
+
     save(
       {
         ...inputs,
         transmissionLossMultipliers: [
-          ...inputs.transmissionLossMultipliers.filter(
-            (existing) =>
-              !result.parsedRows.some(
-                (row) =>
-                  row.settlementDate === existing.settlementDate &&
-                  row.settlementPeriod === existing.settlementPeriod &&
-                  row.gspGroup === existing.gspGroup
-              )
-          ),
+          ...inputs.transmissionLossMultipliers,
           ...result.parsedRows
         ]
       },
       `Imported ${result.parsedRows.length} Transmission Loss Multiplier rows.`
     );
-    setImportMessages([]);
+    setImportMessages(createImportConflictMessages(conflicts).slice(0, 10));
   }
 
   async function refreshTlmEndpoint() {
@@ -1047,6 +1106,15 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
           <SummaryPanel
             title="Consumption totals by meter"
             rows={consumptionTotals.map((row) => `${row.meter || "Missing meter"}: ${row.totalKwh.toLocaleString()} kWh`)}
+          />
+          <SummaryPanel
+            title="Monthly coverage review"
+            rows={coverageSummaryRows({
+              expectedPeriodCount: monthlyCoveragePeriods.length,
+              missingPeriodCount: consumptionCoverage.totalMissingPeriods,
+              duplicatePeriodCount: consumptionCoverage.totalDuplicatePeriods,
+              unknownMeterRecordCount: consumptionCoverage.unknownMeterRecordIds.length
+            })}
           />
           <SummaryPanel
             title="Import template headers"

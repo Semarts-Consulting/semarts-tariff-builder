@@ -15,6 +15,15 @@ type CalculationInputs = {
   dataInputRows: DataInputRow[];
   costPoolRows: CostPoolRow[];
   allocationRows: AllocationMethodRow[];
+  supplyEnergyRows?: SupplyEnergyTariffRow[];
+};
+
+export type SupplyEnergyTariffRow = {
+  id: string;
+  customerClass: string;
+  pencePerKwh: number;
+  sourceRowIds: string[];
+  notes: string;
 };
 
 const revenueRecoveryTolerance = 0.01;
@@ -158,7 +167,8 @@ export function calculateTariffs({
   projectId,
   dataInputRows,
   costPoolRows,
-  allocationRows
+  allocationRows,
+  supplyEnergyRows = []
 }: CalculationInputs): TariffCalculationResult {
   const costPoolById = new Map(costPoolRows.map((row) => [row.id, row]));
   const classResults = createClassResultMap(dataInputRows);
@@ -169,10 +179,11 @@ export function calculateTariffs({
   );
   const classSourceRowIds = new Map<string, Set<string>>();
   const auditTrace: TariffCalculationTraceEntry[] = [];
-  const revenueRequirement = costPoolRows.reduce(
+  const networkRevenueRequirement = costPoolRows.reduce(
     (total, row) => total + recoverableAmount(row),
     0
   );
+  let supplyEnergyRevenueRequirement = 0;
   let allocatedCost = 0;
   let unbalancedAllocationCount = 0;
   const allocatedCostPoolIds = new Set<string>();
@@ -351,6 +362,85 @@ export function calculateTariffs({
     });
   });
 
+  supplyEnergyRows.forEach((supplyRow) => {
+    const customerClass = supplyRow.customerClass.trim();
+    const result = classResults.get(customerClass);
+    const dataInputRow = dataInputRowByCustomerClass.get(customerClass);
+
+    if (!result || !dataInputRow) {
+      validationIssues.push({
+        code: "Unknown customer class",
+        severity: "Error",
+        message:
+          "Supply energy row references a customer class that is not available for calculation.",
+        rowId: supplyRow.id,
+        customerClass: supplyRow.customerClass
+      });
+      return;
+    }
+
+    if (supplyRow.pencePerKwh < 0) {
+      validationIssues.push({
+        code: "Negative cost pool",
+        severity: "Error",
+        message: "Supply energy p/kWh must not be negative.",
+        rowId: supplyRow.id,
+        customerClass
+      });
+      return;
+    }
+
+    const supplyGbpPerKwh = supplyRow.pencePerKwh / 100;
+    const supplyCost = supplyGbpPerKwh * dataInputRow.annualKwh;
+    const supplySourceRowIds = sourceRowIds(
+      supplyRow.id,
+      dataInputRow.id,
+      ...supplyRow.sourceRowIds
+    );
+
+    result.energyCost += supplyCost;
+    allocatedCost += supplyCost;
+    supplyEnergyRevenueRequirement += supplyCost;
+
+    const existingSourceRowIds =
+      classSourceRowIds.get(result.customerClass) ?? new Set<string>();
+
+    supplySourceRowIds.forEach((sourceRowId) => existingSourceRowIds.add(sourceRowId));
+    classSourceRowIds.set(result.customerClass, existingSourceRowIds);
+
+    auditTrace.push({
+      id: `revenue-requirement:supply-energy:${supplyRow.id}`,
+      stage: "Revenue requirement",
+      label: `${result.customerClass} supply energy revenue requirement`,
+      formula: "supplyPencePerKwh / 100 * annualKwh",
+      inputs: [
+        traceValue("Supply energy rate", supplyGbpPerKwh, "GBP per kWh"),
+        traceValue("Annual kWh", dataInputRow.annualKwh, "kWh")
+      ],
+      result: traceValue("Recoverable cost", supplyCost, "GBP"),
+      sourceRowIds: supplySourceRowIds,
+      dataInputRowId: dataInputRow.id,
+      customerClass: result.customerClass,
+      tariffComponent: "Energy"
+    });
+
+    auditTrace.push({
+      id: `supply-energy:${supplyRow.id}:${result.customerClass}`,
+      stage: "Cost allocation",
+      label: `Supply energy cost allocated to ${result.customerClass}`,
+      formula: "supplyPencePerKwh / 100 * annualKwh",
+      inputs: [
+        traceValue("Supply energy rate", supplyGbpPerKwh, "GBP per kWh"),
+        traceValue("Annual kWh", dataInputRow.annualKwh, "kWh")
+      ],
+      result: traceValue("Allocated cost", supplyCost, "GBP"),
+      sourceRowIds: supplySourceRowIds,
+      dataInputRowId: dataInputRow.id,
+      customerClass: result.customerClass,
+      tariffComponent: "Energy"
+    });
+  });
+
   costPoolRows.forEach((costPool) => {
     if (recoverableAmount(costPool) <= 0 || allocatedCostPoolIds.has(costPool.id)) {
       return;
@@ -489,6 +579,7 @@ export function calculateTariffs({
 
     return finalResult;
   });
+  const revenueRequirement = networkRevenueRequirement + supplyEnergyRevenueRequirement;
   const unallocatedCost = revenueRequirement - allocatedCost;
 
   auditTrace.push({
@@ -504,7 +595,9 @@ export function calculateTariffs({
     result: traceValue("Unallocated cost", unallocatedCost, "GBP"),
     sourceRowIds: sourceRowIds(
       ...costPoolRows.map((row) => row.id),
-      ...allocationRows.map((row) => row.id)
+      ...allocationRows.map((row) => row.id),
+      ...supplyEnergyRows.map((row) => row.id),
+      ...supplyEnergyRows.flatMap((row) => row.sourceRowIds)
     )
   });
 

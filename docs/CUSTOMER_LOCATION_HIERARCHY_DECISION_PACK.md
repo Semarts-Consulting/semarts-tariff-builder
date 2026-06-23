@@ -4,6 +4,8 @@
 
 Submeter records currently use free-text `location`, controlled `responsibility`, and optional `tenantName`. That is sufficient for initial input capture but is not strong enough for defensible tariff allocation, reporting and audit trace once submeter-derived consumption becomes tariff-impacting.
 
+User decision recorded on 2026-06-23: the future customer/location hierarchy should mirror Semarts Utilityhub. Tariff Builder should not invent a separate hierarchy contract.
+
 ## Current Linkage Approach
 
 Current fields:
@@ -25,7 +27,7 @@ Existing aggregate tariff calculations still use customer-class rows in the core
 
 ## Recommended Structured Fields
 
-Add structured fields alongside the current free-text fields before replacing anything:
+Add structured fields alongside the current free-text fields before replacing anything. The field names below are provisional placeholders until the Utilityhub hierarchy contract is inspected and mapped:
 
 - `siteId`
 - `areaId`
@@ -42,7 +44,7 @@ The existing `location` and `tenantName` fields should remain as display/source 
 
 ## Target Hierarchy
 
-Recommended direction:
+Recommended direction, subject to Utilityhub alignment:
 
 1. Customer.
 2. Site.
@@ -55,6 +57,8 @@ Recommended direction:
 9. Responsibility category.
 
 The hierarchy must also support Network Operator, Landlord/common area, Shared Asset, EV Asset, Plant Room, Infrastructure and Other Internal Use records without forcing a tenant relationship.
+
+Do not implement these fields in production code until the Utilityhub hierarchy shape, identifiers, and ownership model are confirmed.
 
 ## Migration Risk
 
@@ -108,4 +112,4 @@ Audit trace should preserve:
 
 ## Recommended Decision
 
-Approve structured fields alongside the current free-text fields, but do not remove or replace existing fields until mapping, migration and calculation-source selection are implemented and reviewed.
+Approve Utilityhub-aligned structured fields alongside the current free-text fields, but do not remove or replace existing fields until mapping, migration and calculation-source selection are implemented and reviewed.
