@@ -16,6 +16,12 @@ import {
 } from "@/lib/submeter-import-templates";
 import type { WorkbookTemplate } from "@/lib/submeter-import-templates";
 import {
+  filterSiteSubmeters,
+  filterSubmeterConsumption,
+  filterTransmissionLossMultipliers,
+  limitRows
+} from "@/lib/site-submeter-table-view";
+import {
   consumptionFormats,
   createSiteSubmeterRecord,
   createSubmeterConsumptionRecord,
@@ -73,6 +79,14 @@ function selectClass() {
   return "w-full rounded-md border border-line bg-white px-2 py-1 text-sm";
 }
 
+function compactInputClass() {
+  return "rounded-md border border-line px-3 py-2 text-sm";
+}
+
+function isPresentText(value: string | undefined): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
 function workbookRowsToSheetData(template: WorkbookTemplate): SheetData {
   return template.rows.map((row, rowIndex) =>
     row.map((value) => ({
@@ -90,6 +104,16 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
   const [saveState, setSaveState] = useState("");
   const [importMessages, setImportMessages] = useState<string[]>([]);
   const [tlmEndpointUrl, setTlmEndpointUrl] = useState("");
+  const [submeterQuery, setSubmeterQuery] = useState("");
+  const [showSubmeterIssuesOnly, setShowSubmeterIssuesOnly] = useState(false);
+  const [consumptionMeterQuery, setConsumptionMeterQuery] = useState("");
+  const [consumptionFormatFilter, setConsumptionFormatFilter] = useState<
+    SubmeterConsumptionFormat | "All"
+  >("All");
+  const [showConsumptionIssuesOnly, setShowConsumptionIssuesOnly] = useState(false);
+  const [tlmQuery, setTlmQuery] = useState("");
+  const [tlmSettlementDateFilter, setTlmSettlementDateFilter] = useState("");
+  const [showTlmIssuesOnly, setShowTlmIssuesOnly] = useState(false);
   const isArchived = isProjectArchived(projectId);
 
   useEffect(() => {
@@ -119,6 +143,71 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
     () => getConsumptionTotalByMeter(inputs.submeterConsumption),
     [inputs.submeterConsumption]
   );
+  const submeterIssueRowIds = useMemo(
+    () => new Set(submeterIssues.map((issue) => issue.rowId).filter(isPresentText)),
+    [submeterIssues]
+  );
+  const consumptionIssueRowIds = useMemo(
+    () => new Set(consumptionIssues.map((issue) => issue.rowId).filter(isPresentText)),
+    [consumptionIssues]
+  );
+  const tlmIssueRowIds = useMemo(
+    () =>
+      new Set(
+        tlmIssues
+          .map((issue) => ("rowId" in issue ? issue.rowId : undefined))
+          .filter(isPresentText)
+      ),
+    [tlmIssues]
+  );
+  const filteredSubmeters = useMemo(
+    () =>
+      filterSiteSubmeters({
+        rows: inputs.siteSubmeters,
+        query: submeterQuery,
+        showIssuesOnly: showSubmeterIssuesOnly,
+        issueRowIds: submeterIssueRowIds
+      }),
+    [inputs.siteSubmeters, showSubmeterIssuesOnly, submeterIssueRowIds, submeterQuery]
+  );
+  const visibleSubmeters = useMemo(() => limitRows(filteredSubmeters, 100), [filteredSubmeters]);
+  const filteredConsumption = useMemo(
+    () =>
+      filterSubmeterConsumption(inputs.submeterConsumption, {
+        meterQuery: consumptionMeterQuery,
+        format: consumptionFormatFilter,
+        showIssuesOnly: showConsumptionIssuesOnly,
+        issueRowIds: consumptionIssueRowIds
+      }),
+    [
+      consumptionFormatFilter,
+      consumptionIssueRowIds,
+      consumptionMeterQuery,
+      inputs.submeterConsumption,
+      showConsumptionIssuesOnly
+    ]
+  );
+  const visibleConsumption = useMemo(
+    () => limitRows(filteredConsumption, 150),
+    [filteredConsumption]
+  );
+  const filteredTlms = useMemo(
+    () =>
+      filterTransmissionLossMultipliers(inputs.transmissionLossMultipliers, {
+        query: tlmQuery,
+        settlementDate: tlmSettlementDateFilter,
+        showIssuesOnly: showTlmIssuesOnly,
+        issueRowIds: tlmIssueRowIds
+      }),
+    [
+      inputs.transmissionLossMultipliers,
+      showTlmIssuesOnly,
+      tlmIssueRowIds,
+      tlmQuery,
+      tlmSettlementDateFilter
+    ]
+  );
+  const visibleTlms = useMemo(() => limitRows(filteredTlms, 250), [filteredTlms]);
 
   function save(nextInputs: ProjectMethodologyInputs, message: string) {
     setInputs(nextInputs);
@@ -354,6 +443,26 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
           </div>
         </div>
 
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-md border border-line bg-field p-3">
+          <input
+            value={submeterQuery}
+            placeholder="Filter meters, locations or responsibility"
+            className={`${compactInputClass()} min-w-[260px] flex-1`}
+            onChange={(event) => setSubmeterQuery(event.target.value)}
+          />
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={showSubmeterIssuesOnly}
+              onChange={(event) => setShowSubmeterIssuesOnly(event.target.checked)}
+            />
+            Issues only
+          </label>
+          <span className="text-sm text-ink/70">
+            Showing {visibleSubmeters.length} of {filteredSubmeters.length} filtered rows
+          </span>
+        </div>
+
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[960px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
@@ -367,7 +476,7 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
               </tr>
             </thead>
             <tbody>
-              {inputs.siteSubmeters.map((row) => (
+              {visibleSubmeters.map((row) => (
                 <tr key={row.id}>
                   <td className="border border-line px-3 py-2">
                     <input
@@ -443,6 +552,13 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
                   </td>
                 </tr>
               ))}
+              {visibleSubmeters.length === 0 ? (
+                <tr>
+                  <td className="border border-line px-3 py-4 text-center text-ink/60" colSpan={6}>
+                    No submeter rows match the current filters.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
@@ -504,6 +620,38 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
           </div>
         </div>
 
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-md border border-line bg-field p-3">
+          <input
+            value={consumptionMeterQuery}
+            placeholder="Filter by meter"
+            className={`${compactInputClass()} min-w-[220px]`}
+            onChange={(event) => setConsumptionMeterQuery(event.target.value)}
+          />
+          <select
+            value={consumptionFormatFilter}
+            className={compactInputClass()}
+            onChange={(event) =>
+              setConsumptionFormatFilter(event.target.value as SubmeterConsumptionFormat | "All")
+            }
+          >
+            <option>All</option>
+            {consumptionFormats.map((format) => (
+              <option key={format}>{format}</option>
+            ))}
+          </select>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={showConsumptionIssuesOnly}
+              onChange={(event) => setShowConsumptionIssuesOnly(event.target.checked)}
+            />
+            Issues only
+          </label>
+          <span className="text-sm text-ink/70">
+            Showing {visibleConsumption.length} of {filteredConsumption.length} filtered rows
+          </span>
+        </div>
+
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[1280px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
@@ -520,7 +668,7 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
               </tr>
             </thead>
             <tbody>
-              {inputs.submeterConsumption.map((row) => (
+              {visibleConsumption.map((row) => (
                 <tr key={row.id}>
                   <td className="border border-line px-3 py-2">
                     <input
@@ -647,6 +795,13 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
                   </td>
                 </tr>
               ))}
+              {visibleConsumption.length === 0 ? (
+                <tr>
+                  <td className="border border-line px-3 py-4 text-center text-ink/60" colSpan={9}>
+                    No consumption rows match the current filters.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
           <datalist id="site-submeter-list">
@@ -736,6 +891,32 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
           </div>
         </div>
 
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-md border border-line bg-field p-3">
+          <input
+            value={tlmQuery}
+            placeholder="Filter TLM source, GSP or version"
+            className={`${compactInputClass()} min-w-[240px] flex-1`}
+            onChange={(event) => setTlmQuery(event.target.value)}
+          />
+          <input
+            type="date"
+            value={tlmSettlementDateFilter}
+            className={compactInputClass()}
+            onChange={(event) => setTlmSettlementDateFilter(event.target.value)}
+          />
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={showTlmIssuesOnly}
+              onChange={(event) => setShowTlmIssuesOnly(event.target.checked)}
+            />
+            Issues only
+          </label>
+          <span className="text-sm text-ink/70">
+            Showing {visibleTlms.length} of {filteredTlms.length} filtered rows
+          </span>
+        </div>
+
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[1080px] border-collapse text-sm">
             <thead className="bg-field text-left text-xs uppercase text-ink/60">
@@ -751,7 +932,7 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
               </tr>
             </thead>
             <tbody>
-              {inputs.transmissionLossMultipliers.slice(0, 250).map((row) => (
+              {visibleTlms.map((row) => (
                 <tr key={row.id}>
                   <td className="border border-line px-3 py-2">
                     <input
@@ -843,6 +1024,13 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
                   </td>
                 </tr>
               ))}
+              {visibleTlms.length === 0 ? (
+                <tr>
+                  <td className="border border-line px-3 py-4 text-center text-ink/60" colSpan={8}>
+                    No Transmission Loss Multiplier rows match the current filters.
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
