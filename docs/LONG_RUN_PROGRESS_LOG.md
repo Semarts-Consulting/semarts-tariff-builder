@@ -1131,3 +1131,35 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add input selection readiness scaffolding`
+
+## Package: UtilityHub Selector Contract Dependencies
+
+Files changed:
+
+- `docs/UTILITYHUB_SELECTOR_CONTRACT_DEPENDENCIES.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Continue the input-first pathway after PR #85.
+- Define the external UtilityHub/shared-service contracts required before live selectors replace evidence-only scaffolding.
+- Keep Tariff Builder aligned with UtilityHub ownership of customer/site hierarchy, meters, readings, boundary meters, reference data, permissions and source provenance.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 41 test files and 214 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not change production behaviour.
+- Future selector implementation remains blocked until UtilityHub contracts provide stable shared IDs, permission-safe fields, validation status, source versioning and monthly summary data.
+- UtilityHub-sourced data should remain evidence-only by default until a separate approved package makes selected records tariff-driving.
+
+Suggested commit message:
+
+- `Add UtilityHub selector contract dependencies`
