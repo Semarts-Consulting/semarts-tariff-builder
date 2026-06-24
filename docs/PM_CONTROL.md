@@ -157,13 +157,15 @@ Review risks:
 
 ## Open Decisions
 
-1. Whether allocation reconciliation in `project-storage.ts` is MVP behavior or should be held.
-2. Whether calculation validation issues should block final report approval, while still allowing calculations to run.
-3. Whether a future machine-readable export DTO is required for first commercial release after MVP rendered report output.
-4. Which imported workbook headers are contractual and which remain provisional.
-5. Whether `ReportsSummary.tsx` should be considered report UI only or the start of an export DTO contract.
-6. Supply tariff integration remains deferred until allocation destination and pass-through treatment are signed off.
-7. How to model airport, port, tenant, onward supply, local losses, generation/export, AUoS/PUoS, and site-specific allocation variation without hardcoding workbook-specific logic.
+1. Whether calculation validation issues should block final report approval, while still allowing calculations to run.
+2. Whether a future machine-readable export DTO is required for first commercial release after MVP rendered report output.
+3. Which imported workbook headers are contractual and which remain provisional.
+4. Whether `ReportsSummary.tsx` should be considered report UI only or the start of an export DTO contract.
+5. Supply tariff integration remains deferred until allocation destination and pass-through treatment are signed off.
+6. How to model airport, port, tenant, onward supply, local losses, generation/export, AUoS/PUoS, and site-specific allocation variation without hardcoding workbook-specific logic.
+7. Minimum contract for long-lived tariff models and annual tariff years.
+8. Minimum UtilityHub shared contracts required before Tariff Builder replaces local meter, consumption, boundary meter, supply contract and reference-data inputs with selection surfaces.
+9. How Tariff Builder should present UtilityHub-sourced selected inputs while clearly separating evidence-only data from tariff-driving data.
 
 ## Accepted Decisions
 
@@ -204,6 +206,7 @@ Review risks:
 - Remaining supply integration choices are answered in `docs/SUPPLY_INTEGRATION_DECISION_ANSWER.md`; production integration remains blocked until a separate implementation proposal is prepared and approved.
 - Evidence-only supply presentation and separate supply reconciliation are implemented through PR #43. Tariff-impacting supply integration remains blocked; supply evidence does not feed `calculateTariffs`, network revenue recovery, report totals, imports, storage, exports, shared DTOs, or billing-period daily annualisation.
 - Supply evidence implementation has been reviewed in `docs/SUPPLY_EVIDENCE_REVIEW.md` as evidence-only and non-tariff-impacting. The next safe follow-up is a manual report-page check, not tariff integration.
+- Input architecture should be stabilised before further calculation expansion. The next implementation sequence should prioritise tariff model/year setup, UtilityHub customer/site selection, meter and consumption selection, boundary meter selection, reference data selection, customer class table UX, and input readiness before tariff-impacting aggregation.
 - Airport and Port of Tilbury workbooks show that broader commercial use requires configurable methodology support. This is recorded in `docs/MODEL_FLEXIBILITY_REVIEW.md` and does not approve production implementation.
 - Methodology configuration direction is proposed for owner approval in `docs/METHODOLOGY_CONFIGURATION_DECISION_PACK.md`. Production implementation remains gated.
 - Codex/Git workflow guardrails and helper scripts are recorded in `AGENTS.md`, `docs/CODEX_GIT_WORKFLOW.md`, and `scripts/codex-*.ps1`. Codex should not push, create PRs, force push, or merge from its own context.

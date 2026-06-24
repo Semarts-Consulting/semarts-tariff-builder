@@ -961,3 +961,34 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Record UtilityHub data ownership and tariff year model`
+
+## Package: Tariff Year Input Architecture
+
+Files changed:
+
+- `docs/TARIFF_YEAR_INPUT_ARCHITECTURE.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- User asked to focus less on calculations and more on ensuring the correct data inputs exist first.
+- The package defines the input architecture Tariff Builder should move toward before further tariff calculation expansion.
+- It separates UtilityHub-owned source data from Tariff Builder-owned tariff-year selections, assumptions, direct costs, allocation choices and calculation runs.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 38 test files and 203 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not change production behaviour.
+- Future implementation still needs approved contracts for tariff model/year structure, UtilityHub data selection, customer/site hierarchy, meter and consumption selection, boundary meter selection, CPI/TLM/reference data selection and customer-class UX.
+
+Suggested commit message:
+
+- `Add tariff year input architecture`
