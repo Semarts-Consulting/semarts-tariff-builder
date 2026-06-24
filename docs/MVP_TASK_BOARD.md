@@ -8,7 +8,6 @@
 | ENG-011 Automatic supply evidence derivation proposal | Tariff Engine plus PM review | future supply integration docs, future shared type proposals if approved | `docs/SUPPLY_ENERGY_TARIFF_IMPACT_PROPOSAL.md` | High | Automatic conversion of supply evidence records into tariff-impacting rows remains blocked. |
 | SUP-003 Billing-period daily annualisation | Tariff Engine plus QA review | future `lib/supply-calculation-engine.ts` and focused tests if approved | User decision to replace 365-day annualisation with actual billing-period days | Medium | Keep separate from tariff integration; requires a clear billing-period input before production calculation changes. |
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
-| COST-002 Methodology cost to cost-pool mapping proposal | PM plus Tariff Engine/Data Import review | future `docs/METHODOLOGY_COST_POOL_MAPPING_PROPOSAL.md` | Methodology cost evidence readiness | High | Decide how direct, employee and overhead evidence can become approved tariff-driving cost pools without double counting. |
 | ASSET-002 Asset valuation methodology decision pack | PM plus Tariff Engine review | future `docs/ASSET_VALUATION_METHOD_DECISION_PACK.md` | WB-005 asset evidence and decision pack | High | Required before asset values calculate annuity, depreciation, recoverable cost or tariff allocation. |
 | HIER-003 Meter Map consumption contract implementation | UtilityHub/Meter Map first, Tariff Builder PM review | future UtilityHub shared contracts and Tariff Builder mapping docs if approved | UtilityHub shared entity contracts | High | Do not implement local Tariff Builder building/floor/meter-reading masters. Wait for UtilityHub/Meter Map shared IDs, mapped areas, allocation confidence, area usage metrics and data-quality issue contracts. |
 
@@ -16,7 +15,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| HIER-004 Meter Map programme alignment | PM plus UtilityHub programme review | `AGENTS.md`, `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md`, manager docs | Programme Control Pack UtilityMap/Meter Map update | Medium | Records that Meter Map is UtilityHub-owned shared infrastructure and Tariff Builder must consume shared IDs instead of duplicating building/floor/supply point/meter/meter reading/document upload/audit/permission masters. |
+| COST-002 Methodology cost to cost-pool mapping proposal | PM plus Tariff Engine/Data Import review | `docs/METHODOLOGY_COST_POOL_MAPPING_PROPOSAL.md`, manager docs | Methodology cost evidence readiness | High | Defines when direct, employee and overhead evidence may become reviewed tariff-driving cost-pool candidates without double counting. |
 
 ## Review
 
@@ -25,6 +24,7 @@
 | SUB-004 Submeter to tariff input decision pack | PM plus Tariff Engine/Data Import/UI review | `docs/SUBMETER_TO_TARIFF_INPUT_DECISION_PACK.md` | Merged PR #71 | High | Decision pack recommends aggregate-only remains current mode and submeter-derived aggregate requires review gates before implementation. |
 | HIER-002 Utilityhub hierarchy contract proposal | PM plus Data/UI review | `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md` | Merged PR #72 | High | Defines how Tariff Builder should reference UtilityHub-owned customer/site/building/location/meter hierarchy without creating a competing local hierarchy. |
 | SUP-004 Supply energy tariff impact proposal | PM plus Tariff Engine/UI/QA review | `docs/SUPPLY_ENERGY_TARIFF_IMPACT_PROPOSAL.md` | Merged PR #73 | High | Defines the current approved boundary for explicit supply p/kWh tariff impact and blocks automatic supply evidence-to-tariff conversion. |
+| HIER-004 Meter Map programme alignment | PM plus UtilityHub programme review | `AGENTS.md`, `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md`, manager docs | Merged PR #74 | Medium | Records that Meter Map is UtilityHub-owned shared infrastructure and Tariff Builder must consume shared IDs instead of duplicating building/floor/supply point/meter/meter reading/document upload/audit/permission masters. |
 
 ## Blocked
 
