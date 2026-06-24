@@ -218,6 +218,8 @@ Review risks:
 - WB-004 is implemented as test-only generation/export evidence coverage. Generation/export volumes and credit evidence remain local fixture metadata and do not net consumption, reduce recoverable cost, or change revenue requirement.
 - WB-005 asset allocation Option A is approved for test-only fixture coverage using pre-set annual asset amounts only. Production asset valuation, annuity calculation, import parsing, storage, shared DTOs, report totals, exports, UI, and calculation behaviour remain blocked.
 - Non-ready report HTML export coverage now asserts readiness issues, revenue variance, and validation messages are preserved in downloaded stakeholder report HTML.
+- Long-run evidence batches 01-04 have moved submeter, loss, Utilityhub hierarchy, asset, supply and methodology-cost inputs into reviewable evidence/readiness surfaces. These areas remain non-tariff-impacting unless a separate approved package changes that behaviour.
+- The next larger run should shift from more evidence accumulation to decision-led implementation planning: submeter-to-tariff input treatment, Utilityhub hierarchy contract alignment, supply energy tariff impact, methodology cost to cost-pool mapping, and asset valuation methodology.
 
 ## QA Staging Warnings
 
@@ -271,4 +273,4 @@ Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECIS
 
 ## Immediate Next Action
 
-Review the long-run working-tree changes, restore Git process when appropriate, and split the docs/test-only work into reviewable commits. Do not start production methodology, import, storage, report total, export, shared DTO, or UI behaviour changes until the relevant decision pack is approved.
+Use `docs/NEXT_LONG_RUN_BRIEF.md` as the control document for the next extended run. Start with a docs-only current evidence closeout, then proceed to decision/proposal packages before any tariff-impacting implementation. Do not start production methodology, import, storage, report total, export, shared DTO, Utilityhub hierarchy contract, or calculation behaviour changes until the relevant decision pack is approved.
