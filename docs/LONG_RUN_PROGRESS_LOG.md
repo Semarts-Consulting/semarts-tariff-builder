@@ -1195,3 +1195,35 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add UtilityHub shared selector contract request`
+
+## Package: UtilityHub Selector Contract Closeout
+
+Files changed:
+
+- `docs/UTILITYHUB_SELECTOR_CONTRACT_CLOSEOUT.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Record that UtilityHub has merged the Tariff Builder selector contract package in UtilityHub PR #2.
+- Update Tariff Builder control docs to show that the first contract blocker is cleared.
+- Keep live API integration, storage migration and tariff-impacting selected data out of scope.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 41 test files and 214 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- UtilityHub has contract files but no live API routes yet.
+- The next Tariff Builder package should plan customer/site selector implementation against the contract before any API or storage changes.
+- Meter, consumption, boundary meter and reference-data selectors should remain behind customer/site selector stability.
+
+Suggested commit message:
+
+- `Record UtilityHub selector contract closeout`
