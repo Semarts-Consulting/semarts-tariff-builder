@@ -297,15 +297,27 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(html).toContain("Calculation audit trace");
     expect(html).toContain("Supply evidence only");
     expect(html).toContain("Not tariff-impacting");
+    expect(html).toContain(
+      "They do not change network revenue requirement, recoverable cost, revenue recovery, or tariff rates"
+    );
     expect(html).toContain("Supplier standing charge");
     expect(html).toContain("Submeter and loss evidence only");
+    expect(html).toContain(
+      "They do not change the aggregate customer-class tariff inputs, network revenue requirement, tariff rates, or report totals"
+    );
     expect(html).toContain("Boundary to submeter reconciliation");
     expect(html).toContain("Loss adjustment evidence");
     expect(html).toContain("Monthly consumption coverage");
     expect(html).toContain("Utilityhub hierarchy mapping evidence");
     expect(html).toContain("Asset evidence only");
+    expect(html).toContain(
+      "They do not change recoverable cost, allocation, revenue requirement, tariff rates, report totals or export outputs"
+    );
     expect(html).toContain("Asset readiness messages");
     expect(html).toContain("Methodology cost evidence only");
+    expect(html).toContain(
+      "They do not change the current recoverable cost pools, allocation, revenue requirement, tariff rates, report totals or export outputs"
+    );
     expect(html).toContain("Cost evidence readiness");
   });
 

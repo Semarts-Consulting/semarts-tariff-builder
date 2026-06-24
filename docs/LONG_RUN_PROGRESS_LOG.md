@@ -556,3 +556,28 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add methodology cost evidence readiness`
+
+## Package: Report Evidence Wording Regression
+
+Files changed:
+
+- `tests/report-readiness.test.tsx`
+- `docs/MVP_DEMO_REHEARSAL_NOTES.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- The report download regression now protects the stakeholder-facing evidence-only wording for supply, submeter/loss, asset and methodology cost evidence.
+- Demo rehearsal notes now tell the presenter to distinguish tariff-driving inputs from evidence-only sections during walkthrough.
+
+Validation performed:
+
+- Focused report readiness regression passed.
+
+Risks or follow-up decisions:
+
+- This package is test/docs-only. It does not change tariff calculation, imports, storage, exports, shared DTOs, report totals or UI behaviour.
+
+Suggested commit message:
+
+- `Harden report evidence wording regression`
