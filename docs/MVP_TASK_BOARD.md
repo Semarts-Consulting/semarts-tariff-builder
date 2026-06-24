@@ -17,12 +17,13 @@
 | INPUT-005 Reference data selection | Data plus PM review | future reference data selection docs/components | TLM, CPI, transmission, distribution and supply source contracts | High | Select source/version evidence for TLM, CPI, transmission, distribution and supply contracts before tariff impact. |
 | INPUT-006 Customer class table UX | UI plus PM review | future settings/customer-class component package | Tariff model/year direction | Medium | Replace free-text-style customer class settings with an add/edit table while preserving calculation semantics. |
 | UI-010 Customer class table UX proposal | UI plus PM review | future settings/customer-class docs or component package | Tariff model/year direction | Medium | Replace free-text-style customer class settings with add/edit table workflow after scope approval. |
+| INPUT-007 Input selection state tests | QA plus PM/Data/UI review | future tests for selection state helper functions | `docs/INPUT_SELECTION_DATA_MODEL_PROPOSAL.md` | Medium | Future implementation should prove evidence-only data cannot silently become tariff-driving. |
 
 ## In Progress
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| MODEL-002 Tariff model and tariff-year contract | PM plus UI/Data/Tariff Engine review | `docs/TARIFF_MODEL_YEAR_CONTRACT_PROPOSAL.md`, manager docs | `docs/TARIFF_YEAR_INPUT_ARCHITECTURE.md` | High | Defines the proposed long-lived tariff model and annual tariff year contract before replacing project-style terminology or storage. |
+| INPUT-010 Input selection data model proposal | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/INPUT_SELECTION_DATA_MODEL_PROPOSAL.md`, manager docs | PR #82 tariff model/year contract | High | Defines how tariff years should reference UtilityHub records and Tariff Builder-owned tariff inputs without changing storage or calculations. |
 
 ## Review
 
@@ -39,6 +40,7 @@
 | REL-002 Manual/browser walkthrough evidence | PM plus QA/UI review | `docs/FIRST_RELEASE_WALKTHROUGH_EVIDENCE.md`, `docs/FIRST_RELEASE_READINESS_REVIEW.md`, manager docs | Merged PR #79 | Medium | Prepared the evidence record for the first-release walkthrough; actual browser result remains pending. |
 | MODEL-001 UtilityHub data ownership and tariff-year model decision | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/UTILITYHUB_DATA_OWNERSHIP_AND_TARIFF_YEAR_MODEL.md`, manager docs | Merged PR #80 | High | Records that UtilityHub should own meters, consumption, boundary meters, supply contracts and reference data; Tariff Builder should select inputs by tariff year. |
 | INPUT-000 Tariff year input architecture | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/TARIFF_YEAR_INPUT_ARCHITECTURE.md`, manager docs | Merged PR #81 | High | Defines input ownership, input state, selection surfaces and sequencing before further calculation work. |
+| MODEL-002 Tariff model and tariff-year contract | PM plus UI/Data/Tariff Engine review | `docs/TARIFF_MODEL_YEAR_CONTRACT_PROPOSAL.md`, manager docs | Merged PR #82 | High | Defines the proposed long-lived tariff model and annual tariff year contract before replacing project-style terminology or storage. |
 
 ## Blocked
 

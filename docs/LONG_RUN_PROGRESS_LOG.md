@@ -1023,3 +1023,34 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add tariff model year contract proposal`
+
+## Package: Input Selection Data Model Proposal
+
+Files changed:
+
+- `docs/INPUT_SELECTION_DATA_MODEL_PROPOSAL.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- The tariff model/year contract identified input selection as the next safe prerequisite.
+- The proposal defines how tariff years should reference UtilityHub-owned source records and Tariff Builder-owned tariff inputs.
+- It makes the evidence-only, candidate, tariff-driving and blocked states explicit before implementation.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 38 test files and 203 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not change production behaviour.
+- Future implementation still needs approved TypeScript types, storage compatibility, UI flows and UtilityHub source contracts.
+
+Suggested commit message:
+
+- `Add input selection data model proposal`
