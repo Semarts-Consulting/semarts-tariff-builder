@@ -447,3 +447,78 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add submeter import conflict summary`
+
+## Package: Asset Evidence Readiness
+
+Files changed:
+
+- `lib/asset-readiness.ts`
+- `tests/asset-readiness.test.ts`
+- `components/ReportsSummary.tsx`
+- `tests/fixtures/report-readiness.ts`
+- `tests/report-readiness.test.tsx`
+
+Reason:
+
+- Asset values are now summarised as evidence-only report content, including total value, chargeable value, non-chargeable value, voltage grouping and readiness messages.
+
+Validation performed:
+
+- Focused asset readiness and report readiness regressions passed.
+
+Risks or follow-up decisions:
+
+- Asset evidence still does not calculate annuity, depreciation, recoverable cost, allocation or tariff recovery automatically.
+
+Suggested commit message:
+
+- `Add asset evidence readiness reporting`
+
+## Package: Limitations Register Refresh
+
+Files changed:
+
+- `docs/KNOWN_LIMITATIONS_REGISTER.md`
+- `tests/report-readiness.test.tsx`
+
+Reason:
+
+- The limitations register now reflects that reconciliation, loss-adjusted consumption, Utilityhub mapping, import review summaries and asset evidence are visible as evidence/readiness items while remaining non-tariff-impacting.
+- The HTML report download regression now confirms asset and Utilityhub hierarchy evidence are preserved in exported HTML.
+
+Validation performed:
+
+- Focused report readiness regression passed.
+
+Risks or follow-up decisions:
+
+- Limitations remain open until methodology, storage or tariff-impacting decisions are approved and implemented.
+
+Suggested commit message:
+
+- `Refresh evidence limitations and export coverage`
+
+## Package: Supply Energy Evidence Readiness
+
+Files changed:
+
+- `lib/supply-energy-report-evidence.ts`
+- `tests/supply-energy-report-evidence.test.ts`
+- `components/ReportsSummary.tsx`
+- `tests/report-readiness.test.tsx`
+
+Reason:
+
+- Supply p/kWh report evidence now has a readiness status and messages so the report distinguishes missing, review-needed and ready supply energy evidence.
+
+Validation performed:
+
+- Focused supply energy report evidence and report readiness regressions passed.
+
+Risks or follow-up decisions:
+
+- This remains report evidence only. It does not persist applied supply rows or infer customer-specific final p/kWh.
+
+Suggested commit message:
+
+- `Add supply energy evidence readiness`

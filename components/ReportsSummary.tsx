@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { calculateTariffs } from "@/lib/calculation-engine";
+import { summariseAssetReadiness } from "@/lib/asset-readiness";
 import {
   normaliseSupplyCharges,
   reconcileSupplyEvidence
@@ -341,6 +342,11 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
     methodologyInputs.submeterConsumption.length > 0 ||
     methodologyInputs.transmissionLossMultipliers.length > 0 ||
     methodologyInputs.halfHourlyImports.length > 0;
+  const assetReadiness = useMemo(
+    () => summariseAssetReadiness(methodologyInputs.assets),
+    [methodologyInputs.assets]
+  );
+  const hasAssetEvidence = methodologyInputs.assets.length > 0;
 
   if (!project || !dataInputs || !costPools || !allocationMethods) {
     return null;
@@ -867,6 +873,69 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           </section>
         ) : null}
 
+        {hasAssetEvidence ? (
+          <section className="rounded-md border border-slate-200 bg-slate-50 p-5 text-sm text-slate-950 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-semibold">Asset evidence only</h2>
+                <p className="mt-2 leading-6">
+                  Asset records support future asset-cost methodology review. They do not change
+                  recoverable cost, allocation, revenue requirement, tariff rates, report totals or
+                  export outputs in this report.
+                </p>
+              </div>
+              <span className="rounded-md border border-current px-3 py-1 text-xs font-semibold">
+                {assetReadiness.status}
+              </span>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-4">
+              <div className="rounded-md border border-slate-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-slate-700">Assets</p>
+                <p className="mt-1 text-lg font-semibold">{assetReadiness.rowCount}</p>
+              </div>
+              <div className="rounded-md border border-slate-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-slate-700">Total value</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {formatCurrency(assetReadiness.totalAssetValue)}
+                </p>
+              </div>
+              <div className="rounded-md border border-slate-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-slate-700">Chargeable value</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {formatCurrency(assetReadiness.chargeableAssetValue)}
+                </p>
+              </div>
+              <div className="rounded-md border border-slate-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-slate-700">Rows to review</p>
+                <p className="mt-1 text-lg font-semibold">{assetReadiness.invalidRows}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-md border border-slate-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Asset readiness messages</h3>
+                <ul className="mt-3 list-disc space-y-1 pl-5 leading-6">
+                  {assetReadiness.reviewMessages.map((message) => (
+                    <li key={message}>{message}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-md border border-slate-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Value by voltage</h3>
+                <ul className="mt-3 space-y-1 leading-6">
+                  {assetReadiness.byVoltage.map((row) => (
+                    <li key={row.label}>
+                      {row.label}: {formatCurrency(row.totalValue)} total,{" "}
+                      {formatCurrency(row.chargeableValue)} chargeable
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         <section className="rounded-md border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -914,12 +983,22 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           </div>
 
           <div className="mt-5">
-            <h3 className="font-semibold">Supply energy p/kWh evidence</h3>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="font-semibold">Supply energy p/kWh evidence</h3>
+              <span className="rounded-md border border-current px-3 py-1 text-xs font-semibold">
+                {supplyEnergyRateEvidence.status}
+              </span>
+            </div>
             <p className="mt-2 leading-6">
               Recorded supply contract consumption rates are grouped by their NBP, GSP or CM loss
               position. This table is source evidence only; final loss-adjusted customer p/kWh still
               requires explicit application in the tariff calculation workflow.
             </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-amber-900/80">
+              {supplyEnergyRateEvidence.messages.map((message) => (
+                <li key={message}>{message}</li>
+              ))}
+            </ul>
             {supplyEnergyRateEvidence.rows.length > 0 ? (
               <div className="mt-3 overflow-x-auto">
                 <table className="w-full min-w-[720px] border-collapse text-sm">

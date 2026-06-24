@@ -124,6 +124,7 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(text).toContain("Transmission pass-through");
     expect(text).toContain("Evidence only; excluded from network tariff recovery totals.");
     expect(text).toContain("Supply energy p/kWh evidence");
+    expect(text).toContain("Supply energy p/kWh evidence is ready for review.");
     expect(text).toContain("Recorded base total");
     expect(text).toContain("Before customer-specific loss application");
     expect(text).toContain("Needs volume data");
@@ -171,6 +172,22 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(text).toContain("12,500.00");
     expect(text).toContain("Revenue variance:");
   });
+
+  it("renders asset evidence without changing tariff totals", async () => {
+    const container = await renderReport("report-ready-project");
+    const text = getText(container);
+
+    expect(text).toContain("Asset evidence only");
+    expect(text).toContain("Total value");
+    expect(text).toContain("Chargeable value");
+    expect(text).toContain("Asset readiness messages");
+    expect(text).toContain("Value by voltage");
+    expect(text).toContain("25,000 asset value is non-chargeable or evidence-only.");
+    expect(text).toContain("Revenue requirement");
+    expect(text).toContain("12,500.00");
+    expect(text).toContain("Revenue variance:");
+  });
+
 
   it("renders non-ready status, validation severity labels, and revenue variance", async () => {
     const container = await renderReport("report-non-ready-project");
@@ -264,6 +281,9 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(html).toContain("Boundary to submeter reconciliation");
     expect(html).toContain("Loss adjustment evidence");
     expect(html).toContain("Monthly consumption coverage");
+    expect(html).toContain("Utilityhub hierarchy mapping evidence");
+    expect(html).toContain("Asset evidence only");
+    expect(html).toContain("Asset readiness messages");
   });
 
   it("downloads non-ready HTML containing readiness issues and revenue variance", async () => {
