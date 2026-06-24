@@ -11,13 +11,19 @@
 | HIER-003 Meter Map consumption contract implementation | UtilityHub/Meter Map first, Tariff Builder PM review | future UtilityHub shared contracts and Tariff Builder mapping docs if approved | UtilityHub shared entity contracts | High | Do not implement local Tariff Builder building/floor/meter-reading masters. Wait for UtilityHub/Meter Map shared IDs, mapped areas, allocation confidence, area usage metrics and data-quality issue contracts. |
 | REL-003 Release decision record | PM plus user sign-off owner | future release decision docs | Completed walkthrough evidence | Medium | Record whether current baseline is accepted for controlled walkthrough, accepted with limitations, requires fixes, or needs a scope decision. |
 | MODEL-002 Tariff model and tariff-year contract | PM plus UI/Data/Tariff Engine review | future model/year contract docs | UtilityHub data ownership decision | High | Define long-lived tariff model and annual tariff year structure before replacing project-style terminology or storage. |
+| INPUT-001 Tariff model/year setup UX proposal | PM plus UI/Data review | future input architecture and setup docs | `docs/TARIFF_YEAR_INPUT_ARCHITECTURE.md` | Medium | Define the first input-facing surface for tariff model, tariff year, reference period and UtilityHub customer/site context. |
+| INPUT-002 UtilityHub customer/site selection | UI plus PM/UtilityHub review | future selection docs/components | UtilityHub shared hierarchy contracts | High | Tariff Builder should select UtilityHub-owned customer/site/building/location context rather than create local masters. |
+| INPUT-003 Meter and consumption selection | UI/Data plus PM/UtilityHub review | future selection docs/components/tests | UtilityHub meter and meter-reading contracts | High | Display UtilityHub-owned meters, tenant/responsibility category, loss applicability and reference-year monthly consumption. |
+| INPUT-004 Boundary meter selection | UI/Data plus PM/UtilityHub review | future selection docs/components/tests | UtilityHub boundary meter and reading contracts | High | Select boundary meters for a tariff year and show monthly validation/reconciliation evidence. |
+| INPUT-005 Reference data selection | Data plus PM review | future reference data selection docs/components | TLM, CPI, transmission, distribution and supply source contracts | High | Select source/version evidence for TLM, CPI, transmission, distribution and supply contracts before tariff impact. |
+| INPUT-006 Customer class table UX | UI plus PM review | future settings/customer-class component package | Tariff model/year direction | Medium | Replace free-text-style customer class settings with an add/edit table while preserving calculation semantics. |
 | UI-010 Customer class table UX proposal | UI plus PM review | future settings/customer-class docs or component package | Tariff model/year direction | Medium | Replace free-text-style customer class settings with add/edit table workflow after scope approval. |
 
 ## In Progress
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| MODEL-001 UtilityHub data ownership and tariff-year model decision | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/UTILITYHUB_DATA_OWNERSHIP_AND_TARIFF_YEAR_MODEL.md`, manager docs | User tariff model issue review | High | Records that UtilityHub should own meters, consumption, boundary meters, supply contracts and reference data; Tariff Builder should select inputs by tariff year. |
+| INPUT-000 Tariff year input architecture | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/TARIFF_YEAR_INPUT_ARCHITECTURE.md`, manager docs | Merged PR #80 direction | High | Defines input ownership, input state, selection surfaces and sequencing before further calculation work. |
 
 ## Review
 
@@ -32,6 +38,7 @@
 | REL-001 Friday import, walkthrough and decision-phase closeout | PM plus QA/UI/Data review | `lib/submeter-import-review.ts`, `tests/submeter-import-review.test.ts`, walkthrough docs, manager docs | Merged PR #77 | Medium | Hardened import review duplicate detection, refreshed stakeholder walkthrough notes and recorded decision-pack phase closeout. |
 | REL-002 First-release readiness review | PM plus QA/UI/Tariff Engine review | `docs/FIRST_RELEASE_READINESS_REVIEW.md`, manager docs | Merged PR #78 | Medium | Assessed current baseline, release blockers and recommended next release decision without changing production behaviour. |
 | REL-002 Manual/browser walkthrough evidence | PM plus QA/UI review | `docs/FIRST_RELEASE_WALKTHROUGH_EVIDENCE.md`, `docs/FIRST_RELEASE_READINESS_REVIEW.md`, manager docs | Merged PR #79 | Medium | Prepared the evidence record for the first-release walkthrough; actual browser result remains pending. |
+| MODEL-001 UtilityHub data ownership and tariff-year model decision | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/UTILITYHUB_DATA_OWNERSHIP_AND_TARIFF_YEAR_MODEL.md`, manager docs | Merged PR #80 | High | Records that UtilityHub should own meters, consumption, boundary meters, supply contracts and reference data; Tariff Builder should select inputs by tariff year. |
 
 ## Blocked
 
