@@ -237,6 +237,7 @@ Review risks:
 - `docs/FIRST_RELEASE_WALKTHROUGH_EVIDENCE.md` now provides the manual/browser walkthrough evidence record. No walkthrough result has been recorded yet; the next user-facing action is to run the app and complete the evidence table.
 - `docs/UTILITYHUB_DATA_OWNERSHIP_AND_TARIFF_YEAR_MODEL.md` now records the revised product direction: UtilityHub should own meters, meter readings, consumption, boundary meters, supply contracts, reusable TLM/reference data, transmission/distribution data and shared hierarchy; Tariff Builder should own tariff models, tariff years, selected inputs, methodology assumptions, direct tariff-building costs, calculations and reports.
 - `docs/UTILITYHUB_SELECTOR_CONTRACT_DEPENDENCIES.md` defines the UtilityHub shared contracts needed before live selectors replace the current evidence-only scaffolding. Customer/site, meter/consumption, boundary meter and reference-data selectors remain blocked until UtilityHub exposes stable shared IDs, validation status, source versioning, permission-safe fields and summary data.
+- `docs/UTILITYHUB_SHARED_SELECTOR_CONTRACT_REQUEST.md` turns Tariff Builder's selector needs into a handoff request for UtilityHub / Programme Control. It requests customer/site, meter, monthly consumption, boundary meter, reference data, source and audit metadata contracts before Tariff Builder implements live selectors.
 
 ## QA Staging Warnings
 

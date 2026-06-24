@@ -1163,3 +1163,35 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add UtilityHub selector contract dependencies`
+
+## Package: UtilityHub Shared Selector Contract Request
+
+Files changed:
+
+- `docs/UTILITYHUB_SHARED_SELECTOR_CONTRACT_REQUEST.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Convert Tariff Builder's live selector dependency into a practical request for UtilityHub / Programme Control.
+- Define the required shared contracts for customer/site context, meters, monthly consumption summaries, boundary meters, reference data, source metadata and audit metadata.
+- Keep Tariff Builder implementation blocked until UtilityHub confirms ownership, fields, permissions, source versioning and sample payloads.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 41 test files and 214 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not change production behaviour.
+- UtilityHub still needs to confirm endpoint/service shape, snapshot strategy, permission representation, monthly summary ownership, meter responsibility ownership and boundary meter designation model.
+- Tariff Builder live selector implementation should proceed one selector at a time after shared contract examples exist.
+
+Suggested commit message:
+
+- `Add UtilityHub shared selector contract request`
