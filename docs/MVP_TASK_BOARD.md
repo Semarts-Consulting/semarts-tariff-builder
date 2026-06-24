@@ -9,13 +9,12 @@
 | SUP-003 Billing-period daily annualisation | Tariff Engine plus QA review | future `lib/supply-calculation-engine.ts` and focused tests if approved | User decision to replace 365-day annualisation with actual billing-period days | Medium | Keep separate from tariff integration; requires a clear billing-period input before production calculation changes. |
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
 | HIER-003 Meter Map consumption contract implementation | UtilityHub/Meter Map first, Tariff Builder PM review | future UtilityHub shared contracts and Tariff Builder mapping docs if approved | UtilityHub shared entity contracts | High | Do not implement local Tariff Builder building/floor/meter-reading masters. Wait for UtilityHub/Meter Map shared IDs, mapped areas, allocation confidence, area usage metrics and data-quality issue contracts. |
-| REL-002 First-release readiness review | PM plus QA/UI/Tariff Engine review | future release-readiness docs and targeted tests if needed | Friday decision phase closeout | Medium | Check demo path, import review messages, report evidence sections, decision-pack limitations and remaining first-release blockers. |
 
 ## In Progress
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| REL-001 Friday import, walkthrough and decision-phase closeout | PM plus QA/UI/Data review | `lib/submeter-import-review.ts`, `tests/submeter-import-review.test.ts`, walkthrough docs, manager docs | PRs #73-#76 | Medium | Hardens import review duplicate detection, refreshes stakeholder walkthrough notes and records decision-pack phase closeout. |
+| REL-002 First-release readiness review | PM plus QA/UI/Tariff Engine review | `docs/FIRST_RELEASE_READINESS_REVIEW.md`, manager docs | Friday decision phase closeout | Medium | Assesses current baseline, release blockers and recommended next release decision without changing production behaviour. |
 
 ## Review
 
@@ -27,6 +26,7 @@
 | HIER-004 Meter Map programme alignment | PM plus UtilityHub programme review | `AGENTS.md`, `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md`, manager docs | Merged PR #74 | Medium | Records that Meter Map is UtilityHub-owned shared infrastructure and Tariff Builder must consume shared IDs instead of duplicating building/floor/supply point/meter/meter reading/document upload/audit/permission masters. |
 | COST-002 Methodology cost to cost-pool mapping proposal | PM plus Tariff Engine/Data Import review | `docs/METHODOLOGY_COST_POOL_MAPPING_PROPOSAL.md`, manager docs | Merged PR #75 | High | Defines when direct, employee and overhead evidence may become reviewed tariff-driving cost-pool candidates without double counting. |
 | ASSET-002 Asset valuation methodology decision pack | PM plus Tariff Engine review | `docs/ASSET_VALUATION_METHOD_DECISION_PACK.md`, manager docs | Merged PR #76 | High | Defines when asset evidence may calculate or become approved annual asset recovery cost pools without changing tariff engine semantics. |
+| REL-001 Friday import, walkthrough and decision-phase closeout | PM plus QA/UI/Data review | `lib/submeter-import-review.ts`, `tests/submeter-import-review.test.ts`, walkthrough docs, manager docs | Merged PR #77 | Medium | Hardened import review duplicate detection, refreshed stakeholder walkthrough notes and recorded decision-pack phase closeout. |
 
 ## Blocked
 

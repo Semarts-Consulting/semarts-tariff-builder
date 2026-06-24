@@ -866,3 +866,34 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Complete Friday import and walkthrough closeout`
+
+## Package: First Release Readiness Review
+
+Files changed:
+
+- `docs/FIRST_RELEASE_READINESS_REVIEW.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- The project needed a single current release-readiness view after PRs #73 to #77.
+- The review separates controlled internal/selected stakeholder readiness from unrestricted external production release.
+- It identifies the remaining blockers and the recommended next package: manual/browser walkthrough evidence or release decision record.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 38 test files and 203 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not approve external production release.
+- User still needs to decide the release target: internal controlled use, selected stakeholder review, or external production release.
+
+Suggested commit message:
+
+- `Add first release readiness review`
