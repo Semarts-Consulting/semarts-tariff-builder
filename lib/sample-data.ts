@@ -9,6 +9,7 @@ import type {
   ProjectMethodologyInputs,
   ProjectSection
 } from "@/types/project";
+import { createDefaultInputSelectionScaffold } from "@/lib/input-selection-readiness";
 
 export const demoProjectId = "demo-private-network";
 
@@ -31,6 +32,8 @@ export const sampleProjects: Project[] = [
     lastUpdated: "20 June 2026"
   }
 ];
+
+sampleProjects[0].inputSelections = createDefaultInputSelectionScaffold(sampleProjects[0]);
 
 const demoDataInputRows: DataInputRow[] = [
   {
