@@ -225,6 +225,7 @@ Review risks:
 - `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md` now proposes that Tariff Builder references UtilityHub-owned customer, site, building, location and meter records through an additive compatibility mapping layer. Tariff Builder should not create a competing permanent hierarchy, and hierarchy mappings should not become tariff-impacting without reviewed aggregate input generation.
 - `docs/SUPPLY_ENERGY_TARIFF_IMPACT_PROPOSAL.md` now records the supply energy tariff-impact boundary: explicit reviewed supply p/kWh rows may affect Energy / kWh for a selected customer class, but automatic supply evidence-to-tariff conversion, supply annual amount allocation, report total changes, storage changes and export DTO changes remain blocked.
 - UtilityMap / Meter Map is now recognised as a UtilityHub module. Tariff Builder must not duplicate UtilityHub-owned building, floor, supply point, meter, meter reading, document upload, shared audit or shared permission masters. Future mapped areas, meter-to-area allocations, allocation confidence, area usage metrics and map-specific data-quality issues should be consumed from UtilityHub/Meter Map contracts as evidence or reviewed tariff-specific mappings only.
+- `docs/METHODOLOGY_COST_POOL_MAPPING_PROPOSAL.md` now proposes that direct cost, employee cost and overhead evidence remains evidence-only by default. Future tariff-impacting use should generate reviewed cost-pool candidates and then explicit `CostPoolRow` records, rather than making `calculateTariffs` read raw workbook methodology cost rows directly.
 
 ## QA Staging Warnings
 
@@ -278,4 +279,4 @@ Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECIS
 
 ## Immediate Next Action
 
-Use `docs/NEXT_LONG_RUN_BRIEF.md` as the control document for the next extended run, but apply the newer UtilityMap / Meter Map programme boundary first. Do not start production methodology, import, storage, report total, export, shared DTO, UtilityHub hierarchy, Meter Map consumption, or calculation behaviour changes until the relevant decision pack and shared UtilityHub contracts are approved.
+Use `docs/NEXT_LONG_RUN_BRIEF.md` as the control document for the next extended run, but apply the newer UtilityMap / Meter Map programme boundary and methodology-cost mapping boundary first. Do not start production methodology, import, storage, report total, export, shared DTO, UtilityHub hierarchy, Meter Map consumption, methodology-derived cost-pool generation, or calculation behaviour changes until the relevant decision pack and shared UtilityHub contracts are approved.

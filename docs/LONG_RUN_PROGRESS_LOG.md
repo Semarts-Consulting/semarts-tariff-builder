@@ -766,3 +766,34 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Record Meter Map programme alignment`
+
+## Package: Methodology Cost To Cost-Pool Mapping Proposal
+
+Files changed:
+
+- `docs/METHODOLOGY_COST_POOL_MAPPING_PROPOSAL.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Methodology cost evidence is visible in the application and reports, but direct costs, employee costs and overheads must not automatically become tariff-driving cost pools.
+- The proposal defines cost-pool-only, methodology cost evidence-only and methodology-derived cost-pool modes.
+- It recommends that future implementation should generate reviewed cost-pool candidates and explicit `CostPoolRow` records, rather than changing `calculateTariffs` to read raw workbook cost evidence directly.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 38 test files and 200 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not approve production mapping implementation.
+- Future implementation still needs approval for review statuses, confidence values, duplicate handling, split treatment, persistence, manual override, allocation readiness and report audit evidence.
+
+Suggested commit message:
+
+- `Add methodology cost mapping proposal`
