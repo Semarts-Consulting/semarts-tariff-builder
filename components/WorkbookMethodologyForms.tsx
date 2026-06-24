@@ -43,6 +43,7 @@ import {
   mergeIndirectOverheadRows,
   parseIndirectOverheadRows
 } from "@/lib/indirect-overhead-import";
+import { summariseMethodologyCostReadiness } from "@/lib/methodology-cost-readiness";
 import { isProjectArchived } from "@/lib/project-state";
 import {
   createAssetInput,
@@ -1720,6 +1721,19 @@ export function WorkbookCostInputsForm({
     () => getIndirectOverheadSummary(methodologyInputs.indirectOverheads),
     [methodologyInputs.indirectOverheads]
   );
+  const methodologyCostReadiness = useMemo(
+    () =>
+      summariseMethodologyCostReadiness({
+        directCosts: methodologyInputs.directCosts,
+        employeeCosts: methodologyInputs.employeeCosts,
+        indirectOverheads: methodologyInputs.indirectOverheads
+      }),
+    [
+      methodologyInputs.directCosts,
+      methodologyInputs.employeeCosts,
+      methodologyInputs.indirectOverheads
+    ]
+  );
   const supplyDetailsValidationErrors = useMemo(
     () => validateSupplyDetails(methodologyInputs.supplyDetails),
     [methodologyInputs.supplyDetails]
@@ -2736,6 +2750,48 @@ export function WorkbookCostInputsForm({
 
   return (
     <div className="mt-8 space-y-6">
+      {showAllSections ? (
+        <section className="rounded-md border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-semibold">Methodology cost readiness</h2>
+              <p className="mt-2 leading-6">
+                Direct non-employee costs, employee costs and indirect overheads are review evidence
+                only until they are represented in approved recoverable cost pools and allocations.
+              </p>
+            </div>
+            <span className="rounded-md border border-current px-3 py-1 text-xs font-semibold">
+              {methodologyCostReadiness.status}
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            <SummaryMetric
+              label="Direct annual evidence"
+              value={formatNumber(methodologyCostReadiness.directCostAnnualValue)}
+            />
+            <SummaryMetric
+              label="Employee weighted FTE"
+              value={formatNumber(methodologyCostReadiness.employeeWeightedFte)}
+            />
+            <SummaryMetric
+              label="Overhead annual evidence"
+              value={formatNumber(methodologyCostReadiness.indirectOverheadAnnualCost)}
+            />
+            <SummaryMetric
+              label="Rows needing review"
+              value={formatNumber(methodologyCostReadiness.issues.length)}
+            />
+          </div>
+
+          <ul className="mt-4 list-disc space-y-1 pl-5 leading-6">
+            {methodologyCostReadiness.messages.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {showAllSections || section === "direct-non-employee" ? (
         <WorkbookTableSection
           title="Direct non-employee costs"

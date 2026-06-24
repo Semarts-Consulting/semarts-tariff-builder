@@ -10,6 +10,7 @@ import {
 import { buildSupplyEnergyRateEvidence } from "@/lib/supply-energy-report-evidence";
 import { calculateLossAdjustedHalfHourlyConsumption } from "@/lib/loss-adjusted-consumption";
 import { defaultMeterResponsibilityAllocationRules } from "@/lib/meter-responsibility-rules";
+import { summariseMethodologyCostReadiness } from "@/lib/methodology-cost-readiness";
 import {
   createMonthlyExpectedConsumptionPeriods,
   reviewConsumptionPeriodCoverage
@@ -347,6 +348,23 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
     [methodologyInputs.assets]
   );
   const hasAssetEvidence = methodologyInputs.assets.length > 0;
+  const methodologyCostReadiness = useMemo(
+    () =>
+      summariseMethodologyCostReadiness({
+        directCosts: methodologyInputs.directCosts,
+        employeeCosts: methodologyInputs.employeeCosts,
+        indirectOverheads: methodologyInputs.indirectOverheads
+      }),
+    [
+      methodologyInputs.directCosts,
+      methodologyInputs.employeeCosts,
+      methodologyInputs.indirectOverheads
+    ]
+  );
+  const hasMethodologyCostEvidence =
+    methodologyInputs.directCosts.length > 0 ||
+    methodologyInputs.employeeCosts.length > 0 ||
+    methodologyInputs.indirectOverheads.length > 0;
 
   if (!project || !dataInputs || !costPools || !allocationMethods) {
     return null;
@@ -704,6 +722,106 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
           <li>Customer classes included: {calculation.classResults.length}</li>
         </ul>
         </section>
+
+        {hasMethodologyCostEvidence ? (
+          <section className="rounded-md border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="font-semibold">Methodology cost evidence only</h2>
+                <p className="mt-2 leading-6">
+                  Direct cost, employee cost and overhead rows support commercial methodology review.
+                  They do not change the current recoverable cost pools, allocation, revenue
+                  requirement, tariff rates, report totals or export outputs in this report.
+                </p>
+              </div>
+              <span className="rounded-md border border-current px-3 py-1 text-xs font-semibold">
+                {methodologyCostReadiness.status}
+              </span>
+            </div>
+
+            <div className="mt-4 grid gap-3 md:grid-cols-4">
+              <div className="rounded-md border border-emerald-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-emerald-800">
+                  Direct cost rows
+                </p>
+                <p className="mt-1 text-lg font-semibold">
+                  {methodologyCostReadiness.directCostRows}
+                </p>
+              </div>
+              <div className="rounded-md border border-emerald-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-emerald-800">
+                  Direct annual evidence
+                </p>
+                <p className="mt-1 text-lg font-semibold">
+                  {formatCurrency(methodologyCostReadiness.directCostAnnualValue)}
+                </p>
+              </div>
+              <div className="rounded-md border border-emerald-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-emerald-800">
+                  Employee weighted FTE
+                </p>
+                <p className="mt-1 text-lg font-semibold">
+                  {formatNumber(methodologyCostReadiness.employeeWeightedFte)}
+                </p>
+              </div>
+              <div className="rounded-md border border-emerald-200 bg-white/70 p-3">
+                <p className="text-xs font-semibold uppercase text-emerald-800">
+                  Overhead annual evidence
+                </p>
+                <p className="mt-1 text-lg font-semibold">
+                  {formatCurrency(methodologyCostReadiness.indirectOverheadAnnualCost)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <div className="rounded-md border border-emerald-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Cost evidence readiness</h3>
+                <ul className="mt-3 list-disc space-y-1 pl-5 leading-6">
+                  {methodologyCostReadiness.messages.map((message) => (
+                    <li key={message}>{message}</li>
+                  ))}
+                  <li>Upload batches: {methodologyCostReadiness.uploadBatchCount}</li>
+                  <li>
+                    Total annual cost evidence:{" "}
+                    {formatCurrency(methodologyCostReadiness.totalAnnualCostEvidence)}
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-md border border-emerald-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Cost evidence categories</h3>
+                <ul className="mt-3 space-y-1 leading-6">
+                  <li>
+                    Direct cost types:{" "}
+                    {methodologyCostReadiness.directCostTypes.join(", ") || "None recorded"}
+                  </li>
+                  <li>
+                    Employee role types:{" "}
+                    {methodologyCostReadiness.employeeRoleTypes.join(", ") || "None recorded"}
+                  </li>
+                  <li>Employee FTE: {formatNumber(methodologyCostReadiness.employeeFte)}</li>
+                  <li>
+                    Overhead rows: {methodologyCostReadiness.indirectOverheadRows}
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {methodologyCostReadiness.issues.length > 0 ? (
+              <div className="mt-5 rounded-md border border-emerald-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Cost evidence issues</h3>
+                <ul className="mt-3 space-y-2 leading-6">
+                  {methodologyCostReadiness.issues.slice(0, 8).map((issue) => (
+                    <li key={`${issue.source}-${issue.rowId}`}>
+                      {issue.source} {issue.reference}: {issue.messages.join(", ")}.
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
 
         {hasSubmeterEvidence ? (
           <section className="rounded-md border border-blue-200 bg-blue-50 p-5 text-sm text-blue-950 shadow-sm">

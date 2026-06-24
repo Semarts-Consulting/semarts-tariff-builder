@@ -24,6 +24,9 @@ export type ReportReadinessScenario = {
   methodologyInputs: Pick<
     ProjectMethodologyInputs,
     | "projectId"
+    | "directCosts"
+    | "employeeCosts"
+    | "indirectOverheads"
     | "supplyDetails"
     | "assets"
     | "siteSubmeters"
@@ -335,6 +338,59 @@ const assetRows: AssetInput[] = [
   }
 ];
 
+const directCostRows = [
+  {
+    id: "direct-security",
+    description: "Airport security support",
+    costByType: "Security",
+    annualValue: 12000,
+    comment: "Workbook-derived direct cost evidence",
+    sourceFileName: "cost-evidence.xlsx",
+    uploadedAt: lastUpdated,
+    importBatchId: "direct-cost-evidence",
+    rowFingerprint: "direct-security"
+  },
+  {
+    id: "direct-operations",
+    description: "Operational support",
+    costByType: "Operations",
+    annualValue: 8000,
+    comment: "Workbook-derived direct cost evidence",
+    sourceFileName: "cost-evidence.xlsx",
+    uploadedAt: lastUpdated,
+    importBatchId: "direct-cost-evidence",
+    rowFingerprint: "direct-operations"
+  }
+];
+
+const employeeCostRows = [
+  {
+    id: "employee-energy-manager",
+    role: "Energy manager",
+    roleType: "Manager" as const,
+    fte: 0.5,
+    timePercent: 60,
+    comment: "Workbook-derived employee cost evidence",
+    sourceFileName: "employee-evidence.xlsx",
+    uploadedAt: lastUpdated,
+    importBatchId: "employee-cost-evidence",
+    rowFingerprint: "employee-energy-manager"
+  }
+];
+
+const indirectOverheadRows = [
+  {
+    id: "overhead-shared-utilities",
+    description: "Shared utilities team",
+    annualCost: 6000,
+    comment: "Workbook-derived overhead evidence",
+    sourceFileName: "overhead-evidence.xlsx",
+    uploadedAt: lastUpdated,
+    importBatchId: "overhead-evidence",
+    rowFingerprint: "overhead-shared-utilities"
+  }
+];
+
 function createScenario(
   projectId: string,
   name: string,
@@ -362,6 +418,9 @@ function createScenario(
     },
     methodologyInputs: {
       projectId,
+      directCosts: projectId === "report-ready-project" ? directCostRows : [],
+      employeeCosts: projectId === "report-ready-project" ? employeeCostRows : [],
+      indirectOverheads: projectId === "report-ready-project" ? indirectOverheadRows : [],
       supplyDetails: projectId === "report-ready-project" ? supplyEvidenceRows : [],
       assets: projectId === "report-ready-project" ? assetRows : [],
       siteSubmeters: projectId === "report-ready-project" ? submeterRows : [],
