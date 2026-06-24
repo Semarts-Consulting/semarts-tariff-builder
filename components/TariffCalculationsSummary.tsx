@@ -5,6 +5,7 @@ import { calculateTariffs } from "@/lib/calculation-engine";
 import { TariffAuditTracePanel } from "@/components/TariffAuditTracePanel";
 import {
   calculateSupplyEnergyApplication,
+  validateSupplyEnergyApplication,
   type SupplyEnergyApplicationInput,
   type SupplyEnergyNetworkLevel
 } from "@/lib/supply-energy-application";
@@ -154,6 +155,11 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
     () => calculateSupplyEnergyApplication(supplyEnergyApplication),
     [supplyEnergyApplication]
   );
+  const supplyEnergyValidationIssues = useMemo(
+    () => validateSupplyEnergyApplication(supplyEnergyApplication),
+    [supplyEnergyApplication]
+  );
+  const canApplySupplyEnergy = supplyEnergyValidationIssues.length === 0;
   const recalculatedResult = useMemo(
     () =>
       calculateTariffs({
@@ -161,9 +167,16 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
         dataInputRows: projectCalculationInputs.dataInputs.rows,
         costPoolRows: projectCalculationInputs.costPools.rows,
         allocationRows: projectCalculationInputs.allocationMethods.rows,
-        supplyEnergyRows: applySupplyEnergy ? [supplyEnergyResult.tariffRow] : []
+        supplyEnergyRows:
+          applySupplyEnergy && canApplySupplyEnergy ? [supplyEnergyResult.tariffRow] : []
       }),
-    [applySupplyEnergy, projectCalculationInputs, projectId, supplyEnergyResult.tariffRow]
+    [
+      applySupplyEnergy,
+      canApplySupplyEnergy,
+      projectCalculationInputs,
+      projectId,
+      supplyEnergyResult.tariffRow
+    ]
   );
 
   useEffect(() => {
@@ -263,12 +276,24 @@ export function TariffCalculationsSummary({ projectId }: TariffCalculationsSumma
           <label className="flex items-center gap-2 rounded-md border border-line px-3 py-2 text-sm font-semibold">
             <input
               type="checkbox"
-              checked={applySupplyEnergy}
+              checked={applySupplyEnergy && canApplySupplyEnergy}
+              disabled={!canApplySupplyEnergy}
               onChange={(event) => setApplySupplyEnergy(event.target.checked)}
             />
             Apply to tariff
           </label>
         </div>
+
+        {supplyEnergyValidationIssues.length > 0 ? (
+          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            <p className="font-semibold">Supply energy inputs need review</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              {supplyEnergyValidationIssues.map((issue) => (
+                <li key={`${issue.code}-${issue.message}`}>{issue.message}</li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <label className="text-sm font-medium">

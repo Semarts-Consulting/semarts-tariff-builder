@@ -123,6 +123,9 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(text).toContain("Supplier unit charge");
     expect(text).toContain("Transmission pass-through");
     expect(text).toContain("Evidence only; excluded from network tariff recovery totals.");
+    expect(text).toContain("Supply energy p/kWh evidence");
+    expect(text).toContain("Recorded base total");
+    expect(text).toContain("Before customer-specific loss application");
     expect(text).toContain("Needs volume data");
     expect(text).toContain("Fixed evidence annual amount");
     expect(text).toContain("19,596.00");
@@ -152,6 +155,9 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(text).toContain("Monthly consumption coverage");
     expect(text).toContain("Missing meter-periods:");
     expect(text).toContain("Unknown meter records:");
+    expect(text).toContain("Consumption aggregation evidence");
+    expect(text).toContain("Meter groups:");
+    expect(text).toContain("Tenant groups:");
     expect(text).toContain("Responsibility category evidence");
     expect(text).toContain("Tenant");
     expect(text).toContain("Plant Room");

@@ -46,6 +46,16 @@ export type UtilityhubSubmeterMappingInput = {
   hierarchyReferences: UtilityhubHierarchyReference[];
 };
 
+export type UtilityhubHierarchyMappingSummary = {
+  totalSubmeters: number;
+  mappedSubmeters: number;
+  reviewSubmeters: number;
+  missingMeterCount: number;
+  missingLocationCount: number;
+  unmappedMeterCount: number;
+  unmappedLocationCount: number;
+};
+
 function normaliseKey(value: string) {
   return value.trim().toLowerCase();
 }
@@ -153,4 +163,22 @@ export function mapSubmetersToUtilityhubHierarchy({
 
 export function getUtilityhubHierarchyMappingIssues(mappings: UtilityhubSubmeterMapping[]) {
   return mappings.flatMap((mapping) => mapping.issues);
+}
+
+export function summariseUtilityhubHierarchyMappings(
+  mappings: UtilityhubSubmeterMapping[]
+): UtilityhubHierarchyMappingSummary {
+  const issues = getUtilityhubHierarchyMappingIssues(mappings);
+
+  return {
+    totalSubmeters: mappings.length,
+    mappedSubmeters: mappings.filter(
+      (mapping) => mapping.hierarchyReference !== undefined && mapping.issues.length === 0
+    ).length,
+    reviewSubmeters: mappings.filter((mapping) => mapping.issues.length > 0).length,
+    missingMeterCount: issues.filter((issue) => issue.code === "Missing meter").length,
+    missingLocationCount: issues.filter((issue) => issue.code === "Missing location").length,
+    unmappedMeterCount: issues.filter((issue) => issue.code === "Unmapped meter").length,
+    unmappedLocationCount: issues.filter((issue) => issue.code === "Unmapped location").length
+  };
 }

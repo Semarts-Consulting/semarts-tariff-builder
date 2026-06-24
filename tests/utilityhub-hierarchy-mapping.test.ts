@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getUtilityhubHierarchyMappingIssues,
   mapSubmetersToUtilityhubHierarchy,
+  summariseUtilityhubHierarchyMappings,
   type UtilityhubHierarchyReference
 } from "@/lib/utilityhub-hierarchy-mapping";
 import type { SiteSubmeterRecord } from "@/types/project";
@@ -86,5 +87,26 @@ describe("Utilityhub hierarchy mapping", () => {
       "Missing customer",
       "Missing site"
     ]);
+  });
+
+  it("summarises mapping readiness counts for review UI", () => {
+    const mappings = mapSubmetersToUtilityhubHierarchy({
+      submeters: [
+        submeter({ id: "mapped" }),
+        submeter({ id: "unmapped", meter: "UNKNOWN", location: "Unknown kiosk" }),
+        submeter({ id: "missing", meter: "", location: "" })
+      ],
+      hierarchyReferences: [hierarchyReference]
+    });
+
+    expect(summariseUtilityhubHierarchyMappings(mappings)).toEqual({
+      totalSubmeters: 3,
+      mappedSubmeters: 1,
+      reviewSubmeters: 2,
+      missingMeterCount: 1,
+      missingLocationCount: 1,
+      unmappedMeterCount: 1,
+      unmappedLocationCount: 1
+    });
   });
 });

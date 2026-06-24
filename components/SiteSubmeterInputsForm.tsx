@@ -25,12 +25,17 @@ import {
   createMonthlyExpectedConsumptionPeriods,
   reviewConsumptionPeriodCoverage
 } from "@/lib/submeter-consumption-coverage";
+import { aggregateSubmeterConsumption } from "@/lib/submeter-consumption-aggregation";
 import {
   filterSiteSubmeters,
   filterSubmeterConsumption,
   filterTransmissionLossMultipliers,
   limitRows
 } from "@/lib/site-submeter-table-view";
+import {
+  mapSubmetersToUtilityhubHierarchy,
+  summariseUtilityhubHierarchyMappings
+} from "@/lib/utilityhub-hierarchy-mapping";
 import {
   consumptionFormats,
   createSiteSubmeterRecord,
@@ -212,6 +217,14 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
       }),
     [inputs.siteSubmeters, inputs.submeterConsumption, monthlyCoveragePeriods]
   );
+  const submeterConsumptionAggregation = useMemo(
+    () =>
+      aggregateSubmeterConsumption({
+        submeters: inputs.siteSubmeters,
+        consumptionRows: inputs.submeterConsumption
+      }),
+    [inputs.siteSubmeters, inputs.submeterConsumption]
+  );
   const submeterIssueRowIds = useMemo(
     () => new Set(submeterIssues.map((issue) => issue.rowId).filter(isPresentText)),
     [submeterIssues]
@@ -277,6 +290,22 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
     ]
   );
   const visibleTlms = useMemo(() => limitRows(filteredTlms, 250), [filteredTlms]);
+  const utilityhubHierarchyMappings = useMemo(
+    () =>
+      mapSubmetersToUtilityhubHierarchy({
+        submeters: inputs.siteSubmeters,
+        hierarchyReferences: []
+      }),
+    [inputs.siteSubmeters]
+  );
+  const utilityhubHierarchySummary = useMemo(
+    () => summariseUtilityhubHierarchyMappings(utilityhubHierarchyMappings),
+    [utilityhubHierarchyMappings]
+  );
+  const utilityhubHierarchyReviewRows = useMemo(
+    () => limitRows(utilityhubHierarchyMappings.filter((mapping) => mapping.issues.length > 0), 8),
+    [utilityhubHierarchyMappings]
+  );
 
   function save(nextInputs: ProjectMethodologyInputs, message: string) {
     setInputs(nextInputs);
@@ -1097,6 +1126,73 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
 
       <section className="rounded-md border border-line bg-white p-5">
         <h2 className="font-semibold">Validation and calculation readiness</h2>
+        <div className="mt-4 rounded-md border border-line bg-field p-4">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h3 className="font-semibold">Utilityhub hierarchy mapping review</h3>
+              <p className="mt-1 text-sm leading-6 text-ink/70">
+                This is evidence-only. It checks whether submeter rows can be linked to
+                Utilityhub-style Customer, Site, Building, Location and Meter references before any
+                future tariff-impacting use.
+              </p>
+            </div>
+            <span className="rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold">
+              {utilityhubHierarchySummary.reviewSubmeters > 0 ? "Needs review" : "Mapped"}
+            </span>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            <ReadinessMetric
+              label="Submeters"
+              value={utilityhubHierarchySummary.totalSubmeters.toLocaleString()}
+            />
+            <ReadinessMetric
+              label="Mapped"
+              value={utilityhubHierarchySummary.mappedSubmeters.toLocaleString()}
+            />
+            <ReadinessMetric
+              label="Needs review"
+              value={utilityhubHierarchySummary.reviewSubmeters.toLocaleString()}
+            />
+            <ReadinessMetric
+              label="Unmapped meters"
+              value={utilityhubHierarchySummary.unmappedMeterCount.toLocaleString()}
+            />
+          </div>
+          {utilityhubHierarchyReviewRows.length > 0 ? (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full min-w-[720px] border-collapse text-sm">
+                <thead className="bg-white text-left text-xs uppercase text-ink/60">
+                  <tr>
+                    <th className="border border-line px-3 py-2 font-semibold">Meter</th>
+                    <th className="border border-line px-3 py-2 font-semibold">Location</th>
+                    <th className="border border-line px-3 py-2 font-semibold">
+                      Responsibility
+                    </th>
+                    <th className="border border-line px-3 py-2 font-semibold">Review issue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {utilityhubHierarchyReviewRows.map((mapping) => (
+                    <tr key={mapping.submeterId}>
+                      <td className="border border-line px-3 py-2">{mapping.meter || "Missing"}</td>
+                      <td className="border border-line px-3 py-2">
+                        {mapping.issues[0]?.location || "Missing"}
+                      </td>
+                      <td className="border border-line px-3 py-2">{mapping.responsibility}</td>
+                      <td className="border border-line px-3 py-2">
+                        {mapping.issues.map((issue) => issue.message).join(" ")}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="mt-4 text-sm text-ink/70">
+              No hierarchy mapping review issues for the current submeter rows.
+            </p>
+          )}
+        </div>
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
           <ValidationPanel title="Submeter register" issues={submeterIssues.map((issue) => issue.message)} />
           <ValidationPanel title="Consumption records" issues={consumptionIssues.map((issue) => issue.message)} />
@@ -1115,6 +1211,16 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
               duplicatePeriodCount: consumptionCoverage.totalDuplicatePeriods,
               unknownMeterRecordCount: consumptionCoverage.unknownMeterRecordIds.length
             })}
+          />
+          <SummaryPanel
+            title="Consumption aggregation review"
+            rows={[
+              `Meter groups: ${submeterConsumptionAggregation.byMeter.length}`,
+              `Location groups: ${submeterConsumptionAggregation.byLocation.length}`,
+              `Responsibility groups: ${submeterConsumptionAggregation.byResponsibility.length}`,
+              `Tenant groups: ${submeterConsumptionAggregation.byTenant.length}`,
+              `Unknown meter records: ${submeterConsumptionAggregation.unknownMeterRecords.length}`
+            ]}
           />
           <SummaryPanel
             title="Import template headers"
@@ -1154,6 +1260,15 @@ function ValidationPanel({ title, issues }: { title: string; issues: string[] })
       ) : (
         <p className="mt-2 text-sm text-ink/70">No current validation issues.</p>
       )}
+    </div>
+  );
+}
+
+function ReadinessMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-line bg-white p-3">
+      <p className="text-xs font-semibold uppercase text-ink/50">{label}</p>
+      <p className="mt-1 text-lg font-semibold">{value}</p>
     </div>
   );
 }

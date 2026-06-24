@@ -100,6 +100,15 @@ The Site Submeters screen and report evidence also show monthly consumption cove
 - Duplicate meter-periods.
 - Unknown meter records.
 
+The Site Submeters screen also shows evidence-only Utilityhub hierarchy mapping readiness. Current rows are checked against Utilityhub-style Customer, Site, Building, Location and Meter references where those references are available. The current package does not persist Utilityhub IDs to methodology records.
+
+Consumption aggregation evidence is available in the Site Submeters screen and report. It groups consumption by:
+
+- Meter.
+- Location.
+- Responsibility.
+- Tenant.
+
 These checks are evidence and readiness signals only. They do not block save, delete data, or alter tariff calculations.
 
 ## Calculation Readiness

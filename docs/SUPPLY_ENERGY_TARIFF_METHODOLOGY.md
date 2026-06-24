@@ -71,11 +71,24 @@ No supply energy row means no change to existing tariff outputs.
 
 - Supply p/kWh rows must reference an existing customer class.
 - Negative supply p/kWh is rejected.
+- The tariff calculation screen validates missing customer class, negative component rates, zero or negative loss multipliers, and zero or negative profit multipliers before allowing the supply energy row to be applied.
 - The calculation is explicit and opt-in; it does not infer supply costs from evidence-only supply records.
 - Day, night and combined rates should be supplied as separate rows or pre-blended only where the methodology has approved the denominator.
 - Each charge must carry the loss position specified in the source input. Do not assume all charges are NBP or all charges are CM.
 - Customer-specific private network losses are applied to the built-up site-meter rate, not individually inferred from each source line.
 - Do not add RO, FiT, CfD, BSUoS, CCL or similar levies twice if the supplier unit rate is already all-in.
+
+## Report Evidence
+
+The stakeholder report now shows recorded supply contract consumption rates grouped by NBP, GSP and CM loss position as base p/kWh evidence. This is not a final customer p/kWh unless the loss-adjusted supply application is explicitly applied in the calculation workflow.
+
+The report evidence does not change:
+
+- network revenue requirement;
+- recoverable cost;
+- report totals;
+- export DTOs;
+- stored methodology inputs.
 
 ## Out Of Scope
 
@@ -83,5 +96,5 @@ No supply energy row means no change to existing tariff outputs.
 - Automatic Elexon source refresh.
 - Storage schema changes.
 - Export DTO changes.
-- UI editing for the new optional supply energy rows.
+- Persistent storage for applied supply energy rows.
 - Customer/location hierarchy changes.
