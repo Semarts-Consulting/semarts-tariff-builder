@@ -188,6 +188,27 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(text).toContain("Revenue variance:");
   });
 
+  it("renders methodology cost evidence without changing tariff totals", async () => {
+    const container = await renderReport("report-ready-project");
+    const text = getText(container);
+
+    expect(text).toContain("Methodology cost evidence only");
+    expect(text).toContain(
+      "They do not change the current recoverable cost pools, allocation, revenue requirement, tariff rates, report totals or export outputs"
+    );
+    expect(text).toContain("Ready for review");
+    expect(text).toContain("Direct annual evidence");
+    expect(text).toContain("£20,000.00");
+    expect(text).toContain("Employee weighted FTE");
+    expect(text).toContain("Overhead annual evidence");
+    expect(text).toContain("£6,000.00");
+    expect(text).toContain("Cost evidence categories");
+    expect(text).toContain("Operations, Security");
+    expect(text).toContain("Revenue requirement");
+    expect(text).toContain("12,500.00");
+    expect(text).toContain("Revenue variance:");
+  });
+
 
   it("renders non-ready status, validation severity labels, and revenue variance", async () => {
     const container = await renderReport("report-non-ready-project");
@@ -284,6 +305,8 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(html).toContain("Utilityhub hierarchy mapping evidence");
     expect(html).toContain("Asset evidence only");
     expect(html).toContain("Asset readiness messages");
+    expect(html).toContain("Methodology cost evidence only");
+    expect(html).toContain("Cost evidence readiness");
   });
 
   it("downloads non-ready HTML containing readiness issues and revenue variance", async () => {

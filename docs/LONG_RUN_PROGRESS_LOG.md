@@ -522,3 +522,37 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add supply energy evidence readiness`
+
+## Package: Methodology Cost Evidence Readiness
+
+Files changed:
+
+- `lib/methodology-cost-readiness.ts`
+- `tests/methodology-cost-readiness.test.ts`
+- `components/ReportsSummary.tsx`
+- `components/WorkbookMethodologyForms.tsx`
+- `tests/fixtures/report-readiness.ts`
+- `tests/report-readiness.test.tsx`
+- `docs/KNOWN_LIMITATIONS_REGISTER.md`
+
+Reason:
+
+- Direct non-employee costs, employee costs and indirect overheads now have a pure evidence/readiness summary.
+- The report now shows methodology cost evidence as explicitly non-tariff-impacting.
+- The workbook cost input screen now shows a combined commercial review status across direct cost, employee cost and overhead evidence.
+- The limitations register now records that these workbook cost rows do not automatically create tariff-driving cost pools or allocations.
+
+Validation performed:
+
+- Focused methodology cost readiness tests passed.
+- Focused report readiness regression passed.
+- Type-check passed.
+
+Risks or follow-up decisions:
+
+- This remains evidence/readiness only. It does not change recoverable cost pools, allocation, revenue requirement, tariff rates, report totals, imports, exports, storage, shared DTOs, or calculation behaviour.
+- Future tariff-impacting use needs an approved methodology configuration and cost-pool mapping decision.
+
+Suggested commit message:
+
+- `Add methodology cost evidence readiness`
