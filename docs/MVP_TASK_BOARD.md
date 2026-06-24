@@ -10,7 +10,6 @@
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
 | HIER-003 Meter Map consumption contract implementation | UtilityHub/Meter Map first, Tariff Builder PM review | future UtilityHub shared contracts and Tariff Builder mapping docs if approved | UtilityHub shared entity contracts | High | Do not implement local Tariff Builder building/floor/meter-reading masters. Wait for UtilityHub/Meter Map shared IDs, mapped areas, allocation confidence, area usage metrics and data-quality issue contracts. |
 | REL-003 Release decision record | PM plus user sign-off owner | future release decision docs | Completed walkthrough evidence | Medium | Record whether current baseline is accepted for controlled walkthrough, accepted with limitations, requires fixes, or needs a scope decision. |
-| INPUT-001 Tariff model/year setup UX proposal | PM plus UI/Data review | future input architecture and setup docs | `docs/TARIFF_YEAR_INPUT_ARCHITECTURE.md` | Medium | Define the first input-facing surface for tariff model, tariff year, reference period and UtilityHub customer/site context. |
 | INPUT-002 UtilityHub customer/site selection | UI plus PM/UtilityHub review | future selection docs/components | UtilityHub shared hierarchy contracts | High | Tariff Builder should select UtilityHub-owned customer/site/building/location context rather than create local masters. |
 | INPUT-003 Meter and consumption selection | UI/Data plus PM/UtilityHub review | future selection docs/components/tests | UtilityHub meter and meter-reading contracts | High | Display UtilityHub-owned meters, tenant/responsibility category, loss applicability and reference-year monthly consumption. |
 | INPUT-004 Boundary meter selection | UI/Data plus PM/UtilityHub review | future selection docs/components/tests | UtilityHub boundary meter and reading contracts | High | Select boundary meters for a tariff year and show monthly validation/reconciliation evidence. |
@@ -23,7 +22,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| INPUT-010 Input selection data model proposal | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/INPUT_SELECTION_DATA_MODEL_PROPOSAL.md`, manager docs | PR #82 tariff model/year contract | High | Defines how tariff years should reference UtilityHub records and Tariff Builder-owned tariff inputs without changing storage or calculations. |
+| INPUT-011 Input foundation implementation batch 01 | UI plus PM/QA review | `types/project.ts`, `components/NewProjectForm.tsx`, `components/ProjectSettingsForm.tsx`, `components/CustomerClassTableEditor.tsx`, `components/ProjectDashboardOverview.tsx`, helper libs and tests | PR #83 input selection model | Medium | Adds optional tariff model/year metadata, customer-class table editing, and input foundation readiness without changing calculations. |
 
 ## Review
 
@@ -41,6 +40,7 @@
 | MODEL-001 UtilityHub data ownership and tariff-year model decision | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/UTILITYHUB_DATA_OWNERSHIP_AND_TARIFF_YEAR_MODEL.md`, manager docs | Merged PR #80 | High | Records that UtilityHub should own meters, consumption, boundary meters, supply contracts and reference data; Tariff Builder should select inputs by tariff year. |
 | INPUT-000 Tariff year input architecture | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/TARIFF_YEAR_INPUT_ARCHITECTURE.md`, manager docs | Merged PR #81 | High | Defines input ownership, input state, selection surfaces and sequencing before further calculation work. |
 | MODEL-002 Tariff model and tariff-year contract | PM plus UI/Data/Tariff Engine review | `docs/TARIFF_MODEL_YEAR_CONTRACT_PROPOSAL.md`, manager docs | Merged PR #82 | High | Defines the proposed long-lived tariff model and annual tariff year contract before replacing project-style terminology or storage. |
+| INPUT-010 Input selection data model proposal | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/INPUT_SELECTION_DATA_MODEL_PROPOSAL.md`, manager docs | Merged PR #83 | High | Defines how tariff years should reference UtilityHub records and Tariff Builder-owned tariff inputs without changing storage or calculations. |
 
 ## Blocked
 

@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { calculateTariffs } from "@/lib/calculation-engine";
+import { summariseInputFoundationReadiness } from "@/lib/input-foundation-readiness";
 import { projectSections } from "@/lib/sample-data";
 import {
+  getProjectById,
   getProjectAllocationMethods,
   getProjectCostPools,
   getProjectDataInputs
 } from "@/lib/project-storage";
 import type {
+  Project,
   ProjectAllocationMethods,
   ProjectCostPools,
   ProjectDataInputs,
@@ -21,6 +24,7 @@ type ProjectDashboardOverviewProps = {
 };
 
 type DashboardState = {
+  project: Project | null;
   dataInputs: ProjectDataInputs | null;
   costPools: ProjectCostPools | null;
   allocationMethods: ProjectAllocationMethods | null;
@@ -47,6 +51,7 @@ function isComplete(value: boolean) {
 
 export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverviewProps) {
   const [dashboardState, setDashboardState] = useState<DashboardState>({
+    project: null,
     dataInputs: null,
     costPools: null,
     allocationMethods: null,
@@ -54,6 +59,7 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
   });
 
   useEffect(() => {
+    const project = getProjectById(projectId);
     const dataInputs = getProjectDataInputs(projectId);
     const costPools = getProjectCostPools(projectId);
     const allocationMethods = getProjectAllocationMethods(projectId);
@@ -65,6 +71,7 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
     });
 
     setDashboardState({
+      project,
       dataInputs,
       costPools,
       allocationMethods,
@@ -108,6 +115,10 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
     reports: isComplete(totals.allocatedCost > 0 && Math.abs(totals.variance) < 0.01)
   };
 
+  const inputFoundationSummary = dashboardState.project
+    ? summariseInputFoundationReadiness(dashboardState.project)
+    : null;
+
   return (
     <div className="mt-8 space-y-6">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -147,6 +158,36 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
             <p className="mt-1">{totals.unbalancedRows}</p>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-md border border-line bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="font-semibold">Input foundation</h2>
+            <p className="mt-1 text-sm text-ink/70">
+              Tariff model, tariff year and UtilityHub reference readiness before input selection.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-field px-3 py-1 text-xs font-semibold text-semarts-dark">
+            {inputFoundationSummary?.status ?? "Needs setup"}
+          </span>
+        </div>
+
+        {inputFoundationSummary && inputFoundationSummary.checks.length > 0 ? (
+          <ul className="mt-4 space-y-2 text-sm">
+            {inputFoundationSummary.checks.map((check) => (
+              <li key={check.code} className="rounded-md border border-line bg-field p-3">
+                <span className="font-medium">{check.label}: </span>
+                <span>{check.message}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-4 text-sm text-ink/70">
+            Model/year setup is ready for input selection. UtilityHub-sourced data still needs
+            reviewed selection before it can affect tariffs.
+          </p>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { CustomerClassTableEditor } from "@/components/CustomerClassTableEditor";
 import {
   deleteProject,
   getProjectById,
@@ -14,13 +15,20 @@ import {
   saveDataInputsToSupabase,
   saveProjectToSupabase
 } from "@/lib/supabase-sync";
-import type { Project, ProjectStatus } from "@/types/project";
+import type { InputReadinessStatus, Project, ProjectStatus } from "@/types/project";
 
 type ProjectSettingsFormProps = {
   projectId: string;
 };
 
 const statuses: ProjectStatus[] = ["Draft", "Ready for review", "Locked", "Archived"];
+const inputReadinessStatuses: InputReadinessStatus[] = [
+  "not-started",
+  "in-progress",
+  "needs-review",
+  "blocked",
+  "ready-for-calculation"
+];
 
 function getTodayLabel() {
   return new Intl.DateTimeFormat("en-GB", {
@@ -30,24 +38,17 @@ function getTodayLabel() {
   }).format(new Date());
 }
 
-function splitCustomerClasses(value: string) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
-  const [customerClasses, setCustomerClasses] = useState("");
+  const [customerClasses, setCustomerClasses] = useState<string[]>([]);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
     const nextProject = getProjectById(projectId);
     setProject(nextProject);
-    setCustomerClasses(nextProject.customerClasses.join(", "));
+    setCustomerClasses(nextProject.customerClasses);
   }, [projectId]);
 
   const canDelete = useMemo(
@@ -77,7 +78,7 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
     if (!project) {
       return;
     }
-    const nextCustomerClasses = splitCustomerClasses(customerClasses);
+    const nextCustomerClasses = customerClasses;
     const previousCustomerClasses = project.customerClasses.join("|");
     const customerClassesChanged = previousCustomerClasses !== nextCustomerClasses.join("|");
     const reconciledData =
@@ -152,7 +153,18 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
       >
         <div className="grid gap-5 md:grid-cols-2">
           <label className="block">
-            <span className="text-sm font-medium">Project name</span>
+            <span className="text-sm font-medium">Tariff model name</span>
+            <input
+              type="text"
+              value={project.tariffModelName ?? project.name}
+              onChange={(event) =>
+                setProject({ ...project, tariffModelName: event.target.value })
+              }
+              className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium">Tariff year name</span>
             <input
               type="text"
               value={project.name}
@@ -171,6 +183,50 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
           </label>
         </div>
 
+        <div className="grid gap-5 md:grid-cols-3">
+          <label className="block">
+            <span className="text-sm font-medium">UtilityHub customer ref</span>
+            <input
+              type="text"
+              value={project.utilityHubCustomerId ?? ""}
+              onChange={(event) =>
+                setProject({ ...project, utilityHubCustomerId: event.target.value })
+              }
+              className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium">UtilityHub site ref</span>
+            <input
+              type="text"
+              value={project.utilityHubSiteId ?? ""}
+              onChange={(event) =>
+                setProject({ ...project, utilityHubSiteId: event.target.value })
+              }
+              className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium">Input readiness</span>
+            <select
+              value={project.inputReadinessStatus ?? "not-started"}
+              onChange={(event) =>
+                setProject({
+                  ...project,
+                  inputReadinessStatus: event.target.value as InputReadinessStatus
+                })
+              }
+              className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+            >
+              {inputReadinessStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <div className="grid gap-5 md:grid-cols-4">
           <label className="block">
             <span className="text-sm font-medium">Tariff year</span>
@@ -179,6 +235,28 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
               value={project.tariffYear}
               onChange={(event) =>
                 setProject({ ...project, tariffYear: Number(event.target.value) || 0 })
+              }
+              className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium">Reference start</span>
+            <input
+              type="date"
+              value={project.referencePeriodStart ?? ""}
+              onChange={(event) =>
+                setProject({ ...project, referencePeriodStart: event.target.value })
+              }
+              className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium">Reference end</span>
+            <input
+              type="date"
+              value={project.referencePeriodEnd ?? ""}
+              onChange={(event) =>
+                setProject({ ...project, referencePeriodEnd: event.target.value })
               }
               className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
             />
@@ -220,15 +298,10 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
           </label>
         </div>
 
-        <label className="block">
-          <span className="text-sm font-medium">Customer classes</span>
-          <input
-            type="text"
-            value={customerClasses}
-            onChange={(event) => setCustomerClasses(event.target.value)}
-            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
-          />
-        </label>
+        <CustomerClassTableEditor
+          customerClasses={customerClasses}
+          onChange={setCustomerClasses}
+        />
 
         <div className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t border-line bg-white/95 px-4 py-3 backdrop-blur sm:mx-0 sm:flex-row sm:items-center sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0">
           <button
