@@ -581,3 +581,35 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Harden report evidence wording regression`
+
+## Package: Evidence Batch Closeout And Next Run Planning
+
+Files changed:
+
+- `docs/NEXT_LONG_RUN_BRIEF.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- The next long-run brief was stale after the workbook-derived scenario and evidence-readiness packages landed.
+- The refreshed brief now moves the project from evidence accumulation into decision-led implementation planning.
+- The task board now lists the next major packages: submeter-to-tariff input decisioning, Utilityhub hierarchy contract proposal, methodology cost to cost-pool mapping, and asset valuation methodology.
+- PM control now states that evidence areas remain non-tariff-impacting until a separately approved package changes that behaviour.
+
+Validation performed:
+
+- Lint passed.
+- Type-check passed.
+- Full test suite passed.
+- Production build passed.
+
+Risks or follow-up decisions:
+
+- The next implementation work contains high-risk methodology decisions and should not be run as production code changes without approval.
+- Utilityhub hierarchy alignment depends on the Utilityhub source contract.
+
+Suggested commit message:
+
+- `Refresh next long-run implementation plan`

@@ -1,371 +1,290 @@
 # Next Long Run Brief
 
-Date: 2026-06-22
+Date: 2026-06-24
 
-Status: execution brief for the next extended unattended run.
+Status: refreshed execution brief for the next extended run after long-run evidence batches 01-04.
+
+## Current Baseline
+
+The current `main` baseline includes:
+
+- Workbook-derived scenario regressions for WB-001 through WB-006.
+- Site submeter register, consumption, Transmission Loss Multiplier, reconciliation and loss evidence foundations.
+- Utilityhub-style hierarchy mapping evidence.
+- Supply energy p/kWh evidence and application UI using the approved NBP/GSP/CM and private-network loss treatment.
+- Asset readiness evidence.
+- Methodology cost evidence readiness for direct costs, employee costs and indirect overheads.
+- Report download regressions that preserve evidence-only wording.
+
+These items improve review evidence and commercial defensibility. They do not make submeter, asset, supply, methodology-cost, generation/export, or weak workbook-mapping evidence tariff-impacting unless a separate approved package explicitly changes that behaviour.
 
 ## Primary Objective
 
-Progress workbook-derived scenario coverage quickly while preserving the current tariff calculation, import, storage, export, shared DTO, report total, and UI behaviour.
+Use the next long run to convert the strongest evidence foundations into controlled implementation packages, without changing tariff methodology by assumption.
 
 Target outcome:
 
-- WB-001 airport customer-class fixture/test implementation completed if the proposal is accepted.
-- WB-006 weak workbook mapping confidence proposal or test-design package completed.
-- Manager docs updated.
-- Full validation green.
-- Clear handover and commit grouping ready.
+- More of the app can be walked through end to end using realistic private-network inputs.
+- Any tariff-impacting change is preceded by a decision/proposal package.
+- Evidence-only areas remain clearly separated from tariff-driving inputs.
+- Full validation remains green.
 
 ## Operating Mode
 
-Default mode for the next long run:
+Default mode:
 
-- Test/docs-led delivery.
-- No production behaviour changes unless separately approved.
-- Use small packages.
-- Keep a run log.
-- Do not create per-file checkpoint folders for docs-only or test-only packages.
-- Create non-Git checkpoint copies only before production-code edits, and only if those edits are explicitly approved.
-- If Git is available, work on a feature branch and commit passing checkpoints.
+- Work from a clean `codex/*` feature branch.
+- Prefer small packages that can be validated independently.
+- Use existing helpers and patterns before introducing new abstractions.
+- Keep production behaviour unchanged unless the package has explicit approval.
+- Keep `docs/codex-checkpoints/` out of commits.
+- Run focused tests after each package and full validation before handoff.
 
-If Git remains unavailable:
+Manager-led packages are acceptable for docs, tests, evidence summaries and small UI hardening.
 
-- Do not use Git.
-- Do not create per-file checkpoint folders for docs/test-only work.
-- Keep `docs/LONG_RUN_PROGRESS_LOG.md`.
-- Do not ask Nathan for manual PowerShell during the run unless a material decision is needed.
+Delegate or pause for approval before:
 
-## Pre-Run Decisions
+- Calculation semantics.
+- Import parser output shapes.
+- Storage contracts.
+- Shared DTOs.
+- Report totals or export DTOs.
+- Methodology configuration contracts.
+- Utilityhub shared hierarchy contracts.
 
-The following decisions are now recorded:
+## Recommended Package Queue
 
-1. `docs/codex-checkpoints/` should be treated as temporary evidence and discarded before commit.
-2. WB-001 is approved for test-only implementation.
-3. Manager doc updates are allowed where they record completed packages and risks.
-4. New test fixture files under `tests/fixtures/` are allowed.
-5. Git should only be used if the `.git/index.lock` issue is resolved before the run starts.
-6. Full validation should run every two to three packages, and at the end, rather than after every small docs/test-only package.
-
-Outstanding before the next long run:
-
-- Confirm whether Git is available or still disabled.
-- If Git is available, start from a clean feature branch.
-- If Git is still unavailable, continue with `docs/LONG_RUN_PROGRESS_LOG.md` and new non-Git checkpoints only if needed.
-
-## Package Plan
-
-### Package A: WB-001 Fixture Implementation Proposal
+### Package A: Current Evidence Closeout
 
 Type: docs-only.
-
-Status: approved to start.
-
-Estimated effort: 20-30 minutes.
-
-Allowed files:
-
-- `docs/WB_001_FIXTURE_IMPLEMENTATION_PROPOSAL.md`
-- `docs/WB_001_AIRPORT_CUSTOMER_CLASS_SCENARIO.md`
-- `docs/MVP_TASK_BOARD.md`
-- `docs/PM_CONTROL.md`
-- run log.
-
-Deliverables:
-
-- Exact customer classes.
-- Exact cost lines.
-- Exact recoverable cost base.
-- Expected allocation shares.
-- Expected class-level allocated costs.
-- Explicit evidence-only and excluded values.
-- Test acceptance criteria.
-
-Validation:
-
-- `npm.cmd run lint`
-- `npx.cmd tsc --noEmit --incremental false`
-- `npm.cmd test`
-- `npm.cmd run build`
-
-Stop conditions:
-
-- Stop if exact expected outputs cannot be derived from existing `calculateTariffs` semantics.
-- Stop if capacity charging cannot be represented by current demand tariff component without changing production logic.
-
-### Package B: WB-001 Fixture And Regression Test
-
-Type: test-only.
-
-Status: approved to start after Package A has passing validation.
-
-Estimated effort: 45-75 minutes.
-
-Allowed files:
-
-- `tests/fixtures/workbook-derived-scenarios.ts`
-- `tests/workbook-derived-scenarios.test.ts`
-- run log.
-- manager docs only after green validation.
-
-Out of scope:
-
-- `lib/calculation-engine.ts`
-- `types/project.ts`
-- import parsers.
-- UI/report components.
-- storage.
-- export DTOs.
-
-Fixture shape:
-
-- One project ID.
-- Three customer classes:
-  - Terminal retail.
-  - Airside operations.
-  - EV charging.
-- Three recoverable cost pools:
-  - Network asset annuity: 180,000 allocated by demand/capacity.
-  - Network maintenance: 90,000 allocated by annual kWh.
-  - Customer administration: 36,000 allocated by meter count.
-- Evidence-only rows represented in fixture metadata, not fed into `calculateTariffs`.
-- Unresolved workbook row represented in fixture metadata, not fed into `calculateTariffs`.
-
-Expected recoverable revenue target:
-
-- 306,000.
-
-Expected allocation principles:
-
-- Customer administration by meter count:
-  - Terminal retail: 12 / 18.
-  - Airside operations: 4 / 18.
-  - EV charging: 2 / 18.
-- Network maintenance by annual kWh:
-  - Terminal retail: 2,400,000 / 11,600,000.
-  - Airside operations: 8,000,000 / 11,600,000.
-  - EV charging: 1,200,000 / 11,600,000.
-- Network asset annuity by capacity:
-  - Terminal retail: 1,500 / 5,500.
-  - Airside operations: 3,000 / 5,500.
-  - EV charging: 1,000 / 5,500.
-
-Acceptance criteria:
-
-- `calculateTariffs` returns revenue requirement of 306,000.
-- Allocated cost reconciles to 306,000 within tolerance.
-- No validation errors are emitted for the approved fixture.
-- Audit trace includes revenue requirement, cost allocation, class totals, rate derivation, and revenue recovery entries.
-- Evidence-only and unresolved fixture metadata are asserted not to be part of calculation inputs.
-
-Validation:
-
-- Focused test.
-- Lint.
-- Type-check.
-- Full tests.
-- Build.
-
-Stop conditions:
-
-- Stop rather than change production calculation logic if expected outputs do not reconcile.
-- Stop if evidence-only metadata requires shared DTO changes.
-
-### Package C: WB-006 Weak Mapping Confidence Proposal
-
-Type: docs/test-design.
-
-Estimated effort: 30-45 minutes.
-
-Allowed files:
-
-- `docs/WB_006_WEAK_MAPPING_CONFIDENCE_SCENARIO.md`
-- `docs/MVP_TASK_BOARD.md`
-- `docs/PM_CONTROL.md`
-- run log.
 
 Purpose:
 
-- Define a scenario proving low-confidence or unresolved workbook mappings are visible and cannot silently feed tariff-impacting calculations.
+- Record the evidence foundation now available after PRs #60-#67.
+- Identify which evidence areas are ready for walkthrough and which remain gated.
 
-Acceptance criteria:
-
-- Clearly separates high-confidence recoverable inputs from low-confidence excluded inputs.
-- Defines validation expectations.
-- Does not require production source-mapping implementation.
-- Identifies future implementation options.
-
-Stop conditions:
-
-- Stop if the proposal would require changing imported record shapes or shared DTOs.
-
-### Package D: WB-006 Test-Only Fixture, If Safe
-
-Type: test-only.
-
-Estimated effort: 45-60 minutes.
-
-Allowed files:
-
-- `tests/fixtures/workbook-derived-scenarios.ts`
-- `tests/workbook-derived-scenarios.test.ts`
-- run log.
-
-Goal:
-
-- Add fixture metadata showing excluded low-confidence rows and assert that only approved rows feed calculation inputs.
-
-Out of scope:
-
-- A generic source-mapping engine.
-- Shared DTO changes.
-- Import parser changes.
-
-Stop conditions:
-
-- Stop if representing weak mapping requires production contracts.
-
-### Package E: Closeout And Planning Update
-
-Type: docs-only.
-
-Estimated effort: 20-30 minutes.
-
-Allowed files:
+Likely files:
 
 - `docs/LONG_RUN_PROGRESS_LOG.md`
 - `docs/MVP_TASK_BOARD.md`
 - `docs/PM_CONTROL.md`
 - `docs/OVERNIGHT_REVIEW_AND_NEXT_PHASE_PLAN.md`
 
-Deliverables:
+Acceptance criteria:
 
-- Completed packages.
-- Checks run.
-- Risks and assumptions.
-- Suggested commit grouping.
-- Recommended next package.
+- The next package queue is clear.
+- Evidence-only and tariff-impacting boundaries are explicit.
+- No production files changed.
 
-### Package F: WB-005 Asset Allocation Scenario Proposal
+### Package B: Submeter To Aggregate Input Decision Pack
 
-Type: docs/test-design.
-
-Status: approved to start after WB-001 and WB-006 packages if time remains.
-
-Estimated effort: 30-45 minutes.
-
-Allowed files:
-
-- `docs/WB_005_ASSET_ALLOCATION_SCENARIO.md`
-- `docs/MVP_TASK_BOARD.md`
-- `docs/PM_CONTROL.md`
-- run log.
+Type: decision/proposal.
 
 Purpose:
 
-- Define a workbook-derived scenario proving asset chargeability, voltage, network level, and allocation evidence can be represented without changing import parsers or shared DTOs.
+- Decide how and when submeter consumption can become tariff-driving aggregate customer-class input.
+- Define reconciliation requirements before submeter totals can replace or update aggregate annual kWh and demand inputs.
+
+Likely files:
+
+- future `docs/SUBMETER_TO_TARIFF_INPUT_DECISION_PACK.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+
+Decision points:
+
+- Whether submeter totals should create aggregate customer-class inputs or only produce review evidence.
+- Whether unknown, duplicate, overlapping, or missing periods block tariff-driving use.
+- Whether monthly/quarterly/annual data needs profiling before tariff use.
+- How Utilityhub hierarchy and tenant/customer-class mapping are approved.
+
+Stop condition:
+
+- Stop if tariff-driving treatment is unclear.
+
+### Package C: Utilityhub Hierarchy Contract Proposal
+
+Type: contract proposal.
+
+Purpose:
+
+- Mirror the Utilityhub hierarchy model closely enough that Tariff Builder can later link submeters to site, building, area, customer, responsibility and billing context without inventing a parallel hierarchy.
+
+Likely files:
+
+- future `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
 
 Out of scope:
 
-- Production asset import changes.
-- Calculation engine changes.
-- Source mapping implementation.
+- Production storage migration.
+- Shared DTO implementation.
+- Automatic sync from Utilityhub.
 
-### Package G: WB-005 Test-Only Fixture, If Safe
+Stop condition:
 
-Type: test-only.
+- Stop if the Utilityhub source contract is unavailable or inconsistent.
 
-Status: approved only if it can use existing calculation inputs and fixture metadata.
+### Package D: Supply Energy Tariff Impact Proposal
 
-Estimated effort: 45-60 minutes.
-
-Allowed files:
-
-- `tests/fixtures/workbook-derived-scenarios.ts`
-- `tests/workbook-derived-scenarios.test.ts`
-- run log.
-
-Stop conditions:
-
-- Stop if the scenario needs production asset allocation logic or shared DTO changes.
-
-### Package H: Report And Demo Regression Hardening
-
-Type: test/docs-only.
-
-Status: approved if earlier packages are green and time remains.
-
-Estimated effort: 30-60 minutes.
-
-Allowed files:
-
-- `tests/report-readiness.test.tsx`
-- `docs/MVP_DEMO_PATH_CHECK.md`
-- `docs/MVP_DEMO_REHEARSAL_NOTES.md`
-- `docs/LONG_RUN_PROGRESS_LOG.md`
+Type: decision/proposal.
 
 Purpose:
 
-- Add stakeholder-facing regression coverage or demo notes only where they improve commercial defensibility.
+- Define the precise conditions under which the calculated supply energy p/kWh can update tariff output rows.
+- Keep NBP/GSP/CM source loss treatment and customer-level private-network loss treatment explicit.
+
+Likely files:
+
+- future `docs/SUPPLY_ENERGY_TARIFF_IMPACT_PROPOSAL.md`
+- supply decision docs if cross-references need updating.
+- manager control docs.
+
+Decision points:
+
+- Which customer class receives the applied supply p/kWh.
+- Whether applied supply p/kWh is shown as a separate line, included in energy charge, or both.
+- How pass-through and non-pass-through supply lines are labelled.
+- How supply evidence reconciles to report totals without double counting.
+
+Stop condition:
+
+- Stop before implementation unless the user approves the impact model.
+
+### Package E: Methodology Cost To Cost Pool Mapping Proposal
+
+Type: decision/proposal.
+
+Purpose:
+
+- Decide how direct costs, employee costs and overhead rows can become approved cost pools or support cost pool evidence.
+
+Likely files:
+
+- future `docs/METHODOLOGY_COST_POOL_MAPPING_PROPOSAL.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+
+Decision points:
+
+- Whether workbook methodology cost rows create draft cost pools.
+- Whether rows stay evidence-only until manually mapped.
+- How recoverability percentage and allocation method are assigned.
+- How duplicate cost recovery is prevented.
+
+Stop condition:
+
+- Stop before production implementation if mapping or recoverability rules are not approved.
+
+### Package F: Asset Valuation Methodology Decision Pack
+
+Type: decision/proposal.
+
+Purpose:
+
+- Decide whether and how asset values become tariff recoverable cost.
+
+Likely files:
+
+- future `docs/ASSET_VALUATION_METHOD_DECISION_PACK.md`
+- `docs/WB_005_ASSET_DECISION_PACK.md`
+- manager control docs.
+
+Decision points:
+
+- Annuity, depreciation, WACC, replacement value, prior-year value or other valuation basis.
+- Voltage/network-level allocation.
+- Chargeable vs non-chargeable assets.
+- Treatment of shared, landlord, tenant and network operator assets.
+
+Stop condition:
+
+- Stop before production calculation if valuation rules are not approved.
+
+### Package G: Import Review Workflow Hardening
+
+Type: implementation, low-to-medium risk if scoped to UI/review evidence.
+
+Purpose:
+
+- Make imported workbook/submeter/supply rows easier to review before they affect decisions.
+
+Allowed direction:
+
+- Better review summaries.
+- Issue-only filters.
+- Clearer duplicate/missing/overlap messages.
+- No parser output shape changes unless separately approved.
+
+Likely files:
+
+- existing import review helpers.
+- existing form components.
+- focused tests.
+
+Stop condition:
+
+- Stop if parser contracts or saved record shapes need to change.
+
+### Package H: Stakeholder Walkthrough Readiness
+
+Type: test/docs/manual check support.
+
+Purpose:
+
+- Prepare a current walkthrough path that covers the richer evidence now available.
+
+Likely files:
+
+- `docs/MVP_DEMO_PATH_CHECK.md`
+- `docs/MVP_DEMO_REHEARSAL_NOTES.md`
+- report regression tests if wording is strengthened.
+
+Acceptance criteria:
+
+- A reviewer can tell what drives the tariff and what is supporting evidence.
+- Known limitations are visible and not hidden by polish.
 
 ## Validation Cadence
 
-After each docs/test-only package:
+After each docs-only package:
 
-- Run focused test if any test file changed.
+- Run no checks unless markdown structure or links are material.
 - Record package outcome in `docs/LONG_RUN_PROGRESS_LOG.md`.
 
-After every two to three packages:
-
-- Run `npm.cmd run lint`.
-- Run `npx.cmd tsc --noEmit --incremental false`.
-- Run `npm.cmd test`.
-
-After any production-code package, if one is explicitly approved later:
+After each test or UI package:
 
 - Run focused tests.
-- Run `npm.cmd run lint`.
-- Run `npx.cmd tsc --noEmit --incremental false`.
-- Run `npm.cmd test`.
-- Run `npm.cmd run build` if app/runtime behaviour could be affected.
+- Run type-check if TypeScript changed.
 
-Before stopping:
+After two to three packages, and before handoff:
 
-- Run `npm.cmd run lint`.
-- Run `npx.cmd tsc --noEmit --incremental false`.
-- Run `npm.cmd test`.
-- Run `npm.cmd run build`.
+- `npm.cmd run lint`
+- `npx.cmd tsc --noEmit --incremental false`
+- `npm.cmd test`
+- `npm.cmd run build`
 
 ## Stop Conditions
 
 Stop and report if:
 
-- A required decision affects tariff methodology.
-- A change would require shared DTO changes.
-- A change would alter calculation semantics.
-- A change would alter import/storage/export/report totals.
-- A validation failure cannot be fixed with one narrow test or fixture correction.
-- Git is required but still blocked and the requested work specifically requires commits.
+- A package would make evidence tariff-impacting without explicit approval.
+- A data contract or saved record shape needs to change.
+- Utilityhub hierarchy mirroring requires source details not available in this repo.
+- Supply, asset, submeter or methodology-cost treatment needs a business decision.
+- Validation fails and cannot be fixed with one narrow change.
 
-## Recommended Commit Grouping
+## Recommended Next Branch
 
-If Git is available later:
+Use:
 
-1. `Add WB-001 fixture implementation proposal`
-2. `Add WB-001 workbook-derived scenario regression`
-3. `Add WB-006 weak mapping confidence proposal`
-4. `Add WB-006 weak mapping confidence regression`
-5. `Add WB-005 asset allocation scenario proposal`
-6. `Add WB-005 asset allocation regression`
-7. `Harden report and demo regression coverage`
-8. `Record long-run closeout`
+- `codex/next-implementation-planning`
 
-## Expected End State
+Suggested first package:
 
-At the end of the longer run, the project should have:
+- Package A: Current Evidence Closeout.
 
-- A concrete WB-001 test fixture.
-- Regression evidence that the current calculation engine can handle a representative airport customer-class scenario.
-- A clear WB-006 weak mapping plan or test-only fixture.
-- A WB-005 asset allocation proposal or test-only fixture if safe.
-- No production behaviour drift.
-- Green lint, type-check, tests, and build.
+Suggested follow-up:
+
+- Package B or C depending on whether the user wants submeter tariff impact or Utilityhub hierarchy alignment first.
