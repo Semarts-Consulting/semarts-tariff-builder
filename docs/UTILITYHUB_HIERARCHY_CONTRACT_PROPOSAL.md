@@ -2,9 +2,11 @@
 
 ## Purpose
 
-Define how Tariff Builder should align with the UtilityHub customer, site, building, location and meter hierarchy before adding persistent hierarchy references or using hierarchy-mapped submeter data in tariff calculations.
+Define how Tariff Builder should align with the UtilityHub customer, site, building, floor, location, supply point and meter hierarchy before adding persistent hierarchy references or using hierarchy-mapped submeter data in tariff calculations.
 
 Recommended default: Tariff Builder should reference UtilityHub-owned hierarchy records through a compatibility mapping layer. It should not create a separate permanent customer, site, location or master meter hierarchy.
+
+Programme update: UtilityMap / Meter Map is now recognised as a UtilityHub module. `C:\Projects\UtilityMap` remains a planning and module-contract repo for now; first production implementation should happen inside UtilityHub once the shared contracts exist. Tariff Builder should consume Meter Map outputs only through shared UtilityHub IDs and approved module contracts.
 
 ## Ownership Boundary
 
@@ -13,8 +15,12 @@ UtilityHub owns shared hierarchy and platform records:
 - Customer.
 - Site.
 - Building.
-- Location.
-- Master meter and supply point references.
+- Floor.
+- Location or mapped area references where exposed through UtilityHub or Meter Map contracts.
+- Supply point references.
+- Master meter records.
+- Meter readings.
+- Document upload metadata.
 - Users, roles, permissions and audit events.
 
 Tariff Builder owns tariff-specific records:
@@ -36,8 +42,11 @@ Tariff Builder should align to this UtilityHub hierarchy:
 1. Customer.
 2. Site.
 3. Building.
-4. Location.
-5. Meter.
+4. Floor, where relevant.
+5. Location or mapped area reference, where relevant.
+6. Supply point.
+7. Meter.
+8. Meter reading.
 
 Tenant, occupier, billing responsibility, asset group and customer-class grouping should be treated as reviewable attributes or mappings, not inferred from free text.
 
@@ -58,6 +67,21 @@ Current UtilityHub MVP compatibility uses some existing storage names:
 
 Tariff Builder should use an explicit compatibility mapping layer while UtilityHub completes any hierarchy migration.
 
+## UtilityMap / Meter Map Alignment
+
+Meter Map may later expose map-specific records and evidence that Tariff Builder can use for review:
+
+- mapped areas;
+- meter-to-area allocations;
+- allocation confidence;
+- area usage metrics;
+- map-specific data quality issues;
+- source map document references.
+
+Tariff Builder must not treat those records as local masters. Meter Map outputs should reference UtilityHub-owned IDs such as `customerId`, `siteId`, `buildingId`, `floorId`, `supplyPointId`, `meterId`, `meterReadingId`, `documentUploadId`, actor IDs and shared audit context.
+
+Tariff Builder may use those outputs as evidence for methodology review, submeter reconciliation, mapped-area consumption analysis, or future aggregate input generation only after the relevant tariff-impacting decision pack is approved.
+
 ## Tariff Builder Mapping Rules
 
 Tariff Builder should initially map site submeter records to UtilityHub hierarchy references by:
@@ -73,6 +97,8 @@ The mapping layer must not:
 - infer tenant from responsibility alone;
 - infer customer class from tenant name;
 - create permanent local master hierarchy records;
+- create permanent local building, floor, supply point, meter-reading or document-upload masters;
+- create competing Meter Map spatial masters;
 - make mapped records tariff-impacting without owner sign-off.
 
 ## Required Review States
@@ -117,7 +143,8 @@ This avoids making the tariff engine depend on raw UtilityHub hierarchy records.
 Reports should be able to show:
 
 - source meter and location text;
-- mapped UtilityHub customer, site, building, location and meter references;
+- mapped UtilityHub customer, site, building, floor, location or mapped area, supply point, meter and meter-reading references where available;
+- Meter Map allocation confidence and map-specific data quality issues where available;
 - mapping status and confidence;
 - manual override status;
 - responsibility category;
@@ -133,6 +160,8 @@ This proposal does not approve:
 - production storage migration;
 - shared DTO changes;
 - automatic UtilityHub sync;
+- local UtilityMap / Meter Map production implementation;
+- local building, floor, supply point, meter-reading or document-upload masters;
 - new authentication, role or permission logic;
 - report total changes;
 - tariff calculation changes;
@@ -154,6 +183,7 @@ A future implementation proposal must define:
 
 - exact UtilityHub entity IDs to reference;
 - compatibility handling for current `areaId` and meter `siteId` usage;
+- Meter Map contract handling for mapped areas, meter-to-area allocations, allocation confidence, area usage metrics and map-specific data quality issues;
 - review status and confidence values;
 - manual override rules;
 - treatment of tenant, non-tenant and internal-use meters;
