@@ -9,12 +9,13 @@
 | SUP-003 Billing-period daily annualisation | Tariff Engine plus QA review | future `lib/supply-calculation-engine.ts` and focused tests if approved | User decision to replace 365-day annualisation with actual billing-period days | Medium | Keep separate from tariff integration; requires a clear billing-period input before production calculation changes. |
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
 | HIER-003 Meter Map consumption contract implementation | UtilityHub/Meter Map first, Tariff Builder PM review | future UtilityHub shared contracts and Tariff Builder mapping docs if approved | UtilityHub shared entity contracts | High | Do not implement local Tariff Builder building/floor/meter-reading masters. Wait for UtilityHub/Meter Map shared IDs, mapped areas, allocation confidence, area usage metrics and data-quality issue contracts. |
+| REL-003 Release decision record | PM plus user sign-off owner | future release decision docs | Completed walkthrough evidence | Medium | Record whether current baseline is accepted for controlled walkthrough, accepted with limitations, requires fixes, or needs a scope decision. |
 
 ## In Progress
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| REL-002 First-release readiness review | PM plus QA/UI/Tariff Engine review | `docs/FIRST_RELEASE_READINESS_REVIEW.md`, manager docs | Friday decision phase closeout | Medium | Assesses current baseline, release blockers and recommended next release decision without changing production behaviour. |
+| REL-002 Manual/browser walkthrough evidence | PM plus QA/UI review | `docs/FIRST_RELEASE_WALKTHROUGH_EVIDENCE.md`, `docs/FIRST_RELEASE_READINESS_REVIEW.md`, manager docs | Merged PR #78 | Medium | Prepares the evidence record for the first-release walkthrough; actual browser result remains pending. |
 
 ## Review
 
@@ -27,6 +28,7 @@
 | COST-002 Methodology cost to cost-pool mapping proposal | PM plus Tariff Engine/Data Import review | `docs/METHODOLOGY_COST_POOL_MAPPING_PROPOSAL.md`, manager docs | Merged PR #75 | High | Defines when direct, employee and overhead evidence may become reviewed tariff-driving cost-pool candidates without double counting. |
 | ASSET-002 Asset valuation methodology decision pack | PM plus Tariff Engine review | `docs/ASSET_VALUATION_METHOD_DECISION_PACK.md`, manager docs | Merged PR #76 | High | Defines when asset evidence may calculate or become approved annual asset recovery cost pools without changing tariff engine semantics. |
 | REL-001 Friday import, walkthrough and decision-phase closeout | PM plus QA/UI/Data review | `lib/submeter-import-review.ts`, `tests/submeter-import-review.test.ts`, walkthrough docs, manager docs | Merged PR #77 | Medium | Hardened import review duplicate detection, refreshed stakeholder walkthrough notes and recorded decision-pack phase closeout. |
+| REL-002 First-release readiness review | PM plus QA/UI/Tariff Engine review | `docs/FIRST_RELEASE_READINESS_REVIEW.md`, manager docs | Merged PR #78 | Medium | Assessed current baseline, release blockers and recommended next release decision without changing production behaviour. |
 
 ## Blocked
 
