@@ -5,7 +5,7 @@
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | DATA-003 Form validation/save-blocking package | Data Import plus UI review | `components/DataInputsForm.tsx`, `components/CostPoolsForm.tsx`, `components/AllocationMethodsForm.tsx` | Validation policy decision | Medium | Held because save-blocking changes business workflow. |
-| ENG-010 Supply tariff integration proposal | Tariff Engine plus PM review | future tariff integration docs, future shared type proposals if approved | Supply integration decision pack | High | Start only after allocation, recovery, pass-through, reconciliation, and report treatment are signed off. |
+| ENG-011 Automatic supply evidence derivation proposal | Tariff Engine plus PM review | future supply integration docs, future shared type proposals if approved | `docs/SUPPLY_ENERGY_TARIFF_IMPACT_PROPOSAL.md` | High | Automatic conversion of supply evidence records into tariff-impacting rows remains blocked. |
 | SUP-003 Billing-period daily annualisation | Tariff Engine plus QA review | future `lib/supply-calculation-engine.ts` and focused tests if approved | User decision to replace 365-day annualisation with actual billing-period days | Medium | Keep separate from tariff integration; requires a clear billing-period input before production calculation changes. |
 | OUT-002 Formal export DTO design | PM plus UI/Engine | future export code, report contracts | Report contract decision | Medium | Keep separate from visual report pages; MVP HTML/print report output is documented separately. |
 | COST-002 Methodology cost to cost-pool mapping proposal | PM plus Tariff Engine/Data Import review | future `docs/METHODOLOGY_COST_POOL_MAPPING_PROPOSAL.md` | Methodology cost evidence readiness | High | Decide how direct, employee and overhead evidence can become approved tariff-driving cost pools without double counting. |
@@ -15,13 +15,14 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| HIER-002 Utilityhub hierarchy contract proposal | PM plus Data/UI review | `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md` | Utilityhub source contract, programme module manifest | High | Defines how Tariff Builder should reference UtilityHub-owned customer/site/building/location/meter hierarchy without creating a competing local hierarchy. |
+| SUP-004 Supply energy tariff impact proposal | PM plus Tariff Engine/UI/QA review | `docs/SUPPLY_ENERGY_TARIFF_IMPACT_PROPOSAL.md` | Supply rule decisions, supply energy methodology, explicit p/kWh application workflow | High | Defines the current approved boundary for explicit supply p/kWh tariff impact and blocks automatic supply evidence-to-tariff conversion. |
 
 ## Review
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
 | SUB-004 Submeter to tariff input decision pack | PM plus Tariff Engine/Data Import/UI review | `docs/SUBMETER_TO_TARIFF_INPUT_DECISION_PACK.md` | Merged PR #71 | High | Decision pack recommends aggregate-only remains current mode and submeter-derived aggregate requires review gates before implementation. |
+| HIER-002 Utilityhub hierarchy contract proposal | PM plus Data/UI review | `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md` | Merged PR #72 | High | Defines how Tariff Builder should reference UtilityHub-owned customer/site/building/location/meter hierarchy without creating a competing local hierarchy. |
 
 ## Blocked
 

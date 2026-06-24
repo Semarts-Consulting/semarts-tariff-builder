@@ -223,6 +223,7 @@ Review risks:
 - Current evidence closeout after PR #69 confirms the active baseline is green at 38 test files and 200 tests, with UtilityHub programme integration files merged. The next packages should be decision packs before production behaviour changes.
 - `docs/SUBMETER_TO_TARIFF_INPUT_DECISION_PACK.md` now proposes a conservative control model: aggregate customer-class inputs remain the current tariff-driving path, submeter evidence remains non-tariff-impacting, and future submeter-derived aggregate input should generate reviewed aggregate rows rather than making `calculateTariffs` consume raw submeter rows directly.
 - `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md` now proposes that Tariff Builder references UtilityHub-owned customer, site, building, location and meter records through an additive compatibility mapping layer. Tariff Builder should not create a competing permanent hierarchy, and hierarchy mappings should not become tariff-impacting without reviewed aggregate input generation.
+- `docs/SUPPLY_ENERGY_TARIFF_IMPACT_PROPOSAL.md` now records the supply energy tariff-impact boundary: explicit reviewed supply p/kWh rows may affect Energy / kWh for a selected customer class, but automatic supply evidence-to-tariff conversion, supply annual amount allocation, report total changes, storage changes and export DTO changes remain blocked.
 
 ## QA Staging Warnings
 

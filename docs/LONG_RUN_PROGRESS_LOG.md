@@ -704,3 +704,33 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add UtilityHub hierarchy contract proposal`
+
+## Package: Supply Energy Tariff Impact Proposal
+
+Files changed:
+
+- `docs/SUPPLY_ENERGY_TARIFF_IMPACT_PROPOSAL.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Supply p/kWh application is now visible in the tariff calculation workflow, so the project needed a clear boundary between explicit applied rows and automatic supply evidence-to-tariff conversion.
+- The proposal confirms explicit reviewed supply p/kWh rows may affect Energy / kWh for a selected customer class.
+- It keeps automatic supply evidence derivation, annual amount allocation, report total changes, storage changes and export DTO changes blocked.
+
+Validation performed:
+
+- Lint passed.
+- Type-check passed.
+- Full test suite passed.
+- Production build passed.
+
+Risks or follow-up decisions:
+
+- Future automatic supply derivation still requires customer applicability, reporting category, pass-through, denominator, audit trace and double-recovery decisions.
+
+Suggested commit message:
+
+- `Add supply energy tariff impact proposal`
