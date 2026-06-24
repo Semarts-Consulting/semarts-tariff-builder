@@ -1,5 +1,6 @@
 import type {
   AllocationMethodRow,
+  AssetInput,
   CostPoolRow,
   DataInputRow,
   Project,
@@ -24,6 +25,7 @@ export type ReportReadinessScenario = {
     ProjectMethodologyInputs,
     | "projectId"
     | "supplyDetails"
+    | "assets"
     | "siteSubmeters"
     | "submeterConsumption"
     | "transmissionLossMultipliers"
@@ -300,6 +302,39 @@ const tlmRows: TransmissionLossMultiplierInput[] = Array.from({ length: 47 }, (_
   rowFingerprint: ""
 }));
 
+const assetRows: AssetInput[] = [
+  {
+    id: "asset-transformer",
+    description: "Transformer evidence",
+    assetCategory: "Transformer",
+    isElectricalDistributionAsset: true,
+    isChargeableOnElectricityTariff: true,
+    voltage: "HV",
+    networkLevel: "HV",
+    lifeYears: 40,
+    priorYearAssetValue: 100000,
+    sourceFileName: "asset-evidence.xlsx",
+    uploadedAt: lastUpdated,
+    importBatchId: "asset-evidence",
+    rowFingerprint: "asset-transformer"
+  },
+  {
+    id: "asset-non-chargeable",
+    description: "Non-chargeable site asset",
+    assetCategory: "Site infrastructure",
+    isElectricalDistributionAsset: false,
+    isChargeableOnElectricityTariff: false,
+    voltage: "LV",
+    networkLevel: "LV",
+    lifeYears: 20,
+    priorYearAssetValue: 25000,
+    sourceFileName: "asset-evidence.xlsx",
+    uploadedAt: lastUpdated,
+    importBatchId: "asset-evidence",
+    rowFingerprint: "asset-non-chargeable"
+  }
+];
+
 function createScenario(
   projectId: string,
   name: string,
@@ -328,6 +363,7 @@ function createScenario(
     methodologyInputs: {
       projectId,
       supplyDetails: projectId === "report-ready-project" ? supplyEvidenceRows : [],
+      assets: projectId === "report-ready-project" ? assetRows : [],
       siteSubmeters: projectId === "report-ready-project" ? submeterRows : [],
       submeterConsumption:
         projectId === "report-ready-project" ? submeterConsumptionRows : [],

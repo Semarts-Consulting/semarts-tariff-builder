@@ -18,6 +18,8 @@ export type SupplyEnergyRateEvidence = {
   rows: SupplyEnergyRateEvidenceRow[];
   reviewRows: SupplyEnergyRateReviewRow[];
   totalPencePerKwh: number;
+  status: "No records" | "Needs review" | "Ready for review";
+  messages: string[];
 };
 
 const lossPositionOrder: SupplyContractLosses[] = ["NBP", "GSP", "CM"];
@@ -69,11 +71,19 @@ export function buildSupplyEnergyRateEvidence(
   const rows = lossPositionOrder
     .map((lossPosition) => groupedRows.get(lossPosition))
     .filter((row): row is SupplyEnergyRateEvidenceRow => row !== undefined);
+  const messages = createSupplyEnergyEvidenceMessages(rows, reviewRows);
 
   return {
     rows,
     reviewRows,
-    totalPencePerKwh: rows.reduce((total, row) => total + row.pencePerKwh, 0)
+    totalPencePerKwh: rows.reduce((total, row) => total + row.pencePerKwh, 0),
+    status:
+      rows.length === 0 && reviewRows.length === 0
+        ? "No records"
+        : reviewRows.length > 0
+          ? "Needs review"
+          : "Ready for review",
+    messages
   };
 }
 
@@ -87,4 +97,21 @@ function convertRateToPencePerKwh(line: NormalisedSupplyChargeLine) {
   }
 
   return null;
+}
+
+function createSupplyEnergyEvidenceMessages(
+  rows: SupplyEnergyRateEvidenceRow[],
+  reviewRows: SupplyEnergyRateReviewRow[]
+) {
+  if (rows.length === 0 && reviewRows.length === 0) {
+    return ["No supply contract consumption p/kWh evidence has been recorded yet."];
+  }
+
+  if (reviewRows.length > 0) {
+    return [
+      `${reviewRows.length} supply energy evidence row${reviewRows.length === 1 ? "" : "s"} need review.`
+    ];
+  }
+
+  return ["Supply energy p/kWh evidence is ready for review."];
 }

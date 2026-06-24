@@ -42,6 +42,8 @@ describe("supply energy report evidence", () => {
       expect.objectContaining({ lossPosition: "CM", pencePerKwh: 30 })
     ]);
     expect(evidence.totalPencePerKwh).toBe(60);
+    expect(evidence.status).toBe("Ready for review");
+    expect(evidence.messages).toEqual(["Supply energy p/kWh evidence is ready for review."]);
   });
 
   it("converts per MWh rates and flags unsupported rows for review", () => {
@@ -68,6 +70,17 @@ describe("supply energy report evidence", () => {
         chargeName: "Unsupported unit",
         reason: "Unsupported energy rate unit per day."
       }
+    ]);
+    expect(evidence.status).toBe("Needs review");
+    expect(evidence.messages).toEqual(["1 supply energy evidence row need review."]);
+  });
+
+  it("reports no records when no consumption rate evidence exists", () => {
+    const evidence = buildSupplyEnergyRateEvidence([]);
+
+    expect(evidence.status).toBe("No records");
+    expect(evidence.messages).toEqual([
+      "No supply contract consumption p/kWh evidence has been recorded yet."
     ]);
   });
 });
