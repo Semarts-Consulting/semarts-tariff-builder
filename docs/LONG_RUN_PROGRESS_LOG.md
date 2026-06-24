@@ -1096,3 +1096,38 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add input foundation setup workflow`
+
+## Package: Input Selection Scaffolding Long Run
+
+Files changed:
+
+- `types/project.ts`
+- `lib/input-selection-readiness.ts`
+- `components/ProjectDashboardOverview.tsx`
+- `lib/sample-data.ts`
+- `tests/input-selection-readiness.test.ts`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Continue the input-first pathway after PR #84 toward stages 7-10.
+- Add evidence-only selection scaffolding for customer/site, meter and consumption, boundary meters, and reference data.
+- Surface selected, evidence-only and tariff-driving counts on the project dashboard without changing calculations.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- Focused input selection readiness tests passed.
+- `npm.cmd test`: passed, 41 test files and 214 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package does not implement UtilityHub API calls, storage migration, real selectors, report total changes, exports, imports or calculation changes.
+- The default scaffold is evidence-only and exists to show the required pathway. It should be replaced by UtilityHub-backed selectors when shared contracts are available.
+
+Suggested commit message:
+
+- `Add input selection readiness scaffolding`

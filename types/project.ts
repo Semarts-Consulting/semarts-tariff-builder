@@ -5,6 +5,38 @@ export type InputReadinessStatus =
   | "needs-review"
   | "blocked"
   | "ready-for-calculation";
+export type InputSelectionStatus = "available" | "selected" | "excluded" | "provisional" | "blocked";
+export type InputSelectionReviewStatus =
+  | "not-reviewed"
+  | "needs-review"
+  | "accepted"
+  | "accepted-with-limitation"
+  | "rejected";
+export type InputSelectionTariffUse = "evidence-only" | "tariff-driving" | "candidate" | "blocked";
+export type InputSelectionGroup =
+  | "customer-site-context"
+  | "meter-consumption"
+  | "boundary-meter"
+  | "reference-data"
+  | "supply-contract"
+  | "tariff-specific-cost"
+  | "allocation-method"
+  | "customer-class"
+  | "limitation";
+
+export type TariffYearInputSelection = {
+  id: string;
+  group: InputSelectionGroup;
+  sourceSystem: "utilityhub" | "utilitymap" | "reference-data" | "tariff-builder";
+  sourceEntityType: string;
+  sourceEntityId: string;
+  sourceVersionId?: string;
+  displayName: string;
+  selectionStatus: InputSelectionStatus;
+  reviewStatus: InputSelectionReviewStatus;
+  tariffUse: InputSelectionTariffUse;
+  reviewNotes: string;
+};
 
 export type Project = {
   id: string;
@@ -20,6 +52,7 @@ export type Project = {
   billingPeriod: string;
   customerClasses: string[];
   inputReadinessStatus?: InputReadinessStatus;
+  inputSelections?: TariffYearInputSelection[];
   status: ProjectStatus;
   lastUpdated: string;
 };

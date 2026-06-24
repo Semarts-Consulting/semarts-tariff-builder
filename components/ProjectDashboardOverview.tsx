@@ -4,6 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { calculateTariffs } from "@/lib/calculation-engine";
 import { summariseInputFoundationReadiness } from "@/lib/input-foundation-readiness";
+import {
+  createDefaultInputSelectionScaffold,
+  summariseInputSelectionReadiness
+} from "@/lib/input-selection-readiness";
 import { projectSections } from "@/lib/sample-data";
 import {
   getProjectById,
@@ -118,6 +122,13 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
   const inputFoundationSummary = dashboardState.project
     ? summariseInputFoundationReadiness(dashboardState.project)
     : null;
+  const inputSelectionSummary = dashboardState.project
+    ? summariseInputSelectionReadiness(
+        dashboardState.project.inputSelections?.length
+          ? dashboardState.project.inputSelections
+          : createDefaultInputSelectionScaffold(dashboardState.project)
+      )
+    : null;
 
   return (
     <div className="mt-8 space-y-6">
@@ -188,6 +199,45 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
             reviewed selection before it can affect tariffs.
           </p>
         )}
+      </div>
+
+      <div className="rounded-md border border-line bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="font-semibold">Input selection readiness</h2>
+            <p className="mt-1 text-sm text-ink/70">
+              UtilityHub and reference data selection groups for this tariff year. These are
+              evidence-only until reviewed and explicitly approved as tariff-driving.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-field px-3 py-1 text-xs font-semibold text-semarts-dark">
+            {inputSelectionSummary?.status ?? "Not started"}
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {inputSelectionSummary?.groupSummaries.map((summary) => (
+            <div key={summary.group} className="rounded-md border border-line bg-field p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium">{summary.label}</p>
+                  <p className="mt-1 text-xs text-ink/60">
+                    {summary.selectedCount} selected, {summary.evidenceOnlyCount} evidence-only,{" "}
+                    {summary.tariffDrivingCount} tariff-driving
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-semarts-dark">
+                  {summary.status}
+                </span>
+              </div>
+              <ul className="mt-3 space-y-1 text-sm text-ink/70">
+                {summary.messages.map((message) => (
+                  <li key={message}>{message}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
