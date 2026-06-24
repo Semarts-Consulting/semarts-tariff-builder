@@ -57,6 +57,57 @@ Inputs and outputs should be clearly defined.
 Every calculated value should be explainable and auditable.
 Use interfaces for all calculation inputs and outputs.
 Include validation and error handling.
+
+Shared UtilityHub Programme Integration
+
+Semarts Tariff Builder is part of the wider Semarts UtilityHub platform.
+
+Tariff Builder owns tariff methodology setup, recoverable cost base, cost allocation, supply cost calculation, network charges, submeter consumption inputs, boundary meter reconciliation, tariff outputs and methodology reports.
+
+Related projects:
+
+- Semarts UtilityHub owns the parent platform, authentication, customer hierarchy, navigation, shared layout, module registry, user roles, permissions, audit logging and shared database/API structure.
+- Semarts Invoice Validator owns invoice validation for electricity, gas, water, wastewater, surface water and trade effluent invoices, including OCR/field candidates, charge line extraction, invoice validation and recovery tracking.
+
+Before making architecture, data model, API, authentication, customer hierarchy, meter structure, UI navigation or permissions decisions, check the shared programme documents in:
+
+`C:\Projects\Semarts Utilityhub Programme`
+
+Start each integration-sensitive task by reading:
+
+- `PROGRAMME_STATUS.md`
+- `INTEGRATION_CONTRACT.md`
+- `SHARED_DATA_MODEL.md`
+- `MODULE_BOUNDARIES.md`
+- `DECISION_LOG.md`
+
+Then confirm:
+
+- What Tariff Builder owns.
+- What Tariff Builder must not duplicate.
+- Any dependencies on UtilityHub or Invoice Validator.
+- Any integration risks before coding.
+
+Do not proceed with changes that create conflicting customer, site, meter, user, role, permission or audit models.
+
+At the end of integration-sensitive work, update shared programme documents where relevant:
+
+- `PROGRAMME_STATUS.md` with what changed.
+- `DECISION_LOG.md` for architecture or data decisions.
+- `OPEN_INTEGRATION_RISKS.md` if anything may affect another module.
+
+Include what changed, files changed, new or changed assumptions, API/data model/UI implications, decisions needed from Nathan, UtilityHub integration risks, and any instructions that should be passed to UtilityHub or Invoice Validator.
+
+Shared Ownership Rules
+
+UtilityHub owns authentication, users, roles, customer hierarchy, shared meter register, permissions, navigation, branding and audit logging.
+
+Tariff Builder must not create permanent local versions of customers, areas, sites, users, roles, permissions, audit events or master meters.
+
+Tariff Builder may own tariff methodology records, cost allocation models, tariff calculation runs, tariff outputs and methodology reports. These records should reference UtilityHub shared entity IDs where relevant.
+
+If it is shared by more than one module, UtilityHub owns it.
+
 Before Implementing Changes
 Explain the proposed approach.
 Identify files that need changing.
