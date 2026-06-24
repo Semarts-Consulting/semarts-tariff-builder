@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
+import { CustomerClassTableEditor } from "@/components/CustomerClassTableEditor";
+import { parseCustomerClasses } from "@/lib/customer-classes";
 import { createProjectId, saveProject } from "@/lib/project-storage";
 import { saveProjectToSupabase } from "@/lib/supabase-sync";
-import type { Project } from "@/types/project";
+import type { InputReadinessStatus, Project } from "@/types/project";
 
 const todayFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",
@@ -16,22 +18,20 @@ function getTodayLabel() {
   return todayFormatter.format(new Date());
 }
 
-function splitCustomerClasses(value: string) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
 export function NewProjectForm() {
   const router = useRouter();
   const [projectName, setProjectName] = useState("");
+  const [tariffModelName, setTariffModelName] = useState("");
   const [networkName, setNetworkName] = useState("");
+  const [utilityHubCustomerId, setUtilityHubCustomerId] = useState("");
+  const [utilityHubSiteId, setUtilityHubSiteId] = useState("");
   const [tariffYear, setTariffYear] = useState(new Date().getFullYear().toString());
+  const [referencePeriodStart, setReferencePeriodStart] = useState("");
+  const [referencePeriodEnd, setReferencePeriodEnd] = useState("");
   const [effectiveDate, setEffectiveDate] = useState("");
   const [billingPeriod, setBillingPeriod] = useState("Monthly");
-  const [customerClasses, setCustomerClasses] = useState(
-    "Residential, Small business, Common area"
+  const [customerClasses, setCustomerClasses] = useState<string[]>(
+    parseCustomerClasses("Residential, Small business, Common area")
   );
   const [error, setError] = useState("");
 
@@ -55,11 +55,17 @@ export function NewProjectForm() {
     const project: Project = {
       id: createProjectId(projectName),
       name: projectName.trim(),
+      tariffModelName: tariffModelName.trim() || projectName.trim(),
       networkName: networkName.trim(),
+      utilityHubCustomerId: utilityHubCustomerId.trim(),
+      utilityHubSiteId: utilityHubSiteId.trim(),
       tariffYear: Number(tariffYear),
+      referencePeriodStart,
+      referencePeriodEnd,
       effectiveDate,
       billingPeriod,
-      customerClasses: splitCustomerClasses(customerClasses),
+      customerClasses,
+      inputReadinessStatus: "not-started" satisfies InputReadinessStatus,
       status: "Draft",
       lastUpdated: getTodayLabel()
     };
@@ -83,27 +89,62 @@ export function NewProjectForm() {
       onSubmit={handleSubmit}
       className="mt-8 space-y-6 rounded-md border border-line bg-white p-4 shadow-sm sm:p-6"
     >
-      <label className="block">
-        <span className="text-sm font-medium">Project name</span>
-        <input
-          type="text"
-          value={projectName}
-          onChange={(event) => setProjectName(event.target.value)}
-          placeholder="2026 Private Network Tariff Review"
-          className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
-        />
-      </label>
+      <div className="grid gap-5 md:grid-cols-2">
+        <label className="block">
+          <span className="text-sm font-medium">Tariff model name</span>
+          <input
+            type="text"
+            value={tariffModelName}
+            onChange={(event) => setTariffModelName(event.target.value)}
+            placeholder="POTLL Tariffs"
+            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+          />
+        </label>
 
-      <label className="block">
-        <span className="text-sm font-medium">Network name</span>
-        <input
-          type="text"
-          value={networkName}
-          onChange={(event) => setNetworkName(event.target.value)}
-          placeholder="Semarts Private Electricity Network"
-          className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
-        />
-      </label>
+        <label className="block">
+          <span className="text-sm font-medium">Tariff year name</span>
+          <input
+            type="text"
+            value={projectName}
+            onChange={(event) => setProjectName(event.target.value)}
+            placeholder="2026 Private Network Tariff Review"
+            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-3">
+        <label className="block">
+          <span className="text-sm font-medium">Network name</span>
+          <input
+            type="text"
+            value={networkName}
+            onChange={(event) => setNetworkName(event.target.value)}
+            placeholder="Semarts Private Electricity Network"
+            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+          />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium">UtilityHub customer ref</span>
+          <input
+            type="text"
+            value={utilityHubCustomerId}
+            onChange={(event) => setUtilityHubCustomerId(event.target.value)}
+            placeholder="Future UtilityHub ID"
+            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+          />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium">UtilityHub site ref</span>
+          <input
+            type="text"
+            value={utilityHubSiteId}
+            onChange={(event) => setUtilityHubSiteId(event.target.value)}
+            placeholder="Future UtilityHub ID"
+            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+          />
+        </label>
+      </div>
 
       <div className="grid gap-5 md:grid-cols-2">
         <label className="block">
@@ -129,7 +170,29 @@ export function NewProjectForm() {
         </label>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-[0.75fr_1.25fr]">
+      <div className="grid gap-5 md:grid-cols-2">
+        <label className="block">
+          <span className="text-sm font-medium">Reference period start</span>
+          <input
+            type="date"
+            value={referencePeriodStart}
+            onChange={(event) => setReferencePeriodStart(event.target.value)}
+            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium">Reference period end</span>
+          <input
+            type="date"
+            value={referencePeriodEnd}
+            onChange={(event) => setReferencePeriodEnd(event.target.value)}
+            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-2">
         <label className="block">
           <span className="text-sm font-medium">Billing period</span>
           <select
@@ -142,17 +205,12 @@ export function NewProjectForm() {
             <option>Annual</option>
           </select>
         </label>
-
-        <label className="block">
-          <span className="text-sm font-medium">Customer classes</span>
-          <input
-            type="text"
-            value={customerClasses}
-            onChange={(event) => setCustomerClasses(event.target.value)}
-            className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
-          />
-        </label>
       </div>
+
+      <CustomerClassTableEditor
+        customerClasses={customerClasses}
+        onChange={setCustomerClasses}
+      />
 
       {error ? <p className="text-sm font-medium text-red-700">{error}</p> : null}
 

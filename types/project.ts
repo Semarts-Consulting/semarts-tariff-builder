@@ -1,13 +1,25 @@
 export type ProjectStatus = "Draft" | "Ready for review" | "Locked" | "Archived";
+export type InputReadinessStatus =
+  | "not-started"
+  | "in-progress"
+  | "needs-review"
+  | "blocked"
+  | "ready-for-calculation";
 
 export type Project = {
   id: string;
   name: string;
   networkName: string;
+  tariffModelName?: string;
+  utilityHubCustomerId?: string;
+  utilityHubSiteId?: string;
   tariffYear: number;
+  referencePeriodStart?: string;
+  referencePeriodEnd?: string;
   effectiveDate: string;
   billingPeriod: string;
   customerClasses: string[];
+  inputReadinessStatus?: InputReadinessStatus;
   status: ProjectStatus;
   lastUpdated: string;
 };

@@ -1054,3 +1054,45 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add input selection data model proposal`
+
+## Package: Input Foundation Implementation Batch 01
+
+Files changed:
+
+- `types/project.ts`
+- `components/NewProjectForm.tsx`
+- `components/ProjectSettingsForm.tsx`
+- `components/CustomerClassTableEditor.tsx`
+- `components/ProjectDashboardOverview.tsx`
+- `lib/customer-classes.ts`
+- `lib/input-foundation-readiness.ts`
+- `lib/sample-data.ts`
+- `tests/customer-classes.test.ts`
+- `tests/input-foundation-readiness.test.ts`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Start implementing the input-first pathway after PR #83.
+- Add optional tariff model/year metadata without replacing existing project storage or routes.
+- Replace comma-separated customer class editing with an add/edit/remove table workflow.
+- Add input foundation readiness checks for tariff model/year setup and UtilityHub references.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- Focused tests for customer classes, input foundation readiness and demo defaults passed.
+- `npm.cmd test`: passed, 40 test files and 210 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- New tariff model/year fields are optional and local-compatible. Supabase project rows do not yet persist these optional fields because no database migration has been approved.
+- UtilityHub customer/site fields are reference placeholders only. No UtilityHub API integration or local master data was introduced.
+- Calculations, imports, exports, report totals and shared DTOs were not changed.
+
+Suggested commit message:
+
+- `Add input foundation setup workflow`

@@ -16,11 +16,17 @@ export const sampleProjects: Project[] = [
   {
     id: demoProjectId,
     name: "Demo Private Network Tariff Review",
+    tariffModelName: "Demo Private Network Tariffs",
     networkName: "Semarts Embedded Electricity Network",
+    utilityHubCustomerId: "utilityhub-customer-demo",
+    utilityHubSiteId: "utilityhub-site-demo-private-network",
     tariffYear: 2026,
+    referencePeriodStart: "2025-01-01",
+    referencePeriodEnd: "2025-12-31",
     effectiveDate: "2026-07-01",
     billingPeriod: "Monthly",
     customerClasses: ["Residential", "Small business", "Common area"],
+    inputReadinessStatus: "in-progress",
     status: "Draft",
     lastUpdated: "20 June 2026"
   }
