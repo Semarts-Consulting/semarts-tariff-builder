@@ -22,7 +22,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| INPUT-012 Input selection scaffolding long run | UI plus PM/QA review | `types/project.ts`, `lib/input-selection-readiness.ts`, `components/ProjectDashboardOverview.tsx`, `lib/sample-data.ts`, tests, manager docs | PR #84 input foundation setup | Medium | Adds evidence-only selection scaffolding for customer/site, meter/consumption, boundary meter and reference data readiness without UtilityHub API or calculation impact. |
+| INPUT-013 UtilityHub selector contract dependencies | PM plus UtilityHub/Data/UI review | `docs/UTILITYHUB_SELECTOR_CONTRACT_DEPENDENCIES.md`, manager docs | Merged PR #85 input selection scaffolding | High | Defines the UtilityHub shared contracts needed before Tariff Builder replaces evidence-only scaffolds with live selectors. |
 
 ## Review
 
@@ -42,6 +42,7 @@
 | MODEL-002 Tariff model and tariff-year contract | PM plus UI/Data/Tariff Engine review | `docs/TARIFF_MODEL_YEAR_CONTRACT_PROPOSAL.md`, manager docs | Merged PR #82 | High | Defines the proposed long-lived tariff model and annual tariff year contract before replacing project-style terminology or storage. |
 | INPUT-010 Input selection data model proposal | PM plus UtilityHub/Data/UI/Tariff Engine review | `docs/INPUT_SELECTION_DATA_MODEL_PROPOSAL.md`, manager docs | Merged PR #83 | High | Defines how tariff years should reference UtilityHub records and Tariff Builder-owned tariff inputs without changing storage or calculations. |
 | INPUT-011 Input foundation implementation batch 01 | UI plus PM/QA review | `types/project.ts`, setup forms, dashboard, helper libs and tests | Merged PR #84 | Medium | Added optional tariff model/year metadata, customer-class table editing, and input foundation readiness without changing calculations. |
+| INPUT-012 Input selection scaffolding long run | UI plus PM/QA review | `types/project.ts`, `lib/input-selection-readiness.ts`, `components/ProjectDashboardOverview.tsx`, `lib/sample-data.ts`, tests, manager docs | Merged PR #85 | Medium | Adds evidence-only selection scaffolding for customer/site, meter/consumption, boundary meter and reference data readiness without UtilityHub API or calculation impact. |
 
 ## Blocked
 
