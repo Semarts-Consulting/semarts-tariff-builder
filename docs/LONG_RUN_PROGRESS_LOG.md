@@ -613,3 +613,32 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Refresh next long-run implementation plan`
+
+## Package: Current Evidence Closeout
+
+Files changed:
+
+- `docs/OVERNIGHT_REVIEW_AND_NEXT_PHASE_PLAN.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- The original overnight review document was superseded by the merged workbook, submeter, supply, asset, methodology-cost, report and UtilityHub programme integration packages.
+- The closeout now records the active baseline after PR #69 and confirms the project should move into decision-led implementation planning before tariff-impacting changes.
+
+Validation performed:
+
+- Lint passed.
+- Type-check passed.
+- Full test suite passed.
+- Production build passed.
+
+Risks or follow-up decisions:
+
+- The next packages carry material methodology and shared-contract risk. They should start as decision/proposal packages rather than production implementation.
+
+Suggested commit message:
+
+- `Record current evidence closeout`
