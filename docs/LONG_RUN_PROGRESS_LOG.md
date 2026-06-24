@@ -734,3 +734,35 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add supply energy tariff impact proposal`
+
+## Package: Meter Map Programme Alignment
+
+Files changed:
+
+- `AGENTS.md`
+- `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Programme Control Pack now recognises UtilityMap / Meter Map as a UtilityHub module.
+- Tariff Builder needs its local governance docs to state that buildings, floors, supply points, meters, meter readings, document uploads, shared audit and shared permissions remain UtilityHub-owned.
+- Future mapped areas, meter-to-area allocations, allocation confidence, area usage metrics and map-specific data-quality issues should be consumed from UtilityHub/Meter Map contracts, not recreated as Tariff Builder masters.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 38 test files and 200 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not approve production Meter Map integration.
+- Future Tariff Builder implementation must wait for UtilityHub/Meter Map shared contracts before touching persistent hierarchy IDs, mapped area inputs, allocation evidence or usage data.
+
+Suggested commit message:
+
+- `Record Meter Map programme alignment`
