@@ -929,3 +929,35 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add first release walkthrough evidence record`
+
+## Package: UtilityHub Data Ownership And Tariff Year Model Decision
+
+Files changed:
+
+- `docs/UTILITYHUB_DATA_OWNERSHIP_AND_TARIFF_YEAR_MODEL.md`
+- `docs/FIRST_RELEASE_READINESS_REVIEW.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- User review identified that Tariff Builder should not own meter, consumption, boundary meter, supply contract or reusable reference data.
+- The decision pack records UtilityHub as the system of record and Tariff Builder as the tariff-year methodology and calculation workspace.
+- It also records the longer-term product shape: tariff models containing annual tariff years, rather than treating each tariff build as a standalone project.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 38 test files and 203 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not change storage, imports, shared DTOs, UI, reference data, report totals or calculation behaviour.
+- Future implementation needs separate contracts for tariff model/year structure, UtilityHub data selection surfaces, CPI sourcing, losses/reference data, boundary meter selection and customer-class table UX.
+
+Suggested commit message:
+
+- `Record UtilityHub data ownership and tariff year model`

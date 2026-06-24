@@ -80,6 +80,7 @@ Do not position the current app as externally production-ready if the release re
 | Methodology cost mapping | Tariff Engine/Data plus PM | Approve candidate persistence, review status and allocation readiness. |
 | Asset valuation | Tariff Engine plus PM | Approve annual amount or formula-based valuation method. |
 | Browser walkthrough evidence | UI plus QA | Run and record a manual/browser route check on the current build. |
+| UtilityHub data ownership and tariff-year model | User plus PM | Align future product shape so UtilityHub owns meters, consumption, boundary meters, supply contracts and reusable reference data while Tariff Builder owns tariff-year methodology and calculation records. |
 
 ## Recommended Next Step
 
@@ -105,7 +106,7 @@ Recommended current decision:
 - Accept as first-release candidate for controlled internal and selected stakeholder review.
 - Do not approve unrestricted external production release yet.
 - Complete a manual/browser walkthrough on the current baseline.
-- Then choose whether the next package is formal export design, UtilityHub contract integration, or targeted walkthrough fixes.
+- Then choose whether the next package is tariff model / tariff year contract design, UtilityHub contract integration, formal export design, or targeted walkthrough fixes.
 
 ## Checks Required Before Final Release Tag
 
