@@ -55,6 +55,8 @@ Do not describe the workflow as externally release-ready.
 
 8. Show report view.
    - Explain this is a stakeholder-reviewable report view.
+   - Show that submeter, loss, Utilityhub hierarchy, asset, supply and methodology-cost evidence are labelled as evidence-only where they do not yet drive tariff totals.
+   - Confirm the tariff-driving path remains aggregate customer inputs, approved recoverable cost pools, allocation methods, and tariff calculation outputs.
    - State that formal machine-readable export DTOs remain outside MVP scope.
 
 9. Close with limitations and asks.
@@ -68,7 +70,9 @@ Do not describe the workflow as externally release-ready.
 | Is this production-ready? | No. It is an internal MVP candidate accepted with limitations. |
 | Does this certify Ofgem compliance? | No. It supports transparent methodology review; formal compliance sign-off remains a business/legal process. |
 | Are exports complete? | No. The current report view is stakeholder-reviewable, but formal export DTOs are outside MVP scope. |
-| Is supply calculation complete? | No. Supply calculation is deferred pending business rule decisions. |
+| Is supply calculation complete? | No. Supply evidence and p/kWh application are visible, but tariff-impacting supply integration remains controlled by approved business rules. |
+| Do submeter and loss records drive tariff rates? | Not automatically. They are visible as reconciliation and readiness evidence until tariff-impacting use is approved. |
+| Do asset and methodology cost rows create tariff cost pools? | No. They support commercial review and future mapping decisions; current tariff totals still come from approved cost pools and allocations. |
 | Are all tariff scenarios covered? | No. The current evidence covers one representative internal scenario. |
 | Can the calculation be traced? | Yes. The calculation workflow includes audit trace entries linked to tariff outputs. |
 
@@ -82,6 +86,7 @@ The rehearsal is acceptable if the presenter can clearly explain:
 - How each tariff output is built up.
 - Whether revenue recovery reconciles.
 - Where audit trace can be inspected.
+- Which evidence sections are tariff-impacting and which are evidence-only.
 - Which limitations remain.
 
 ## Decisions Or Support To Request
