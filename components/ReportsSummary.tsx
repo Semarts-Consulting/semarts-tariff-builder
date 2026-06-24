@@ -6,12 +6,14 @@ import {
   normaliseSupplyCharges,
   reconcileSupplyEvidence
 } from "@/lib/supply-calculation-engine";
+import { buildSupplyEnergyRateEvidence } from "@/lib/supply-energy-report-evidence";
 import { calculateLossAdjustedHalfHourlyConsumption } from "@/lib/loss-adjusted-consumption";
 import { defaultMeterResponsibilityAllocationRules } from "@/lib/meter-responsibility-rules";
 import {
   createMonthlyExpectedConsumptionPeriods,
   reviewConsumptionPeriodCoverage
 } from "@/lib/submeter-consumption-coverage";
+import { aggregateSubmeterConsumption } from "@/lib/submeter-consumption-aggregation";
 import { reconcileSubmeterConsumptionToBoundary } from "@/lib/submeter-reconciliation";
 import { TariffAuditTracePanel } from "@/components/TariffAuditTracePanel";
 import {
@@ -238,6 +240,10 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
     () => supplyCalculation.chargeLines.filter((line) => line.source === "Supply Contract"),
     [supplyCalculation.chargeLines]
   );
+  const supplyEnergyRateEvidence = useMemo(
+    () => buildSupplyEnergyRateEvidence(supplyCalculation.chargeLines),
+    [supplyCalculation.chargeLines]
+  );
   const submeterEvidence = useMemo(
     () =>
       reconcileSubmeterConsumptionToBoundary({
@@ -294,6 +300,14 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
       methodologyInputs.submeterConsumption,
       monthlyCoveragePeriods
     ]
+  );
+  const submeterConsumptionAggregation = useMemo(
+    () =>
+      aggregateSubmeterConsumption({
+        submeters: methodologyInputs.siteSubmeters,
+        consumptionRows: methodologyInputs.submeterConsumption
+      }),
+    [methodologyInputs.siteSubmeters, methodologyInputs.submeterConsumption]
   );
   const responsibilityCounts = useMemo(
     () =>
@@ -758,6 +772,29 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
                   <li>Unknown meter records: {consumptionCoverage.unknownMeterRecordIds.length}</li>
                 </ul>
               </div>
+
+              <div className="rounded-md border border-blue-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Consumption aggregation evidence</h3>
+                <ul className="mt-3 space-y-2 leading-6">
+                  <li>
+                    Meter groups: {submeterConsumptionAggregation.byMeter.length}
+                  </li>
+                  <li>
+                    Location groups: {submeterConsumptionAggregation.byLocation.length}
+                  </li>
+                  <li>
+                    Responsibility groups:{" "}
+                    {submeterConsumptionAggregation.byResponsibility.length}
+                  </li>
+                  <li>
+                    Tenant groups: {submeterConsumptionAggregation.byTenant.length}
+                  </li>
+                  <li>
+                    Unknown meter records:{" "}
+                    {submeterConsumptionAggregation.unknownMeterRecords.length}
+                  </li>
+                </ul>
+              </div>
             </div>
 
             <div className="mt-5 overflow-x-auto">
@@ -847,6 +884,57 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
               applicability and reporting category are not derived from the current report data, so
               this report does not infer them from charge names.
             </p>
+          </div>
+
+          <div className="mt-5">
+            <h3 className="font-semibold">Supply energy p/kWh evidence</h3>
+            <p className="mt-2 leading-6">
+              Recorded supply contract consumption rates are grouped by their NBP, GSP or CM loss
+              position. This table is source evidence only; final loss-adjusted customer p/kWh still
+              requires explicit application in the tariff calculation workflow.
+            </p>
+            {supplyEnergyRateEvidence.rows.length > 0 ? (
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full min-w-[720px] border-collapse text-sm">
+                  <thead className="text-left text-xs uppercase text-amber-900/70">
+                    <tr>
+                      <th className="px-3 py-2 font-semibold">Loss position</th>
+                      <th className="px-3 py-2 font-semibold">Base p/kWh</th>
+                      <th className="px-3 py-2 font-semibold">Source charges</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {supplyEnergyRateEvidence.rows.map((row) => (
+                      <tr key={row.lossPosition} className="border-t border-amber-200">
+                        <td className="px-3 py-2">{row.lossPosition}</td>
+                        <td className="px-3 py-2">{formatNumber(row.pencePerKwh)}</td>
+                        <td className="px-3 py-2">{row.chargeNames.join(", ")}</td>
+                      </tr>
+                    ))}
+                    <tr className="border-t border-amber-200 font-semibold">
+                      <td className="px-3 py-2">Recorded base total</td>
+                      <td className="px-3 py-2">
+                        {formatNumber(supplyEnergyRateEvidence.totalPencePerKwh)}
+                      </td>
+                      <td className="px-3 py-2">Before customer-specific loss application</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="mt-2 text-amber-900/80">
+                No supply contract consumption p/kWh evidence recorded.
+              </p>
+            )}
+            {supplyEnergyRateEvidence.reviewRows.length > 0 ? (
+              <ul className="mt-3 list-disc space-y-1 pl-5 text-amber-900/80">
+                {supplyEnergyRateEvidence.reviewRows.slice(0, 6).map((row) => (
+                  <li key={row.id}>
+                    {row.chargeName}: {row.reason}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
 
           <div className="mt-5">

@@ -29,6 +29,73 @@ export type SupplyEnergyApplicationResult = {
   tariffRow: SupplyEnergyTariffRow;
 };
 
+export type SupplyEnergyApplicationValidationIssue = {
+  code:
+    | "Missing customer class"
+    | "Negative rate"
+    | "Invalid loss multiplier"
+    | "Invalid profit multiplier";
+  severity: "Error" | "Warning";
+  message: string;
+};
+
+export function validateSupplyEnergyApplication(
+  input: SupplyEnergyApplicationInput
+): SupplyEnergyApplicationValidationIssue[] {
+  const issues: SupplyEnergyApplicationValidationIssue[] = [];
+  const rates = [
+    ["NBP p/kWh", input.nbpPencePerKwh],
+    ["GSP p/kWh", input.gspPencePerKwh],
+    ["Site meter p/kWh", input.siteMeterPencePerKwh],
+    ["CM p/kWh", input.cmPencePerKwh]
+  ] as const;
+  const lossMultipliers = [
+    ["TLM", input.transmissionLossMultiplier],
+    ["DNO loss factor", input.dnoDistributionLossFactor],
+    ["EHV loss", input.ehvLossMultiplier],
+    ["HV loss", input.hvLossMultiplier],
+    ["LV loss", input.lvLossMultiplier]
+  ] as const;
+
+  if (!input.customerClass.trim()) {
+    issues.push({
+      code: "Missing customer class",
+      severity: "Error",
+      message: "Select a customer class before applying supply energy to the tariff."
+    });
+  }
+
+  rates.forEach(([label, value]) => {
+    if (value < 0) {
+      issues.push({
+        code: "Negative rate",
+        severity: "Error",
+        message: `${label} cannot be negative.`
+      });
+    }
+  });
+
+  lossMultipliers.forEach(([label, value]) => {
+    if (value <= 0) {
+      issues.push({
+        code: "Invalid loss multiplier",
+        severity: "Error",
+        message: `${label} must be greater than zero.`
+      });
+    }
+  });
+
+  if (input.profitMultiplier <= 0) {
+    issues.push({
+      code: "Invalid profit multiplier",
+      severity: "Error",
+      message: "Profit multiplier must be greater than zero."
+    });
+  }
+
+  return issues;
+}
+
 export function calculateSupplyEnergyApplication(
   input: SupplyEnergyApplicationInput
 ): SupplyEnergyApplicationResult {

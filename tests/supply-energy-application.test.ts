@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { calculateSupplyEnergyApplication } from "@/lib/supply-energy-application";
+import {
+  calculateSupplyEnergyApplication,
+  validateSupplyEnergyApplication
+} from "@/lib/supply-energy-application";
 
 describe("supply energy application", () => {
   it("creates a tariff row using cumulative customer-level losses", () => {
@@ -55,5 +58,31 @@ describe("supply energy application", () => {
 
     expect(application.supplyCost.finalPencePerKwh).toBe(100);
     expect(application.tariffRow.pencePerKwh).toBe(100);
+  });
+
+  it("validates missing classes, negative rates and invalid multipliers", () => {
+    const issues = validateSupplyEnergyApplication({
+      id: "invalid",
+      customerClass: "",
+      nbpPencePerKwh: -1,
+      gspPencePerKwh: 0,
+      siteMeterPencePerKwh: 0,
+      cmPencePerKwh: 0,
+      transmissionLossMultiplier: 0,
+      dnoDistributionLossFactor: 1,
+      ehvLossMultiplier: 1,
+      hvLossMultiplier: 1,
+      lvLossMultiplier: 1,
+      networkLevel: "LV",
+      profitMultiplier: 0,
+      sourceLabel: "Invalid supply"
+    });
+
+    expect(issues.map((issue) => issue.code)).toEqual([
+      "Missing customer class",
+      "Negative rate",
+      "Invalid loss multiplier",
+      "Invalid profit multiplier"
+    ]);
   });
 });
