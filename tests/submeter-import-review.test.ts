@@ -73,7 +73,7 @@ describe("submeter import review", () => {
   it("flags duplicate register meters without removing imported rows", () => {
     const conflicts = findSubmeterRegisterImportConflicts({
       existingRows: [submeter()],
-      importedRows: [submeter({ id: "submeter-imported" })]
+      importedRows: [submeter({ id: "submeter-imported", meter: " mtr-001 " })]
     });
 
     expect(conflicts).toEqual([
@@ -86,10 +86,29 @@ describe("submeter import review", () => {
     expect(createImportConflictMessages(conflicts)[0]).toContain("MTR-001");
   });
 
+  it("flags duplicate register meters inside the imported file", () => {
+    const conflicts = findSubmeterRegisterImportConflicts({
+      existingRows: [],
+      importedRows: [
+        submeter({ id: "submeter-imported-1", meter: "MTR-002" }),
+        submeter({ id: "submeter-imported-2", meter: " mtr-002 " })
+      ]
+    });
+
+    expect(conflicts).toEqual([
+      expect.objectContaining({
+        code: "Duplicate meter",
+        existingRowId: "submeter-imported-1",
+        importedRowId: "submeter-imported-2"
+      })
+    ]);
+    expect(conflicts[0]?.message).toContain("appears more than once");
+  });
+
   it("flags duplicate consumption periods by meter, format and dates", () => {
     const conflicts = findSubmeterConsumptionImportConflicts({
       existingRows: [consumption()],
-      importedRows: [consumption({ id: "consumption-imported" })]
+      importedRows: [consumption({ id: "consumption-imported", meter: " mtr-001 " })]
     });
 
     expect(conflicts).toEqual([
@@ -101,10 +120,28 @@ describe("submeter import review", () => {
     ]);
   });
 
+  it("flags duplicate consumption periods inside the imported file", () => {
+    const conflicts = findSubmeterConsumptionImportConflicts({
+      existingRows: [],
+      importedRows: [
+        consumption({ id: "consumption-imported-1", meter: "MTR-003" }),
+        consumption({ id: "consumption-imported-2", meter: " mtr-003 " })
+      ]
+    });
+
+    expect(conflicts).toEqual([
+      expect.objectContaining({
+        code: "Duplicate consumption period",
+        existingRowId: "consumption-imported-1",
+        importedRowId: "consumption-imported-2"
+      })
+    ]);
+  });
+
   it("flags duplicate TLM periods by date, settlement period and GSP group", () => {
     const conflicts = findTransmissionLossMultiplierImportConflicts({
       existingRows: [tlm()],
-      importedRows: [tlm({ id: "tlm-imported" })]
+      importedRows: [tlm({ id: "tlm-imported", gspGroup: " _a " })]
     });
 
     expect(conflicts).toEqual([
@@ -112,6 +149,24 @@ describe("submeter import review", () => {
         code: "Duplicate TLM period",
         existingRowId: "tlm-existing",
         importedRowId: "tlm-imported"
+      })
+    ]);
+  });
+
+  it("flags duplicate TLM periods inside the imported file", () => {
+    const conflicts = findTransmissionLossMultiplierImportConflicts({
+      existingRows: [],
+      importedRows: [
+        tlm({ id: "tlm-imported-1", gspGroup: "_B" }),
+        tlm({ id: "tlm-imported-2", gspGroup: " _b " })
+      ]
+    });
+
+    expect(conflicts).toEqual([
+      expect.objectContaining({
+        code: "Duplicate TLM period",
+        existingRowId: "tlm-imported-1",
+        importedRowId: "tlm-imported-2"
       })
     ]);
   });

@@ -1,8 +1,8 @@
 # MVP Demo Rehearsal Notes
 
-Date: 2026-06-22
+Date: 2026-06-24
 
-Status: prepared.
+Status: refreshed after decision-pack phase.
 
 Purpose: provide a short rehearsal script for presenting the accepted-with-limitations internal MVP candidate.
 
@@ -57,6 +57,8 @@ Do not describe the workflow as externally release-ready.
    - Explain this is a stakeholder-reviewable report view.
    - Show that submeter, loss, Utilityhub hierarchy, asset, supply and methodology-cost evidence are labelled as evidence-only where they do not yet drive tariff totals.
    - Confirm the tariff-driving path remains aggregate customer inputs, approved recoverable cost pools, allocation methods, and tariff calculation outputs.
+   - Explain that supply p/kWh can affect tariffs only through explicit reviewed application rows.
+   - Explain that methodology cost and asset evidence require reviewed cost-pool or valuation packages before they can affect tariff recovery.
    - State that formal machine-readable export DTOs remain outside MVP scope.
 
 9. Close with limitations and asks.
@@ -73,6 +75,8 @@ Do not describe the workflow as externally release-ready.
 | Is supply calculation complete? | No. Supply evidence and p/kWh application are visible, but tariff-impacting supply integration remains controlled by approved business rules. |
 | Do submeter and loss records drive tariff rates? | Not automatically. They are visible as reconciliation and readiness evidence until tariff-impacting use is approved. |
 | Do asset and methodology cost rows create tariff cost pools? | No. They support commercial review and future mapping decisions; current tariff totals still come from approved cost pools and allocations. |
+| Does Meter Map own the hierarchy? | UtilityHub owns the shared hierarchy and meter masters. Meter Map may provide mapping evidence later; Tariff Builder should consume shared IDs rather than create duplicate masters. |
+| Can asset values calculate annuity or depreciation now? | No. Asset evidence is visible, but valuation formulas remain blocked until methodology approval. |
 | Are all tariff scenarios covered? | No. The current evidence covers one representative internal scenario. |
 | Can the calculation be traced? | Yes. The calculation workflow includes audit trace entries linked to tariff outputs. |
 
@@ -87,11 +91,12 @@ The rehearsal is acceptable if the presenter can clearly explain:
 - Whether revenue recovery reconciles.
 - Where audit trace can be inspected.
 - Which evidence sections are tariff-impacting and which are evidence-only.
+- Which future decision packs are required before evidence can drive tariff inputs.
 - Which limitations remain.
 
 ## Decisions Or Support To Request
 
-- Confirm whether the next priority is stakeholder-demo delivery or narrow fixes.
+- Confirm whether the next priority is first-release readiness review, formal export design, UtilityHub integration contracts, or narrow walkthrough fixes.
 - Confirm which additional tariff scenarios should be added after the internal MVP candidate.
-- Confirm the business policy for supply calculation before any production implementation starts.
+- Confirm the business policy for automatic supply derivation, submeter-derived aggregate inputs, methodology-derived cost pools and asset valuation before any production implementation starts.
 - Confirm whether formal export DTOs are needed for the next commercial milestone.

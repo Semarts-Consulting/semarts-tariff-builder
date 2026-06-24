@@ -29,23 +29,40 @@ export function findSubmeterRegisterImportConflicts({
   const existingByMeter = new Map(
     existingRows
       .filter((row) => row.meter.trim())
-      .map((row) => [row.meter.trim(), row])
+      .map((row) => [normaliseImportKeyPart(row.meter), row])
   );
+  const importedByMeter = new Map<string, SiteSubmeterRecord>();
+  const conflicts: ImportConflict[] = [];
 
-  return importedRows.flatMap((row) => {
-    const existing = existingByMeter.get(row.meter.trim());
+  importedRows.forEach((row) => {
+    const meterKey = normaliseImportKeyPart(row.meter);
+    if (!meterKey) return;
 
-    return existing
-      ? [
-          {
-            code: "Duplicate meter",
-            message: `Imported meter ${row.meter} already exists in the submeter register.`,
-            existingRowId: existing.id,
-            importedRowId: row.id
-          }
-        ]
-      : [];
+    const existing = existingByMeter.get(meterKey);
+    if (existing) {
+      conflicts.push({
+        code: "Duplicate meter",
+        message: `Imported meter ${existing.meter.trim()} already exists in the submeter register.`,
+        existingRowId: existing.id,
+        importedRowId: row.id
+      });
+    }
+
+    const earlierImport = importedByMeter.get(meterKey);
+    if (earlierImport) {
+      conflicts.push({
+        code: "Duplicate meter",
+        message: `Imported meter ${row.meter.trim()} appears more than once in this import.`,
+        existingRowId: earlierImport.id,
+        importedRowId: row.id
+      });
+      return;
+    }
+
+    importedByMeter.set(meterKey, row);
   });
+
+  return conflicts;
 }
 
 export function findSubmeterConsumptionImportConflicts({
@@ -56,21 +73,37 @@ export function findSubmeterConsumptionImportConflicts({
   importedRows: SubmeterConsumptionRecord[];
 }): ImportConflict[] {
   const existingByKey = new Map(existingRows.map((row) => [consumptionKey(row), row]));
+  const importedByKey = new Map<string, SubmeterConsumptionRecord>();
+  const conflicts: ImportConflict[] = [];
 
-  return importedRows.flatMap((row) => {
-    const existing = existingByKey.get(consumptionKey(row));
+  importedRows.forEach((row) => {
+    const key = consumptionKey(row);
+    const existing = existingByKey.get(key);
 
-    return existing
-      ? [
-          {
-            code: "Duplicate consumption period",
-            message: `Imported ${row.format.toLowerCase()} consumption for ${row.meter} overlaps an existing record for ${row.periodStart} to ${row.periodEnd}.`,
-            existingRowId: existing.id,
-            importedRowId: row.id
-          }
-        ]
-      : [];
+    if (existing) {
+      conflicts.push({
+        code: "Duplicate consumption period",
+        message: `Imported ${row.format.toLowerCase()} consumption for ${row.meter.trim()} overlaps an existing record for ${row.periodStart} to ${row.periodEnd}.`,
+        existingRowId: existing.id,
+        importedRowId: row.id
+      });
+    }
+
+    const earlierImport = importedByKey.get(key);
+    if (earlierImport) {
+      conflicts.push({
+        code: "Duplicate consumption period",
+        message: `Imported ${row.format.toLowerCase()} consumption for ${row.meter.trim()} appears more than once in this import for ${row.periodStart} to ${row.periodEnd}.`,
+        existingRowId: earlierImport.id,
+        importedRowId: row.id
+      });
+      return;
+    }
+
+    importedByKey.set(key, row);
   });
+
+  return conflicts;
 }
 
 export function findTransmissionLossMultiplierImportConflicts({
@@ -81,21 +114,37 @@ export function findTransmissionLossMultiplierImportConflicts({
   importedRows: TransmissionLossMultiplierInput[];
 }): ImportConflict[] {
   const existingByKey = new Map(existingRows.map((row) => [tlmKey(row), row]));
+  const importedByKey = new Map<string, TransmissionLossMultiplierInput>();
+  const conflicts: ImportConflict[] = [];
 
-  return importedRows.flatMap((row) => {
+  importedRows.forEach((row) => {
     const existing = existingByKey.get(tlmKey(row));
 
-    return existing
-      ? [
-          {
-            code: "Duplicate TLM period",
-            message: `Imported TLM for ${row.settlementDate} SP${row.settlementPeriod} ${row.gspGroup || "default GSP"} already exists.`,
-            existingRowId: existing.id,
-            importedRowId: row.id
-          }
-        ]
-      : [];
+    if (existing) {
+      conflicts.push({
+        code: "Duplicate TLM period",
+        message: `Imported TLM for ${row.settlementDate} SP${row.settlementPeriod} ${row.gspGroup || "default GSP"} already exists.`,
+        existingRowId: existing.id,
+        importedRowId: row.id
+      });
+    }
+
+    const key = tlmKey(row);
+    const earlierImport = importedByKey.get(key);
+    if (earlierImport) {
+      conflicts.push({
+        code: "Duplicate TLM period",
+        message: `Imported TLM for ${row.settlementDate} SP${row.settlementPeriod} ${row.gspGroup || "default GSP"} appears more than once in this import.`,
+        existingRowId: earlierImport.id,
+        importedRowId: row.id
+      });
+      return;
+    }
+
+    importedByKey.set(key, row);
   });
+
+  return conflicts;
 }
 
 export function createImportConflictMessages(conflicts: ImportConflict[]) {
@@ -130,9 +179,22 @@ export function summariseImportConflicts(conflicts: ImportConflict[]): ImportCon
 }
 
 function consumptionKey(row: SubmeterConsumptionRecord) {
-  return [row.meter, row.format, row.periodStart, row.periodEnd].join("::");
+  return [
+    normaliseImportKeyPart(row.meter),
+    normaliseImportKeyPart(row.format),
+    row.periodStart,
+    row.periodEnd
+  ].join("::");
 }
 
 function tlmKey(row: TransmissionLossMultiplierInput) {
-  return [row.settlementDate, row.settlementPeriod, row.gspGroup].join("::");
+  return [
+    row.settlementDate,
+    row.settlementPeriod,
+    normaliseImportKeyPart(row.gspGroup || "default GSP")
+  ].join("::");
+}
+
+function normaliseImportKeyPart(value: string) {
+  return value.trim().toLowerCase();
 }
