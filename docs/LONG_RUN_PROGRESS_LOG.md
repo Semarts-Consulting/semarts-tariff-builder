@@ -992,3 +992,34 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add tariff year input architecture`
+
+## Package: Tariff Model And Tariff Year Contract Proposal
+
+Files changed:
+
+- `docs/TARIFF_MODEL_YEAR_CONTRACT_PROPOSAL.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- The input architecture package identified the tariff model/year contract as the next safe prerequisite.
+- The proposal defines long-lived tariff model and annual tariff year concepts before any storage, route, shared DTO or calculation changes.
+- It keeps UtilityHub-owned customer/site/meter/reading records separate from Tariff Builder-owned tariff model, tariff year, input selection and calculation run records.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 38 test files and 203 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not change production behaviour.
+- Future implementation still needs owner approval for storage compatibility, UI terminology, project-to-model migration, UtilityHub ID usage and input selection contracts.
+
+Suggested commit message:
+
+- `Add tariff model year contract proposal`
