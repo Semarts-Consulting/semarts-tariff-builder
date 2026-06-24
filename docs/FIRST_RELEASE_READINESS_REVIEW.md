@@ -85,6 +85,8 @@ Do not position the current app as externally production-ready if the release re
 
 Run a first-release walkthrough against the current app and record the result.
 
+Use `docs/FIRST_RELEASE_WALKTHROUGH_EVIDENCE.md` as the walkthrough evidence record.
+
 Minimum walkthrough path:
 
 1. Open the demo project.

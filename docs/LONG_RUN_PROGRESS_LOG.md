@@ -897,3 +897,35 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add first release readiness review`
+
+## Package: Manual/Browser Walkthrough Evidence Record
+
+Files changed:
+
+- `docs/FIRST_RELEASE_WALKTHROUGH_EVIDENCE.md`
+- `docs/FIRST_RELEASE_READINESS_REVIEW.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- The first-release readiness review recommended a manual/browser walkthrough before any release decision.
+- This package adds the evidence record and links it from the readiness and control docs.
+- The actual walkthrough result remains pending and must be recorded after the app is run locally.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 38 test files and 203 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not claim the walkthrough has been completed.
+- User still needs to run the app and complete the walkthrough evidence before a release decision can be recorded.
+
+Suggested commit message:
+
+- `Add first release walkthrough evidence record`

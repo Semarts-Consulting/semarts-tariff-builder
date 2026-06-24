@@ -229,6 +229,7 @@ Review risks:
 - `docs/ASSET_VALUATION_METHOD_DECISION_PACK.md` now proposes that asset evidence remains evidence-only by default. The safest first production route is approved annual asset recovery amounts converted into explicit `CostPoolRow` records; formula-based valuation using life, WACC, CPI, depreciation or annuity remains blocked pending methodology approval.
 - Friday closeout package hardens submeter import review by detecting duplicates inside imported files as well as duplicates against existing records, and refreshes stakeholder walkthrough material to reflect the supply, Meter Map, methodology cost and asset valuation boundaries.
 - `docs/FIRST_RELEASE_READINESS_REVIEW.md` now records the recommended release position: acceptable as a first-release candidate for controlled internal and selected stakeholder review, but not unrestricted external production release until release blockers are accepted or resolved.
+- `docs/FIRST_RELEASE_WALKTHROUGH_EVIDENCE.md` now provides the manual/browser walkthrough evidence record. No walkthrough result has been recorded yet; the next user-facing action is to run the app and complete the evidence table.
 
 ## QA Staging Warnings
 
@@ -282,4 +283,4 @@ Supply calculation decision gate is maintained in `docs/SUPPLY_CALCULATION_DECIS
 
 ## Immediate Next Action
 
-Use `docs/FIRST_RELEASE_READINESS_REVIEW.md` as the current release-readiness reference. The next package should record a manual/browser walkthrough result or prepare a release decision record. Do not start production methodology, import parser contract changes, storage, report total, export, shared DTO, UtilityHub hierarchy, Meter Map consumption, methodology-derived cost-pool generation, asset valuation, or calculation behaviour changes until the relevant decision pack and shared UtilityHub contracts are approved.
+Use `docs/FIRST_RELEASE_READINESS_REVIEW.md` and `docs/FIRST_RELEASE_WALKTHROUGH_EVIDENCE.md` as the current release-readiness references. The next package should record the actual walkthrough result or prepare a release decision record. Do not start production methodology, import parser contract changes, storage, report total, export, shared DTO, UtilityHub hierarchy, Meter Map consumption, methodology-derived cost-pool generation, asset valuation, or calculation behaviour changes until the relevant decision pack and shared UtilityHub contracts are approved.
