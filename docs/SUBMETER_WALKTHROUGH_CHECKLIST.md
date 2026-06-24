@@ -20,6 +20,8 @@ Use this checklist to test the current evidence-only submeter workflow. The work
 - Submeter register accepts meters without tenants where responsibility is not Tenant.
 - Tenant responsibility requires Tenant Name.
 - Imports append by default and show duplicate review messages rather than replacing rows silently.
+- Import review catches duplicates against existing records and duplicates inside the imported file.
+- Import duplicate detection ignores casing and surrounding whitespace for meter references and GSP groups.
 - Consumption records can be entered as half-hourly, monthly, quarterly, or annual.
 - Half-hourly rows require 48 settlement periods.
 - Monthly coverage review shows expected periods, missing periods, duplicates, and unknown meter records.
@@ -41,7 +43,17 @@ Submeter and TLM evidence does not currently change:
 
 ## Utilityhub Alignment
 
-Future structured customer, site, area, location, tenant, and meter hierarchy should mirror Semarts Utilityhub. Until that shared hierarchy contract is confirmed, Tariff Builder keeps location and tenant fields as source/display text and treats submeter-derived allocation as evidence-only.
+Future structured customer, site, building, floor, location, supply point, tenant, meter, meter reading, document upload, permission and audit hierarchy should mirror Semarts UtilityHub and UtilityMap / Meter Map contracts. Until those shared contracts are confirmed, Tariff Builder keeps location and tenant fields as source/display text and treats submeter-derived allocation as evidence-only.
+
+Meter Map may later provide mapped areas, meter-to-area allocations, allocation confidence, area usage metrics and map-specific data-quality issues. Tariff Builder should consume that evidence through shared UtilityHub IDs rather than creating competing masters.
+
+## Current Decision Boundaries
+
+- Submeter-derived aggregate tariff input is blocked until reviewed aggregate generation is approved.
+- Supply energy p/kWh affects tariffs only through explicit reviewed application rows.
+- Methodology cost evidence does not create cost pools automatically.
+- Asset evidence does not calculate annual asset recovery automatically.
+- Report evidence sections distinguish tariff-driving values from evidence-only values.
 
 ## Stop Points
 
@@ -50,4 +62,6 @@ Pause before implementing any change that would:
 - Promote submeter consumption into tariff denominators.
 - Apply loss-adjusted consumption to tariff outputs.
 - Replace free-text location with a new hierarchy not aligned to Utilityhub.
+- Create local building, floor, supply point, meter-reading or document-upload masters.
+- Convert methodology cost or asset evidence into tariff cost pools without an approved mapping or valuation package.
 - Change storage, shared DTOs, exports, or report totals.

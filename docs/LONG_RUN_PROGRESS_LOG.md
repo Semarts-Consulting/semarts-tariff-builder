@@ -828,3 +828,41 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add asset valuation methodology decision pack`
+
+## Package: Friday Import Review, Walkthrough And Decision-Phase Closeout
+
+Files changed:
+
+- `lib/submeter-import-review.ts`
+- `tests/submeter-import-review.test.ts`
+- `docs/SUBMETER_WALKTHROUGH_CHECKLIST.md`
+- `docs/MVP_STAKEHOLDER_DEMO_PREP.md`
+- `docs/MVP_DEMO_REHEARSAL_NOTES.md`
+- `docs/FRIDAY_DECISION_PHASE_CLOSEOUT.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Complete the planned Friday packages in one controlled batch.
+- Harden import review duplicate detection without changing parser contracts or tariff behaviour.
+- Refresh stakeholder walkthrough material to reflect the latest decision-pack boundaries.
+- Record the decision-pack phase closeout and recommended next package.
+
+Validation performed:
+
+- Focused import review test passed.
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed on rerun, 38 test files and 203 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- Import review remains review-only and does not block save, replace rows, change parser output, change storage or affect tariff calculations.
+- First-release readiness review is the recommended next package before any production behaviour changes.
+
+Suggested commit message:
+
+- `Complete Friday import and walkthrough closeout`
