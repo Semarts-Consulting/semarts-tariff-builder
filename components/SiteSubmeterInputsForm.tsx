@@ -16,7 +16,7 @@ import {
 } from "@/lib/submeter-import-templates";
 import type { WorkbookTemplate } from "@/lib/submeter-import-templates";
 import {
-  createImportConflictMessages,
+  createImportReviewMessages,
   findSubmeterConsumptionImportConflicts,
   findSubmeterRegisterImportConflicts,
   findTransmissionLossMultiplierImportConflicts
@@ -32,6 +32,7 @@ import {
   filterTransmissionLossMultipliers,
   limitRows
 } from "@/lib/site-submeter-table-view";
+import { summariseSiteSubmeterReadiness } from "@/lib/site-submeter-readiness";
 import {
   mapSubmetersToUtilityhubHierarchy,
   summariseUtilityhubHierarchyMappings
@@ -306,6 +307,32 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
     () => limitRows(utilityhubHierarchyMappings.filter((mapping) => mapping.issues.length > 0), 8),
     [utilityhubHierarchyMappings]
   );
+  const submeterReadiness = useMemo(
+    () =>
+      summariseSiteSubmeterReadiness({
+        submeterIssues,
+        consumptionIssues,
+        tlmIssues,
+        hierarchySummary: utilityhubHierarchySummary,
+        unknownMeterRecordCount: submeterConsumptionAggregation.unknownMeterRecords.length,
+        recordCount:
+          inputs.siteSubmeters.length +
+          inputs.submeterConsumption.length +
+          inputs.transmissionLossMultipliers.length +
+          inputs.halfHourlyImports.length
+      }),
+    [
+      consumptionIssues,
+      inputs.halfHourlyImports.length,
+      inputs.siteSubmeters.length,
+      inputs.submeterConsumption.length,
+      inputs.transmissionLossMultipliers.length,
+      submeterConsumptionAggregation.unknownMeterRecords.length,
+      submeterIssues,
+      tlmIssues,
+      utilityhubHierarchySummary
+    ]
+  );
 
   function save(nextInputs: ProjectMethodologyInputs, message: string) {
     setInputs(nextInputs);
@@ -377,7 +404,7 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
       },
       `Imported ${result.parsedRows.length} submeter rows.`
     );
-    setImportMessages(createImportConflictMessages(conflicts).slice(0, 10));
+    setImportMessages(createImportReviewMessages(conflicts).slice(0, 10));
   }
 
   async function importConsumption(file: File) {
@@ -405,7 +432,7 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
       },
       `Imported ${result.parsedRows.length} consumption rows.`
     );
-    setImportMessages(createImportConflictMessages(conflicts).slice(0, 10));
+    setImportMessages(createImportReviewMessages(conflicts).slice(0, 10));
   }
 
   async function importTlm(file: File) {
@@ -434,7 +461,7 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
       },
       `Imported ${result.parsedRows.length} Transmission Loss Multiplier rows.`
     );
-    setImportMessages(createImportConflictMessages(conflicts).slice(0, 10));
+    setImportMessages(createImportReviewMessages(conflicts).slice(0, 10));
   }
 
   async function refreshTlmEndpoint() {
@@ -1126,6 +1153,25 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
 
       <section className="rounded-md border border-line bg-white p-5">
         <h2 className="font-semibold">Validation and calculation readiness</h2>
+        <div className="mt-4 rounded-md border border-line bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h3 className="font-semibold">Submeter evidence readiness</h3>
+              <p className="mt-1 text-sm leading-6 text-ink/70">
+                This status combines submeter validation, consumption validation, TLM coverage,
+                Utilityhub mapping readiness, and unknown meter references.
+              </p>
+            </div>
+            <span className="rounded-md border border-line bg-field px-3 py-2 text-sm font-semibold">
+              {submeterReadiness.status}
+            </span>
+          </div>
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm leading-6 text-ink/70">
+            {submeterReadiness.messages.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
+        </div>
         <div className="mt-4 rounded-md border border-line bg-field p-4">
           <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
             <div>

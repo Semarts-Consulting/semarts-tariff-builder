@@ -55,6 +55,8 @@ The templates use the exact headers expected by the import parsers. Each templat
 
 Imports append by default. They do not silently replace existing rows. If an imported register meter, consumption period, or TLM settlement period appears to duplicate an existing row, the row is still imported and the screen displays a review message so the user can decide whether to correct, remove, or retain the duplicate.
 
+The import review message includes a summary count before the detailed duplicate messages. This is a usability signal only; it does not delete, merge, overwrite or reject imported rows.
+
 CSV support is not included in the current package because the existing app import pattern is Excel workbook based. CSV can be added later using the same parser contracts if users prefer CSV templates.
 
 ## Transmission Loss Multipliers

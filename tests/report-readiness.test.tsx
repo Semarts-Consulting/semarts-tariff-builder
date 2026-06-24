@@ -158,6 +158,9 @@ describe("ReportsSummary readiness regression coverage", () => {
     expect(text).toContain("Consumption aggregation evidence");
     expect(text).toContain("Meter groups:");
     expect(text).toContain("Tenant groups:");
+    expect(text).toContain("Utilityhub hierarchy mapping evidence");
+    expect(text).toContain("Mapped submeters:");
+    expect(text).toContain("Unmapped locations:");
     expect(text).toContain("Responsibility category evidence");
     expect(text).toContain("Tenant");
     expect(text).toContain("Plant Room");

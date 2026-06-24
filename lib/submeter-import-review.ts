@@ -11,6 +11,14 @@ export type ImportConflict = {
   importedRowId: string;
 };
 
+export type ImportConflictSummary = {
+  totalConflicts: number;
+  duplicateMeterCount: number;
+  duplicateConsumptionPeriodCount: number;
+  duplicateTlmPeriodCount: number;
+  status: "No conflicts" | "Needs review";
+};
+
 export function findSubmeterRegisterImportConflicts({
   existingRows,
   importedRows
@@ -92,6 +100,33 @@ export function findTransmissionLossMultiplierImportConflicts({
 
 export function createImportConflictMessages(conflicts: ImportConflict[]) {
   return conflicts.map((conflict) => conflict.message);
+}
+
+export function createImportReviewMessages(conflicts: ImportConflict[]) {
+  const summary = summariseImportConflicts(conflicts);
+
+  if (summary.status === "No conflicts") {
+    return [];
+  }
+
+  return [
+    `Import review found ${summary.totalConflicts} possible duplicate record${summary.totalConflicts === 1 ? "" : "s"}.`,
+    ...createImportConflictMessages(conflicts)
+  ];
+}
+
+export function summariseImportConflicts(conflicts: ImportConflict[]): ImportConflictSummary {
+  return {
+    totalConflicts: conflicts.length,
+    duplicateMeterCount: conflicts.filter((conflict) => conflict.code === "Duplicate meter").length,
+    duplicateConsumptionPeriodCount: conflicts.filter(
+      (conflict) => conflict.code === "Duplicate consumption period"
+    ).length,
+    duplicateTlmPeriodCount: conflicts.filter(
+      (conflict) => conflict.code === "Duplicate TLM period"
+    ).length,
+    status: conflicts.length > 0 ? "Needs review" : "No conflicts"
+  };
 }
 
 function consumptionKey(row: SubmeterConsumptionRecord) {

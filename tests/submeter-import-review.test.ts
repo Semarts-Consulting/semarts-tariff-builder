@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   createImportConflictMessages,
+  createImportReviewMessages,
   findSubmeterConsumptionImportConflicts,
   findSubmeterRegisterImportConflicts,
-  findTransmissionLossMultiplierImportConflicts
+  findTransmissionLossMultiplierImportConflicts,
+  summariseImportConflicts
 } from "@/lib/submeter-import-review";
 import type {
   SiteSubmeterRecord,
@@ -112,5 +114,44 @@ describe("submeter import review", () => {
         importedRowId: "tlm-imported"
       })
     ]);
+  });
+
+  it("summarises import conflicts for review UI", () => {
+    const conflicts = [
+      ...findSubmeterRegisterImportConflicts({
+        existingRows: [submeter()],
+        importedRows: [submeter({ id: "submeter-imported" })]
+      }),
+      ...findSubmeterConsumptionImportConflicts({
+        existingRows: [consumption()],
+        importedRows: [consumption({ id: "consumption-imported" })]
+      }),
+      ...findTransmissionLossMultiplierImportConflicts({
+        existingRows: [tlm()],
+        importedRows: [tlm({ id: "tlm-imported" })]
+      })
+    ];
+
+    expect(summariseImportConflicts(conflicts)).toEqual({
+      totalConflicts: 3,
+      duplicateMeterCount: 1,
+      duplicateConsumptionPeriodCount: 1,
+      duplicateTlmPeriodCount: 1,
+      status: "Needs review"
+    });
+    expect(summariseImportConflicts([]).status).toBe("No conflicts");
+  });
+
+  it("creates user-facing import review messages with a summary first", () => {
+    const conflicts = findSubmeterRegisterImportConflicts({
+      existingRows: [submeter()],
+      importedRows: [submeter({ id: "submeter-imported" })]
+    });
+
+    expect(createImportReviewMessages(conflicts)).toEqual([
+      "Import review found 1 possible duplicate record.",
+      "Imported meter MTR-001 already exists in the submeter register."
+    ]);
+    expect(createImportReviewMessages([])).toEqual([]);
   });
 });

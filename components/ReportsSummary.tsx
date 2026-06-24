@@ -15,6 +15,10 @@ import {
 } from "@/lib/submeter-consumption-coverage";
 import { aggregateSubmeterConsumption } from "@/lib/submeter-consumption-aggregation";
 import { reconcileSubmeterConsumptionToBoundary } from "@/lib/submeter-reconciliation";
+import {
+  mapSubmetersToUtilityhubHierarchy,
+  summariseUtilityhubHierarchyMappings
+} from "@/lib/utilityhub-hierarchy-mapping";
 import { TariffAuditTracePanel } from "@/components/TariffAuditTracePanel";
 import {
   getProjectAllocationMethods,
@@ -308,6 +312,18 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
         consumptionRows: methodologyInputs.submeterConsumption
       }),
     [methodologyInputs.siteSubmeters, methodologyInputs.submeterConsumption]
+  );
+  const utilityhubHierarchyMappings = useMemo(
+    () =>
+      mapSubmetersToUtilityhubHierarchy({
+        submeters: methodologyInputs.siteSubmeters,
+        hierarchyReferences: []
+      }),
+    [methodologyInputs.siteSubmeters]
+  );
+  const utilityhubHierarchySummary = useMemo(
+    () => summariseUtilityhubHierarchyMappings(utilityhubHierarchyMappings),
+    [utilityhubHierarchyMappings]
   );
   const responsibilityCounts = useMemo(
     () =>
@@ -793,6 +809,17 @@ export function ReportsSummary({ projectId }: ReportsSummaryProps) {
                     Unknown meter records:{" "}
                     {submeterConsumptionAggregation.unknownMeterRecords.length}
                   </li>
+                </ul>
+              </div>
+
+              <div className="rounded-md border border-blue-200 bg-white/70 p-4">
+                <h3 className="font-semibold">Utilityhub hierarchy mapping evidence</h3>
+                <ul className="mt-3 space-y-2 leading-6">
+                  <li>Total submeters: {utilityhubHierarchySummary.totalSubmeters}</li>
+                  <li>Mapped submeters: {utilityhubHierarchySummary.mappedSubmeters}</li>
+                  <li>Needs review: {utilityhubHierarchySummary.reviewSubmeters}</li>
+                  <li>Unmapped meters: {utilityhubHierarchySummary.unmappedMeterCount}</li>
+                  <li>Unmapped locations: {utilityhubHierarchySummary.unmappedLocationCount}</li>
                 </ul>
               </div>
             </div>
