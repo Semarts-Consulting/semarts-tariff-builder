@@ -642,3 +642,34 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Record current evidence closeout`
+
+## Package: Submeter To Tariff Input Decision Pack
+
+Files changed:
+
+- `docs/SUBMETER_TO_TARIFF_INPUT_DECISION_PACK.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- The project needed an explicit decision gate before submeter consumption can become tariff-driving aggregate input.
+- The new decision pack defines aggregate-only, submeter evidence-only and submeter-derived aggregate modes.
+- It recommends preserving the existing aggregate customer-class tariff input path and generating reviewed aggregate rows later, rather than changing `calculateTariffs` to consume raw submeter rows directly.
+
+Validation performed:
+
+- Lint passed.
+- Type-check passed.
+- Full test suite passed.
+- Production build passed.
+
+Risks or follow-up decisions:
+
+- This package does not approve tariff-impacting implementation.
+- Future implementation still needs UtilityHub hierarchy mapping, customer-class mapping, reconciliation tolerance, validation blocker, profiling and loss-treatment decisions to be accepted.
+
+Suggested commit message:
+
+- `Add submeter tariff input decision pack`

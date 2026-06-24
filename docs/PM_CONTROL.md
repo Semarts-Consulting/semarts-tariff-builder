@@ -221,6 +221,7 @@ Review risks:
 - Long-run evidence batches 01-04 have moved submeter, loss, Utilityhub hierarchy, asset, supply and methodology-cost inputs into reviewable evidence/readiness surfaces. These areas remain non-tariff-impacting unless a separate approved package changes that behaviour.
 - The next larger run should shift from more evidence accumulation to decision-led implementation planning: submeter-to-tariff input treatment, Utilityhub hierarchy contract alignment, supply energy tariff impact, methodology cost to cost-pool mapping, and asset valuation methodology.
 - Current evidence closeout after PR #69 confirms the active baseline is green at 38 test files and 200 tests, with UtilityHub programme integration files merged. The next packages should be decision packs before production behaviour changes.
+- `docs/SUBMETER_TO_TARIFF_INPUT_DECISION_PACK.md` now proposes a conservative control model: aggregate customer-class inputs remain the current tariff-driving path, submeter evidence remains non-tariff-impacting, and future submeter-derived aggregate input should generate reviewed aggregate rows rather than making `calculateTariffs` consume raw submeter rows directly.
 
 ## QA Staging Warnings
 
