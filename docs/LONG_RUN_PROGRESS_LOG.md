@@ -373,3 +373,77 @@ Risks or follow-up decisions:
 Suggested future Git commit message:
 
 - `Add WB-003 tenant recovery regression`
+# Long-Run Evidence Batch 01 - 2026-06-24
+
+## Package: Report Utilityhub Mapping Evidence
+
+Files changed:
+
+- `components/ReportsSummary.tsx`
+- `tests/report-readiness.test.tsx`
+
+Reason:
+
+- Stakeholder reports should show whether submeter evidence can be mapped to Utilityhub-style Customer, Site, Building, Location and Meter references before any tariff-impacting hierarchy use.
+
+Validation performed:
+
+- Focused report readiness regression passed.
+
+Risks or follow-up decisions:
+
+- No Utilityhub IDs are persisted yet. Future persistent mapping remains gated by shared hierarchy contract approval.
+
+Suggested commit message:
+
+- `Add report hierarchy mapping evidence`
+
+## Package: Site Submeter Readiness Summary
+
+Files changed:
+
+- `lib/site-submeter-readiness.ts`
+- `tests/site-submeter-readiness.test.ts`
+- `components/SiteSubmeterInputsForm.tsx`
+
+Reason:
+
+- The Site Submeters screen now has a single readiness status combining validation, TLM coverage, Utilityhub mapping readiness and unknown meter references.
+
+Validation performed:
+
+- Focused readiness and type-check validation passed.
+
+Risks or follow-up decisions:
+
+- Status is evidence/readiness only and does not block save or alter tariff calculations.
+
+Suggested commit message:
+
+- `Add site submeter readiness summary`
+
+## Package: Import Conflict Summary
+
+Files changed:
+
+- `lib/submeter-import-review.ts`
+- `tests/submeter-import-review.test.ts`
+- `components/SiteSubmeterInputsForm.tsx`
+- `docs/SITE_SUBMETER_AND_TLM_INPUTS.md`
+
+Reason:
+
+- Import review now has summary counts for duplicate meters, duplicate consumption periods and duplicate TLM periods.
+- The Site Submeters screen now shows a summary message before detailed duplicate import messages.
+
+Validation performed:
+
+- Focused import review regression passed.
+
+Risks or follow-up decisions:
+
+- Existing import behaviour is unchanged: rows append and conflicts are review evidence only.
+
+Suggested commit message:
+
+- `Add submeter import conflict summary`
