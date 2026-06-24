@@ -673,3 +673,34 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add submeter tariff input decision pack`
+
+## Package: UtilityHub Hierarchy Contract Proposal
+
+Files changed:
+
+- `docs/UTILITYHUB_HIERARCHY_CONTRACT_PROPOSAL.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Tariff Builder needs an explicit shared-hierarchy contract direction before persistent hierarchy references or tariff-impacting submeter use are implemented.
+- The proposal confirms UtilityHub owns shared customer, site, building, location, meter, user, permission and audit records.
+- It recommends an additive compatibility mapping layer and blocks local master hierarchy duplication.
+
+Validation performed:
+
+- Lint passed.
+- Type-check passed.
+- Full test suite passed.
+- Production build passed.
+
+Risks or follow-up decisions:
+
+- This proposal does not approve storage migration, shared DTO changes, automatic UtilityHub sync or tariff-impacting hierarchy use.
+- Future implementation still needs exact UtilityHub entity IDs, compatibility handling, review status, confidence and manual override rules.
+
+Suggested commit message:
+
+- `Add UtilityHub hierarchy contract proposal`
