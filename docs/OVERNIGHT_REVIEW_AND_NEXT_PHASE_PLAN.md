@@ -2,7 +2,50 @@
 
 Date: 2026-06-22
 
-Status: review and planning document.
+Status: superseded by current evidence closeout and next implementation planning.
+
+## Current Evidence Closeout
+
+Date: 2026-06-24
+
+Current baseline after PR #69:
+
+- Workbook-derived scenario coverage is implemented for WB-001 through WB-006 as test-only evidence.
+- Site submeter register, consumption formats, TLM rows, boundary reconciliation, loss-adjusted evidence, import templates, import review summaries, and submeter report evidence are available.
+- Utilityhub-style hierarchy mapping evidence is available, but permanent shared customer, site, meter, user, permission and audit ownership remains with UtilityHub.
+- Supply energy p/kWh evidence and application UI are available using the approved NBP/GSP/CM source-loss and private-network-loss treatment.
+- Asset readiness evidence and methodology cost evidence readiness are visible in report and workflow surfaces.
+- Report download regression coverage preserves evidence-only wording for supply, submeter/loss, asset and methodology-cost evidence.
+- UtilityHub programme integration guidance and `module.manifest.json` are now merged.
+
+Current validation baseline:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 38 test files and 200 tests.
+- `npm.cmd run build`: passed.
+
+Current delivery conclusion:
+
+- The project has moved beyond the original overnight regression catch-up.
+- The next phase should not keep adding evidence surfaces by default.
+- The next phase should make explicit decisions before any evidence becomes tariff-impacting.
+
+Current gated package queue:
+
+1. Submeter to tariff input decision pack.
+2. UtilityHub hierarchy contract proposal.
+3. Supply energy tariff impact proposal.
+4. Methodology cost to cost-pool mapping proposal.
+5. Asset valuation methodology decision pack.
+6. Import review workflow hardening, only if parser/output contracts stay stable.
+7. Stakeholder walkthrough refresh.
+
+Evidence-only boundary:
+
+- Submeter, loss, UtilityHub hierarchy, supply, asset, methodology-cost, generation/export and weak workbook-mapping evidence remain non-tariff-impacting unless a separate approved package changes that behaviour.
+
+---
 
 Git usage: none during the overnight delivery session.
 

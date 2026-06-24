@@ -220,6 +220,7 @@ Review risks:
 - Non-ready report HTML export coverage now asserts readiness issues, revenue variance, and validation messages are preserved in downloaded stakeholder report HTML.
 - Long-run evidence batches 01-04 have moved submeter, loss, Utilityhub hierarchy, asset, supply and methodology-cost inputs into reviewable evidence/readiness surfaces. These areas remain non-tariff-impacting unless a separate approved package changes that behaviour.
 - The next larger run should shift from more evidence accumulation to decision-led implementation planning: submeter-to-tariff input treatment, Utilityhub hierarchy contract alignment, supply energy tariff impact, methodology cost to cost-pool mapping, and asset valuation methodology.
+- Current evidence closeout after PR #69 confirms the active baseline is green at 38 test files and 200 tests, with UtilityHub programme integration files merged. The next packages should be decision packs before production behaviour changes.
 
 ## QA Staging Warnings
 
