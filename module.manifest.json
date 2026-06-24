@@ -1,0 +1,45 @@
+{
+  "moduleName": "Semarts Tariff Builder",
+  "moduleKey": "tariff-builder",
+  "moduleType": "module",
+  "ownedRoutes": [
+    "/tariff-builder",
+    "/tariff-builder/methodologies",
+    "/tariff-builder/cost-base",
+    "/tariff-builder/allocation",
+    "/tariff-builder/reconciliation",
+    "/tariff-builder/outputs",
+    "/tariff-builder/reports"
+  ],
+  "requiresSharedEntities": [
+    "customer",
+    "area",
+    "site",
+    "meter",
+    "supply_point",
+    "utility_type",
+    "user",
+    "permission",
+    "audit_event",
+    "document_upload"
+  ],
+  "exports": [
+    "tariff_methodology",
+    "tariff_period",
+    "tariff_output",
+    "methodology_report"
+  ],
+  "permissions": [
+    "tariff.view",
+    "tariff.edit",
+    "tariff.calculate",
+    "tariff.report",
+    "tariff.admin"
+  ],
+  "integrationRisks": [
+    "Requires agreed shared meter and supply point structure before production use",
+    "Requires agreed permission enforcement model from UtilityHub",
+    "Requires agreed audit event schema for methodology and calculation changes",
+    "Requires clear boundary between UtilityHub-owned meter records and tariff-specific submeter or boundary reconciliation inputs"
+  ]
+}
