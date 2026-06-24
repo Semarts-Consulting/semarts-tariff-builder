@@ -797,3 +797,34 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add methodology cost mapping proposal`
+
+## Package: Asset Valuation Methodology Decision Pack
+
+Files changed:
+
+- `docs/ASSET_VALUATION_METHOD_DECISION_PACK.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Asset evidence is visible in the application and reports, but prior-year asset values, life years, chargeability and voltage classifications must not automatically calculate tariff recovery.
+- The decision pack defines evidence-only, approved annual amount and calculated annual amount modes.
+- It recommends that the first production route should use approved annual asset recovery amounts converted into explicit `CostPoolRow` records before any formula-based valuation method is implemented.
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 38 test files and 200 tests.
+- `npm.cmd run build`: passed.
+
+Risks or follow-up decisions:
+
+- This package is docs-only and does not approve production asset valuation implementation.
+- Formula-based valuation still needs owner decisions for chargeability, valuation source, useful life, WACC, CPI, depreciation, annuity, shared-use treatment, allocation basis and report audit evidence.
+
+Suggested commit message:
+
+- `Add asset valuation methodology decision pack`
