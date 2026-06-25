@@ -4,6 +4,7 @@ import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { readSheet } from "read-excel-file/browser";
 import writeXlsxFile from "write-excel-file/browser";
 import type { SheetData } from "write-excel-file/browser";
+import { summariseBoundaryMeterSelectorState } from "@/lib/boundary-reference-selector-state";
 import { isProjectArchived } from "@/lib/project-state";
 import {
   getProjectMethodologyInputs,
@@ -333,6 +334,14 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
       utilityhubHierarchySummary
     ]
   );
+  const boundaryMeterSelectorState = useMemo(
+    () =>
+      summariseBoundaryMeterSelectorState({
+        submeterCount: inputs.siteSubmeters.length,
+        consumptionRecordCount: inputs.submeterConsumption.length
+      }),
+    [inputs.siteSubmeters.length, inputs.submeterConsumption.length]
+  );
 
   function save(nextInputs: ProjectMethodologyInputs, message: string) {
     setInputs(nextInputs);
@@ -507,6 +516,27 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
 
   return (
     <div className="mt-8 space-y-6">
+      <section className="rounded-md border border-line bg-white p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="font-semibold">Boundary meter selector</h2>
+            <p className="mt-1 text-sm text-ink/70">
+              UtilityHub owns boundary-capable meter records and readings. Tariff Builder keeps
+              local submeter and consumption rows as evidence until live UtilityHub services are
+              connected.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-field px-3 py-1 text-xs font-semibold text-semarts-dark">
+            {boundaryMeterSelectorState.status}
+          </span>
+        </div>
+        <ul className="mt-3 space-y-1 text-sm text-ink/70">
+          {boundaryMeterSelectorState.messages.map((message) => (
+            <li key={message}>{message}</li>
+          ))}
+        </ul>
+      </section>
+
       <section className="rounded-md border border-line bg-white p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>

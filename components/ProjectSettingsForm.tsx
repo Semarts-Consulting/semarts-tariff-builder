@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { CustomerClassTableEditor } from "@/components/CustomerClassTableEditor";
+import { summariseCustomerSiteSelectorState } from "@/lib/customer-site-selector-state";
 import {
   deleteProject,
   getProjectById,
@@ -145,6 +146,8 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
     return null;
   }
 
+  const customerSiteSelectorState = summariseCustomerSiteSelectorState(project);
+
   return (
     <div className="mt-8 space-y-6">
       <form
@@ -225,6 +228,27 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
               ))}
             </select>
           </label>
+        </div>
+
+        <div className="rounded-md border border-line bg-field p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="font-semibold">Customer/site selector</h2>
+              <p className="mt-1 text-sm text-ink/70">
+                UtilityHub owns customer and site records. Tariff Builder can hold manual
+                references for now; live selection will be connected after the shared service is
+                available.
+              </p>
+            </div>
+            <span className="w-fit rounded-full bg-white px-3 py-1 text-xs font-semibold text-semarts-dark">
+              {customerSiteSelectorState.status}
+            </span>
+          </div>
+          <ul className="mt-3 space-y-1 text-sm text-ink/70">
+            {customerSiteSelectorState.messages.map((message) => (
+              <li key={message}>{message}</li>
+            ))}
+          </ul>
         </div>
 
         <div className="grid gap-5 md:grid-cols-4">

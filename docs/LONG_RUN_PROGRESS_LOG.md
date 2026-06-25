@@ -1227,3 +1227,146 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Record UtilityHub selector contract closeout`
+
+## Package: Selector-Ready Long Run 01
+
+Files changed:
+
+- `lib/utilityhub-selector-readiness.ts`
+- `tests/utilityhub-selector-readiness.test.ts`
+- `components/ProjectDashboardOverview.tsx`
+- `docs/SELECTOR_READY_LONG_RUN.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Start the approved selector-ready long run after UtilityHub supplied the selector contract baseline.
+- Add a pure readiness layer that represents contract-ready, selected-evidence, awaiting-service and blocked states.
+- Surface UtilityHub selector readiness on the project dashboard without adding live API calls or tariff-impacting behaviour.
+
+Validation performed:
+
+- Focused selector readiness tests passed.
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+
+Risks or follow-up decisions:
+
+- This package does not connect to UtilityHub services.
+- Selected UtilityHub records remain evidence-only unless a later approved package changes tariff-use state.
+- Customer/site selector planning remains the next implementation package.
+
+Suggested commit message:
+
+- `Add UtilityHub selector readiness surface`
+
+## Package: Selector-Ready Long Run 02
+
+Files changed:
+
+- `lib/customer-site-selector-state.ts`
+- `tests/customer-site-selector-state.test.ts`
+- `components/ProjectSettingsForm.tsx`
+- `docs/SELECTOR_READY_LONG_RUN.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Add a customer/site selector state helper and settings-page panel.
+- Make it clear that UtilityHub owns customer/site data and live selection is not connected yet.
+- Preserve the current manual reference compatibility route without introducing live API calls.
+
+Validation performed:
+
+- Focused customer/site selector state tests passed.
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+
+Risks or follow-up decisions:
+
+- Manual UtilityHub references remain interim evidence and require review.
+- This package does not implement the live UtilityHub customer/site selector.
+- No storage, calculation, import, export, report total or shared DTO behaviour changes are included.
+
+Suggested commit message:
+
+- `Add customer site selector readiness state`
+
+## Package: Selector-Ready Long Run 03
+
+Files changed:
+
+- `lib/meter-consumption-selector-state.ts`
+- `tests/meter-consumption-selector-state.test.ts`
+- `components/DataInputsForm.tsx`
+- `docs/SELECTOR_READY_LONG_RUN.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Add the meter and monthly consumption selector readiness state to the data inputs workflow.
+- Keep aggregate customer-class rows as the current tariff-driving path.
+- Make UtilityHub-owned meters and consumption summaries visible as the future source without connecting live services.
+
+Validation performed:
+
+- Focused meter/consumption selector state tests passed.
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+
+Risks or follow-up decisions:
+
+- This package does not implement live UtilityHub meter or consumption services.
+- No selected UtilityHub meter data can drive tariffs from this package.
+- Reviewed aggregate generation from UtilityHub meter summaries remains a separate future package.
+
+Suggested commit message:
+
+- `Add meter consumption selector readiness state`
+
+## Package: Selector-Ready Long Run 04
+
+Files changed:
+
+- `lib/boundary-reference-selector-state.ts`
+- `tests/boundary-reference-selector-state.test.ts`
+- `components/SiteSubmeterInputsForm.tsx`
+- `components/SupplyReferenceDataForm.tsx`
+- `docs/SELECTOR_READY_LONG_RUN.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Add boundary meter and reference-data selector readiness states.
+- Make clear that UtilityHub/shared services own boundary-capable meters, readings and reusable reference datasets.
+- Preserve current local evidence and reference review behaviour without live service integration.
+
+Validation performed:
+
+- Focused boundary/reference selector state tests passed.
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+
+Risks or follow-up decisions:
+
+- This package does not implement live UtilityHub boundary meter or reference-data services.
+- Local submeter, TLM and supply reference data remain interim evidence.
+- Public-release source versioning still depends on shared service implementation.
+
+Suggested commit message:
+
+- `Add boundary and reference selector readiness states`
+
+## Selector-Ready Long Run Final Validation
+
+Validation performed:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 45 test files and 226 tests.
+- `npm.cmd run build`: passed.
+
+Result:
+
+- Selector-ready internal release candidate surfaces are implemented as evidence-only UI/readiness states.
+- No live UtilityHub API calls, storage migration, calculation changes, imports, exports, report total changes or shared DTO changes were introduced.

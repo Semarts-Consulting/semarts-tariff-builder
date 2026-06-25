@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { summariseReferenceDataSelectorState } from "@/lib/boundary-reference-selector-state";
 import {
   createDefaultSupplyReferenceData,
   getSupplyReferenceData
@@ -98,6 +99,14 @@ export function SupplyReferenceDataForm() {
       ),
     [sortedDataSets]
   );
+  const referenceDataSelectorState = useMemo(
+    () =>
+      summariseReferenceDataSelectorState({
+        reviewedDataSetCount: reviewSummary.Reviewed,
+        totalDataSetCount: sortedDataSets.length
+      }),
+    [reviewSummary.Reviewed, sortedDataSets.length]
+  );
 
   useEffect(() => {
     loadReferenceDataFromCloud().catch(() => {
@@ -121,6 +130,26 @@ export function SupplyReferenceDataForm() {
 
   return (
     <div className="space-y-6">
+      <section className="rounded-md border border-line bg-white p-4 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="font-semibold">Reference data selector</h2>
+            <p className="mt-1 text-sm text-ink/70">
+              Shared TLM, CPI, transmission, distribution and supply contract references should be
+              selected from UtilityHub or approved shared reference services when available.
+            </p>
+          </div>
+          <span className="rounded-full bg-field px-3 py-1 text-xs font-semibold text-semarts-dark">
+            {referenceDataSelectorState.status}
+          </span>
+        </div>
+        <ul className="mt-3 space-y-1 text-sm text-ink/70">
+          {referenceDataSelectorState.messages.map((message) => (
+            <li key={message}>{message}</li>
+          ))}
+        </ul>
+      </section>
+
       <section className="rounded-md border border-line bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
