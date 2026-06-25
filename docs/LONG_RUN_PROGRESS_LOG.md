@@ -1410,3 +1410,42 @@ Final validation:
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 46 test files and 230 tests.
 - `npm.cmd run build`: passed.
+
+## Package: Customer/Site Selector UI
+
+Files changed:
+
+- `lib/customer-site-selector-local-envelope.ts`
+- `tests/customer-site-selector-local-envelope.test.ts`
+- `components/ProjectSettingsForm.tsx`
+- `docs/CUSTOMER_SITE_SELECTOR_ADAPTER.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Wire the customer/site settings panel to the selector adapter using a contract-shaped local envelope.
+- Avoid fake UtilityHub records by deriving the local envelope only from existing manual references.
+- Display selector option count, selected hierarchy label and source version before live service calls are introduced.
+
+Validation performed:
+
+- Focused customer/site selector UI and adapter tests passed.
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+
+Risks or follow-up decisions:
+
+- This package does not call UtilityHub APIs.
+- The source version is local/interim until UtilityHub live selector responses are consumed.
+- The next package should introduce a service boundary for live customer/site selector retrieval when approved.
+
+Suggested commit message:
+
+- `Wire customer site selector UI`
+
+Final validation:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 47 test files and 232 tests.
+- `npm.cmd run build`: passed.
