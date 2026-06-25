@@ -1526,3 +1526,47 @@ Final validation:
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 49 test files and 237 tests.
 - `npm.cmd run build`: passed.
+
+## Package: Selector UI Foundation Long Run
+
+Files changed:
+
+- `components/DataInputsForm.tsx`
+- `components/SiteSubmeterInputsForm.tsx`
+- `components/SupplyReferenceDataForm.tsx`
+- `lib/meter-selector-local-envelope.ts`
+- `lib/meter-selector-service.ts`
+- `lib/monthly-consumption-selector-local-envelope.ts`
+- `lib/monthly-consumption-selector-service.ts`
+- `lib/utilityhub-monthly-consumption-selector-adapter.ts`
+- `lib/boundary-meter-selector-local-envelope.ts`
+- `lib/boundary-meter-selector-service.ts`
+- `lib/utilityhub-boundary-meter-selector-adapter.ts`
+- `lib/reference-data-selector-local-envelope.ts`
+- `lib/reference-data-selector-service.ts`
+- `lib/utilityhub-reference-data-selector-adapter.ts`
+- selector adapter/service tests
+- `docs/SELECTOR_UI_FOUNDATION_LONG_RUN.md`
+- manager control docs
+
+Reason:
+
+- Continue the selector integration foundation after the meter adapter package.
+- Add local service boundaries for meter, monthly consumption, boundary meter and reference data selectors.
+- Show selector option counts and validation issue counts on the existing input panels while keeping all selected UtilityHub data evidence-only.
+
+Validation performed:
+
+- Focused selector adapter and service tests passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+
+Risks or follow-up decisions:
+
+- This package does not call UtilityHub APIs.
+- This package does not persist selected UtilityHub records to tariff years.
+- This package does not convert meter or consumption evidence into tariff-driving aggregate rows.
+- Future live selector calls, selected-record persistence, reviewed aggregate generation and reference-data tariff impact remain separate approval gates.
+
+Suggested commit message:
+
+- `Add selector UI foundation boundaries`

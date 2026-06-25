@@ -4,6 +4,7 @@ import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { readSheet } from "read-excel-file/browser";
 import writeXlsxFile from "write-excel-file/browser";
 import type { SheetData } from "write-excel-file/browser";
+import { getBoundaryMeterSelectorResult } from "@/lib/boundary-meter-selector-service";
 import { summariseBoundaryMeterSelectorState } from "@/lib/boundary-reference-selector-state";
 import { isProjectArchived } from "@/lib/project-state";
 import {
@@ -338,7 +339,8 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
     () =>
       summariseBoundaryMeterSelectorState({
         submeterCount: inputs.siteSubmeters.length,
-        consumptionRecordCount: inputs.submeterConsumption.length
+        consumptionRecordCount: inputs.submeterConsumption.length,
+        boundaryMeterSelector: getBoundaryMeterSelectorResult()
       }),
     [inputs.siteSubmeters.length, inputs.submeterConsumption.length]
   );
@@ -529,6 +531,20 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
           <span className="w-fit rounded-full bg-field px-3 py-1 text-xs font-semibold text-semarts-dark">
             {boundaryMeterSelectorState.status}
           </span>
+        </div>
+        <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">Local evidence rows</p>
+            <p className="mt-1">{boundaryMeterSelectorState.evidenceCount}</p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">UtilityHub candidates</p>
+            <p className="mt-1">{boundaryMeterSelectorState.selectorOptionCount}</p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">Selector issues</p>
+            <p className="mt-1">{boundaryMeterSelectorState.selectorValidationIssueCount}</p>
+          </div>
         </div>
         <ul className="mt-3 space-y-1 text-sm text-ink/70">
           {boundaryMeterSelectorState.messages.map((message) => (
