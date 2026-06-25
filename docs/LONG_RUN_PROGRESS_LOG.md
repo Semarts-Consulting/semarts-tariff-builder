@@ -1488,3 +1488,41 @@ Final validation:
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 48 test files and 234 tests.
 - `npm.cmd run build`: passed.
+
+## Package: Meter Selector Adapter
+
+Files changed:
+
+- `lib/utilityhub-meter-selector-adapter.ts`
+- `tests/utilityhub-meter-selector-adapter.test.ts`
+- `docs/METER_SELECTOR_ADAPTER.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Start the meter selector integration foundation after customer/site service-boundary work.
+- Add a pure adapter for UtilityHub meter selector envelopes.
+- Preserve source version, snapshot ID, boundary candidate flag and validation status without making records tariff-driving.
+
+Validation performed:
+
+- Focused meter selector adapter tests passed.
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+
+Risks or follow-up decisions:
+
+- This package does not call UtilityHub APIs.
+- This package does not add meter selector UI.
+- Meter evidence remains non-tariff-impacting until a later reviewed input-generation package is approved.
+
+Suggested commit message:
+
+- `Add meter selector adapter`
+
+Final validation:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 49 test files and 237 tests.
+- `npm.cmd run build`: passed.
