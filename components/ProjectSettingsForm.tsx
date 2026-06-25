@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { CustomerClassTableEditor } from "@/components/CustomerClassTableEditor";
+import { createLocalCustomerSiteSelectorEnvelope } from "@/lib/customer-site-selector-local-envelope";
 import { summariseCustomerSiteSelectorState } from "@/lib/customer-site-selector-state";
+import { adaptUtilityHubCustomerSiteSelector } from "@/lib/utilityhub-customer-site-selector-adapter";
 import {
   deleteProject,
   getProjectById,
@@ -146,7 +148,14 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
     return null;
   }
 
-  const customerSiteSelectorState = summariseCustomerSiteSelectorState(project);
+  const customerSiteSelectorResult = adaptUtilityHubCustomerSiteSelector(
+    createLocalCustomerSiteSelectorEnvelope(project),
+    project
+  );
+  const customerSiteSelectorState = summariseCustomerSiteSelectorState(
+    project,
+    customerSiteSelectorResult
+  );
 
   return (
     <div className="mt-8 space-y-6">
@@ -249,6 +258,24 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
               <li key={message}>{message}</li>
             ))}
           </ul>
+          <div className="mt-4 grid gap-3 text-sm md:grid-cols-3">
+            <div className="rounded-md border border-line bg-white p-3">
+              <p className="font-medium text-ink/60">Selector options</p>
+              <p className="mt-1">{customerSiteSelectorState.optionCount}</p>
+            </div>
+            <div className="rounded-md border border-line bg-white p-3">
+              <p className="font-medium text-ink/60">Selected site</p>
+              <p className="mt-1">
+                {customerSiteSelectorResult.selectedOption?.hierarchyLabel ?? "Not selected"}
+              </p>
+            </div>
+            <div className="rounded-md border border-line bg-white p-3">
+              <p className="font-medium text-ink/60">Source version</p>
+              <p className="mt-1 break-words">
+                {customerSiteSelectorState.sourceVersion ?? "No selector version"}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-5 md:grid-cols-4">

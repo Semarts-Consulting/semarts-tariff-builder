@@ -33,3 +33,9 @@ This package does not:
 ## Next Step
 
 The next safe package is a customer/site selector UI package that uses this adapter with contract-shaped examples and unavailable/access-denied states before live service calls are introduced.
+
+## UI Wiring
+
+The settings page now uses a local contract-shaped envelope derived only from existing manual UtilityHub customer/site references. This keeps the UI aligned to the UtilityHub selector contract without inventing external records or making live API calls.
+
+When no manual references exist, the selector surface shows an empty state. When references exist, it shows a read-only selected evidence state with a local source version. This remains an interim bridge until live UtilityHub service calls are approved.
