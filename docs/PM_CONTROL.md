@@ -244,6 +244,7 @@ Review risks:
 - Customer/site selector UI now uses a contract-shaped local envelope derived only from current manual UtilityHub references. This avoids fake UtilityHub records while allowing the settings page to show selector option count, selected hierarchy label and source version before live service calls are introduced.
 - Customer/site selector retrieval now has a single Tariff Builder service boundary. It currently uses local contract-envelope mode and is the intended place for a later live UtilityHub call; the UI, adapter and tests should not need to change when live retrieval is introduced.
 - Meter selector integration has started with a pure local adapter for UtilityHub meter selector envelopes. The adapter preserves validation status, validation issue counts, source versions, snapshot IDs and boundary meter candidate flags, but does not add UI, call UtilityHub APIs, change storage or make meter evidence tariff-driving.
+- Selector UI foundation long run adds local contract-envelope service boundaries for meter, monthly consumption, boundary meter and reference-data selectors. Existing input panels can now show selector counts, validation issue counts and service messages without live UtilityHub API calls, storage migration, tariff calculation changes or tariff-driving conversion.
 
 ## QA Staging Warnings
 

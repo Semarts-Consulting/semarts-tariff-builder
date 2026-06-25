@@ -6,7 +6,9 @@ import {
   getProjectDataInputs,
   saveProjectDataInputs
 } from "@/lib/project-storage";
+import { getMeterSelectorResult } from "@/lib/meter-selector-service";
 import { summariseMeterConsumptionSelectorState } from "@/lib/meter-consumption-selector-state";
+import { getMonthlyConsumptionSelectorResult } from "@/lib/monthly-consumption-selector-service";
 import { isProjectArchived } from "@/lib/project-state";
 import { saveDataInputsToSupabase } from "@/lib/supabase-sync";
 import type { DataInputRow, ProjectDataInputs } from "@/types/project";
@@ -48,9 +50,18 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
   }, [projectId]);
 
   const totals = useMemo(() => getTotals(dataInputs.rows), [dataInputs.rows]);
+  const meterSelectorResult = useMemo(() => getMeterSelectorResult(), []);
+  const monthlyConsumptionSelectorResult = useMemo(
+    () => getMonthlyConsumptionSelectorResult(),
+    []
+  );
   const meterConsumptionSelectorState = useMemo(
-    () => summariseMeterConsumptionSelectorState(dataInputs.rows),
-    [dataInputs.rows]
+    () =>
+      summariseMeterConsumptionSelectorState(dataInputs.rows, {
+        meterSelector: meterSelectorResult,
+        monthlyConsumptionSelector: monthlyConsumptionSelectorResult
+      }),
+    [dataInputs.rows, meterSelectorResult, monthlyConsumptionSelectorResult]
   );
 
   function updateRow(rowId: string, updates: Partial<DataInputRow>) {
@@ -147,7 +158,7 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
             {meterConsumptionSelectorState.status}
           </span>
         </div>
-        <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3 xl:grid-cols-6">
           <div className="rounded-md border border-line bg-field p-3">
             <p className="font-medium text-ink/60">Aggregate classes</p>
             <p className="mt-1">{meterConsumptionSelectorState.aggregateCustomerClassCount}</p>
@@ -161,6 +172,18 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
             <p className="mt-1">
               {formatNumber(meterConsumptionSelectorState.aggregatePeakDemandKw)}
             </p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">UtilityHub meters</p>
+            <p className="mt-1">{meterConsumptionSelectorState.meterOptionCount}</p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">Monthly records</p>
+            <p className="mt-1">{meterConsumptionSelectorState.monthlyConsumptionRecordCount}</p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">Selector issues</p>
+            <p className="mt-1">{meterConsumptionSelectorState.selectorValidationIssueCount}</p>
           </div>
         </div>
         <ul className="mt-3 space-y-1 text-sm text-ink/70">

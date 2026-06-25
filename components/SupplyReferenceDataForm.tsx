@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { summariseReferenceDataSelectorState } from "@/lib/boundary-reference-selector-state";
+import { getReferenceDataSelectorResult } from "@/lib/reference-data-selector-service";
 import {
   createDefaultSupplyReferenceData,
   getSupplyReferenceData
@@ -103,7 +104,8 @@ export function SupplyReferenceDataForm() {
     () =>
       summariseReferenceDataSelectorState({
         reviewedDataSetCount: reviewSummary.Reviewed,
-        totalDataSetCount: sortedDataSets.length
+        totalDataSetCount: sortedDataSets.length,
+        referenceDataSelector: getReferenceDataSelectorResult()
       }),
     [reviewSummary.Reviewed, sortedDataSets.length]
   );
@@ -142,6 +144,20 @@ export function SupplyReferenceDataForm() {
           <span className="rounded-full bg-field px-3 py-1 text-xs font-semibold text-semarts-dark">
             {referenceDataSelectorState.status}
           </span>
+        </div>
+        <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">Local data sets</p>
+            <p className="mt-1">{referenceDataSelectorState.evidenceCount}</p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">UtilityHub references</p>
+            <p className="mt-1">{referenceDataSelectorState.selectorOptionCount}</p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">Selector issues</p>
+            <p className="mt-1">{referenceDataSelectorState.selectorValidationIssueCount}</p>
+          </div>
         </div>
         <ul className="mt-3 space-y-1 text-sm text-ink/70">
           {referenceDataSelectorState.messages.map((message) => (
