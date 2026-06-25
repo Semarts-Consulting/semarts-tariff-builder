@@ -1449,3 +1449,42 @@ Final validation:
 - `npx.cmd tsc --noEmit --incremental false`: passed.
 - `npm.cmd test`: passed, 47 test files and 232 tests.
 - `npm.cmd run build`: passed.
+
+## Package: Customer/Site Selector Service Boundary
+
+Files changed:
+
+- `lib/customer-site-selector-service.ts`
+- `tests/customer-site-selector-service.test.ts`
+- `components/ProjectSettingsForm.tsx`
+- `docs/CUSTOMER_SITE_SELECTOR_ADAPTER.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Add a single Tariff Builder service boundary for customer/site selector retrieval.
+- Keep the current implementation on local contract-envelope mode.
+- Prepare for a later live UtilityHub selector call without changing the settings UI again.
+
+Validation performed:
+
+- Focused customer/site selector service tests passed.
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+
+Risks or follow-up decisions:
+
+- This package does not call UtilityHub APIs.
+- Live customer/site selector retrieval remains a separate approval/package.
+- Selected UtilityHub data remains evidence-only.
+
+Suggested commit message:
+
+- `Add customer site selector service boundary`
+
+Final validation:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 48 test files and 234 tests.
+- `npm.cmd run build`: passed.

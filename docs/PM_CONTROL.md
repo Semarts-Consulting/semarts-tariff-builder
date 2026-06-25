@@ -242,6 +242,7 @@ Review risks:
 - Selector-ready long run package adds contract-shaped readiness surfaces for UtilityHub customer/site, meter, monthly consumption, boundary meter and reference-data selectors. These surfaces are evidence-only and do not connect live UtilityHub services, change storage, change calculations, change imports, change exports, change report totals or make selected UtilityHub records tariff-driving.
 - UtilityHub has merged its tariff selector service foundation, including callable service functions and behaviour coverage. Tariff Builder customer/site selector integration starts with a pure local adapter that maps UtilityHub selector envelopes into Tariff Builder readiness state without importing UtilityHub source directly or calling live APIs from the browser.
 - Customer/site selector UI now uses a contract-shaped local envelope derived only from current manual UtilityHub references. This avoids fake UtilityHub records while allowing the settings page to show selector option count, selected hierarchy label and source version before live service calls are introduced.
+- Customer/site selector retrieval now has a single Tariff Builder service boundary. It currently uses local contract-envelope mode and is the intended place for a later live UtilityHub call; the UI, adapter and tests should not need to change when live retrieval is introduced.
 
 ## QA Staging Warnings
 

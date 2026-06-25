@@ -3,9 +3,8 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { CustomerClassTableEditor } from "@/components/CustomerClassTableEditor";
-import { createLocalCustomerSiteSelectorEnvelope } from "@/lib/customer-site-selector-local-envelope";
+import { getCustomerSiteSelectorResult } from "@/lib/customer-site-selector-service";
 import { summariseCustomerSiteSelectorState } from "@/lib/customer-site-selector-state";
-import { adaptUtilityHubCustomerSiteSelector } from "@/lib/utilityhub-customer-site-selector-adapter";
 import {
   deleteProject,
   getProjectById,
@@ -148,10 +147,7 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
     return null;
   }
 
-  const customerSiteSelectorResult = adaptUtilityHubCustomerSiteSelector(
-    createLocalCustomerSiteSelectorEnvelope(project),
-    project
-  );
+  const customerSiteSelectorResult = getCustomerSiteSelectorResult(project);
   const customerSiteSelectorState = summariseCustomerSiteSelectorState(
     project,
     customerSiteSelectorResult
@@ -274,6 +270,10 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
               <p className="mt-1 break-words">
                 {customerSiteSelectorState.sourceVersion ?? "No selector version"}
               </p>
+            </div>
+            <div className="rounded-md border border-line bg-white p-3">
+              <p className="font-medium text-ink/60">Service mode</p>
+              <p className="mt-1">Local contract envelope</p>
             </div>
           </div>
         </div>
