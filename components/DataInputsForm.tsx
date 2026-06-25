@@ -6,6 +6,7 @@ import {
   getProjectDataInputs,
   saveProjectDataInputs
 } from "@/lib/project-storage";
+import { summariseMeterConsumptionSelectorState } from "@/lib/meter-consumption-selector-state";
 import { isProjectArchived } from "@/lib/project-state";
 import { saveDataInputsToSupabase } from "@/lib/supabase-sync";
 import type { DataInputRow, ProjectDataInputs } from "@/types/project";
@@ -47,6 +48,10 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
   }, [projectId]);
 
   const totals = useMemo(() => getTotals(dataInputs.rows), [dataInputs.rows]);
+  const meterConsumptionSelectorState = useMemo(
+    () => summariseMeterConsumptionSelectorState(dataInputs.rows),
+    [dataInputs.rows]
+  );
 
   function updateRow(rowId: string, updates: Partial<DataInputRow>) {
     if (isArchived) return;
@@ -126,6 +131,43 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
           <p className="text-xs font-semibold uppercase text-ink/50">Peak demand kW</p>
           <p className="mt-2 text-2xl font-semibold">{formatNumber(totals.peakDemandKw)}</p>
         </div>
+      </div>
+
+      <div className="rounded-md border border-line bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="font-semibold">Meter and consumption selector</h2>
+            <p className="mt-1 text-sm text-ink/70">
+              UtilityHub owns meter records and monthly consumption summaries. This page keeps the
+              reviewed aggregate customer-class input route until live UtilityHub services are
+              connected.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-field px-3 py-1 text-xs font-semibold text-semarts-dark">
+            {meterConsumptionSelectorState.status}
+          </span>
+        </div>
+        <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">Aggregate classes</p>
+            <p className="mt-1">{meterConsumptionSelectorState.aggregateCustomerClassCount}</p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">Aggregate annual kWh</p>
+            <p className="mt-1">{formatNumber(meterConsumptionSelectorState.aggregateAnnualKwh)}</p>
+          </div>
+          <div className="rounded-md border border-line bg-field p-3">
+            <p className="font-medium text-ink/60">Aggregate peak kW</p>
+            <p className="mt-1">
+              {formatNumber(meterConsumptionSelectorState.aggregatePeakDemandKw)}
+            </p>
+          </div>
+        </div>
+        <ul className="mt-3 space-y-1 text-sm text-ink/70">
+          {meterConsumptionSelectorState.messages.map((message) => (
+            <li key={message}>{message}</li>
+          ))}
+        </ul>
       </div>
 
       <div className="overflow-hidden rounded-md border border-line bg-white shadow-sm">

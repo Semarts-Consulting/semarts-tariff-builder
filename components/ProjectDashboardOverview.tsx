@@ -9,6 +9,7 @@ import {
   summariseInputSelectionReadiness
 } from "@/lib/input-selection-readiness";
 import { projectSections } from "@/lib/sample-data";
+import { summariseUtilityHubSelectorReadiness } from "@/lib/utilityhub-selector-readiness";
 import {
   getProjectById,
   getProjectAllocationMethods,
@@ -129,6 +130,9 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
           : createDefaultInputSelectionScaffold(dashboardState.project)
       )
     : null;
+  const utilityHubSelectorSummary = dashboardState.project
+    ? summariseUtilityHubSelectorReadiness(dashboardState.project)
+    : null;
 
   return (
     <div className="mt-8 space-y-6">
@@ -235,6 +239,47 @@ export function ProjectDashboardOverview({ projectId }: ProjectDashboardOverview
                   <li key={message}>{message}</li>
                 ))}
               </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-md border border-line bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="font-semibold">UtilityHub selector readiness</h2>
+            <p className="mt-1 text-sm text-ink/70">
+              Shared selector contracts are available from UtilityHub. Live service connections are
+              not connected in Tariff Builder yet, so selected records remain evidence-only.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-field px-3 py-1 text-xs font-semibold text-semarts-dark">
+            {utilityHubSelectorSummary?.status ?? "Contract ready"}
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {utilityHubSelectorSummary?.items.map((item) => (
+            <div key={item.key} className="rounded-md border border-line bg-field p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium">{item.label}</p>
+                  <p className="mt-1 text-xs text-ink/60">
+                    {item.selectedEvidenceCount} selected evidence, {item.tariffDrivingCount}{" "}
+                    tariff-driving
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-semarts-dark">
+                  {item.status === "awaiting-service"
+                    ? "Awaiting service"
+                    : item.status === "selected-evidence"
+                      ? "Evidence only"
+                      : item.status === "blocked"
+                        ? "Blocked"
+                        : "Contract ready"}
+                </span>
+              </div>
+              <p className="mt-3 text-sm text-ink/70">{item.message}</p>
             </div>
           ))}
         </div>

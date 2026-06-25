@@ -22,7 +22,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| INPUT-015 UtilityHub selector contract closeout | PM plus UtilityHub programme review | `docs/UTILITYHUB_SELECTOR_CONTRACT_CLOSEOUT.md`, manager docs | UtilityHub PR #2 merged | Medium | Records UtilityHub selector contract baseline and unlocks customer/site selector implementation planning while live API integration remains separate. |
+| INPUT-016 Selector-ready long run | UI plus PM/QA review | selector readiness helpers, dashboard/settings/data input/submeter/reference pages, tests, manager docs | Merged PR #88 and UtilityHub contract baseline | Medium | Adds contract-shaped evidence-only selector readiness surfaces without live UtilityHub API calls, storage migration or tariff-impacting behaviour. |
 
 ## Review
 
@@ -45,6 +45,7 @@
 | INPUT-012 Input selection scaffolding long run | UI plus PM/QA review | `types/project.ts`, `lib/input-selection-readiness.ts`, `components/ProjectDashboardOverview.tsx`, `lib/sample-data.ts`, tests, manager docs | Merged PR #85 | Medium | Adds evidence-only selection scaffolding for customer/site, meter/consumption, boundary meter and reference data readiness without UtilityHub API or calculation impact. |
 | INPUT-013 UtilityHub selector contract dependencies | PM plus UtilityHub/Data/UI review | `docs/UTILITYHUB_SELECTOR_CONTRACT_DEPENDENCIES.md`, manager docs | Merged PR #86 | High | Defines the UtilityHub shared contracts needed before Tariff Builder replaces evidence-only scaffolds with live selectors. |
 | INPUT-014 UtilityHub shared selector contract request | PM plus UtilityHub programme review | `docs/UTILITYHUB_SHARED_SELECTOR_CONTRACT_REQUEST.md`, manager docs | Merged PR #87 | High | Converts Tariff Builder selector needs into a UtilityHub-owned shared contract request with required fields, capabilities and open decisions. |
+| INPUT-015 UtilityHub selector contract closeout | PM plus UtilityHub programme review | `docs/UTILITYHUB_SELECTOR_CONTRACT_CLOSEOUT.md`, manager docs | Merged PR #88 | Medium | Records UtilityHub selector contract baseline and unlocks customer/site selector implementation planning while live API integration remains separate. |
 
 ## Blocked
 
