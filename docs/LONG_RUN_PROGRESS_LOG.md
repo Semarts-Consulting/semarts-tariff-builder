@@ -1370,3 +1370,43 @@ Result:
 
 - Selector-ready internal release candidate surfaces are implemented as evidence-only UI/readiness states.
 - No live UtilityHub API calls, storage migration, calculation changes, imports, exports, report total changes or shared DTO changes were introduced.
+
+## Package: Customer/Site Selector Adapter
+
+Files changed:
+
+- `lib/utilityhub-customer-site-selector-adapter.ts`
+- `lib/customer-site-selector-state.ts`
+- `tests/utilityhub-customer-site-selector-adapter.test.ts`
+- `tests/customer-site-selector-state.test.ts`
+- `docs/CUSTOMER_SITE_SELECTOR_ADAPTER.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Start Tariff Builder live-integration foundations after UtilityHub merged the tariff selector service foundation.
+- Add a pure adapter for UtilityHub customer/site selector envelopes.
+- Preserve access denied, unavailable and empty states without making live API calls.
+
+Validation performed:
+
+- Focused customer/site selector adapter tests passed.
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+
+Risks or follow-up decisions:
+
+- This package does not connect to UtilityHub at runtime.
+- The next package should add UI wiring against contract-shaped examples or a service boundary.
+- Selected UtilityHub data remains evidence-only.
+
+Suggested commit message:
+
+- `Add customer site selector adapter`
+
+Final validation:
+
+- `npm.cmd run lint`: passed.
+- `npx.cmd tsc --noEmit --incremental false`: passed.
+- `npm.cmd test`: passed, 46 test files and 230 tests.
+- `npm.cmd run build`: passed.

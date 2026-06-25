@@ -22,6 +22,7 @@ describe("customer/site selector state", () => {
     expect(summary.status).toBe("Awaiting live selector");
     expect(summary.hasCustomerReference).toBe(false);
     expect(summary.hasSiteReference).toBe(false);
+    expect(summary.optionCount).toBe(0);
     expect(summary.messages).toContain(
       "UtilityHub selector contract is available, but live selection is not connected in Tariff Builder yet."
     );
@@ -49,5 +50,33 @@ describe("customer/site selector state", () => {
     expect(summary.messages).toContain(
       "Manual UtilityHub references are present and should be reviewed against UtilityHub."
     );
+  });
+
+  it("uses adapted UtilityHub selector results when provided", () => {
+    const summary = summariseCustomerSiteSelectorState(project, {
+      status: "ready",
+      message: "UtilityHub customer/site options are available for review.",
+      options: [
+        {
+          id: "customer-1:site-1",
+          label: "Customer - Site",
+          customerId: "customer-1",
+          customerName: "Customer",
+          siteId: "site-1",
+          siteName: "Site",
+          hierarchyLabel: "Customer / Site",
+          permissionStatus: "allowed",
+          sourceVersion: "utilityhub:selector",
+          lastUpdatedAt: "2026-06-25T20:00:00.000Z"
+        }
+      ],
+      sourceVersion: "utilityhub:selector",
+      retrievedAt: "2026-06-25T20:00:00.000Z"
+    });
+
+    expect(summary.status).toBe("Ready for manual references");
+    expect(summary.optionCount).toBe(1);
+    expect(summary.sourceVersion).toBe("utilityhub:selector");
+    expect(summary.messages[0]).toBe("UtilityHub customer/site options are available for review.");
   });
 });
