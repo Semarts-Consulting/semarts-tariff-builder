@@ -1606,3 +1606,34 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add selector client configuration boundary`
+
+## Package: UtilityHub Selector Server Client Boundary
+
+Files changed:
+
+- `lib/utilityhub-selector-server-client.ts`
+- `tests/utilityhub-selector-server-client.test.ts`
+- `docs/UTILITYHUB_SELECTOR_SERVER_CLIENT.md`
+- manager control docs
+
+Reason:
+
+- Define the server-side selector client boundary before any live UtilityHub selector calls are introduced.
+- Add stable endpoint construction for customer/site context, meters, monthly consumption, boundary meters and reference data.
+- Return controlled unavailable envelopes while live retrieval remains unimplemented.
+
+Validation performed:
+
+- Focused selector server-client tests passed.
+- Type-check passed.
+
+Risks or follow-up decisions:
+
+- This package does not call UtilityHub.
+- Authentication/session propagation remains undecided.
+- API route and fetch implementation remain separate packages.
+- Selected-record persistence and tariff-driving conversion remain separate packages.
+
+Suggested commit message:
+
+- `Add UtilityHub selector server client boundary`
