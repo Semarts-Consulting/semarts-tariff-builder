@@ -39,3 +39,9 @@ The next safe package is a customer/site selector UI package that uses this adap
 The settings page now uses a local contract-shaped envelope derived only from existing manual UtilityHub customer/site references. This keeps the UI aligned to the UtilityHub selector contract without inventing external records or making live API calls.
 
 When no manual references exist, the selector surface shows an empty state. When references exist, it shows a read-only selected evidence state with a local source version. This remains an interim bridge until live UtilityHub service calls are approved.
+
+## Service Boundary
+
+`lib/customer-site-selector-service.ts` now owns the customer/site selector retrieval boundary. It currently returns the local contract envelope mode, which keeps the UI independent from the data source.
+
+When live UtilityHub selector access is approved, the service boundary is the intended place to add the live call while preserving the adapter, UI state and tests.

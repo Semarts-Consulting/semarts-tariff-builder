@@ -22,7 +22,7 @@
 
 | Task | Owner | Files | Dependencies | Risk | Notes |
 | --- | --- | --- | --- | --- | --- |
-| INPUT-018 Customer/site selector UI | UI plus PM/QA review | `components/ProjectSettingsForm.tsx`, customer/site selector adapter helpers, tests, manager docs | INPUT-017 customer/site selector adapter | Medium | Wires settings UI to contract-shaped local selector envelope without fake UtilityHub records or live API calls. |
+| INPUT-019 Customer/site selector service boundary | UI plus PM/QA review | `lib/customer-site-selector-service.ts`, `components/ProjectSettingsForm.tsx`, tests, manager docs | INPUT-018 customer/site selector UI | Medium | Adds a single retrieval boundary that currently uses local contract-envelope mode and can later host live UtilityHub calls. |
 
 ## Review
 
@@ -48,6 +48,7 @@
 | INPUT-015 UtilityHub selector contract closeout | PM plus UtilityHub programme review | `docs/UTILITYHUB_SELECTOR_CONTRACT_CLOSEOUT.md`, manager docs | Merged PR #88 | Medium | Records UtilityHub selector contract baseline and unlocks customer/site selector implementation planning while live API integration remains separate. |
 | INPUT-016 Selector-ready long run | UI plus PM/QA review | selector readiness helpers, dashboard/settings/data input/submeter/reference pages, tests, manager docs | Merged PR #89 | Medium | Adds contract-shaped evidence-only selector readiness surfaces without live UtilityHub API calls, storage migration or tariff-impacting behaviour. |
 | INPUT-017 Customer/site selector adapter | UI plus PM/QA review | `lib/utilityhub-customer-site-selector-adapter.ts`, `lib/customer-site-selector-state.ts`, tests, manager docs | Merged PR #90 | Medium | Adds pure customer/site selector envelope adapter and response-state handling without live API calls, storage migration or tariff-impacting behaviour. |
+| INPUT-018 Customer/site selector UI | UI plus PM/QA review | `components/ProjectSettingsForm.tsx`, customer/site selector adapter helpers, tests, manager docs | Merged PR #91 | Medium | Wires settings UI to contract-shaped local selector envelope without fake UtilityHub records or live API calls. |
 
 ## Blocked
 
