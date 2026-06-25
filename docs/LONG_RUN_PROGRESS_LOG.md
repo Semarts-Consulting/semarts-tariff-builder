@@ -1570,3 +1570,39 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add selector UI foundation boundaries`
+
+## Package: Selector Client Configuration Boundary
+
+Files changed:
+
+- `lib/utilityhub-selector-client-config.ts`
+- `lib/customer-site-selector-service.ts`
+- `lib/meter-selector-service.ts`
+- `lib/monthly-consumption-selector-service.ts`
+- `lib/boundary-meter-selector-service.ts`
+- `lib/reference-data-selector-service.ts`
+- `tests/utilityhub-selector-client-config.test.ts`
+- `tests/selector-service-boundaries.test.ts`
+- `docs/SELECTOR_CLIENT_CONFIGURATION_BOUNDARY.md`
+- manager control docs
+
+Reason:
+
+- Add a shared selector client configuration boundary before live UtilityHub calls are introduced.
+- Keep local contract-envelope mode as the default.
+- Return explicit unavailable states when live mode is requested without an endpoint or when an endpoint is configured before network retrieval is implemented.
+
+Validation performed:
+
+- Focused selector client/service tests passed.
+
+Risks or follow-up decisions:
+
+- This package does not call UtilityHub.
+- This package does not persist selected UtilityHub records.
+- This package does not change tariff calculations, imports, exports, storage, shared DTOs or report totals.
+- A later live-integration package must decide the browser/server execution boundary, authentication route and endpoint shape.
+
+Suggested commit message:
+
+- `Add selector client configuration boundary`
