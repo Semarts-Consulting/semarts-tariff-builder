@@ -45,7 +45,7 @@ If a UtilityHub selector endpoint is configured, the route can show the resolved
 
 `lib/utilityhub-selector-api-client.ts` builds stable internal app paths for future UI calls.
 
-The current UI remains on existing local service-boundary state. Runtime UI fetching from the API route remains a separate package.
+The current UI can display the internal API stub state for each selector surface. The API still returns controlled unavailable envelopes and does not retrieve live UtilityHub data.
 
 ## Out Of Scope
 
@@ -56,7 +56,5 @@ The current UI remains on existing local service-boundary state. Runtime UI fetc
 - Storage, import, export, shared DTO, report total or calculation changes.
 
 ## Next Safe Step
-
-After this package is merged, the next non-tariff-impacting package can wire UI panels to the internal API route while keeping responses read-only and unavailable/evidence-only.
 
 Live UtilityHub calls remain blocked until endpoint shape and authentication are confirmed.

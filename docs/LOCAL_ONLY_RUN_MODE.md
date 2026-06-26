@@ -14,7 +14,7 @@ The current application can run locally using built-in sample data and browser s
 - Built-in demo/sample data is available when no local projects exist.
 - Supply reference data falls back to built-in records if cloud loading fails.
 - UtilityHub selector surfaces show local contract-envelope or unavailable states.
-- Selector API stubs do not make live UtilityHub calls.
+- Selector API stubs can be called by the UI and return controlled unavailable states; they do not make live UtilityHub calls.
 
 ## Run Commands
 
@@ -45,6 +45,7 @@ Local-only mode is not proof of:
 - production authentication;
 - shared permission enforcement;
 - live meter/consumption/reference-data retrieval.
+- selector authentication or permission enforcement beyond controlled unavailable/access state handling.
 
 ## Follow-Up
 

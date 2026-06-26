@@ -8,6 +8,19 @@ export type UtilityHubSelectorApiClientRequest = {
   scope?: UtilityHubSelectorRequestScope;
 };
 
+export type UtilityHubSelectorApiStubStatus = {
+  path: string;
+  state: string;
+  message: string;
+};
+
+type SelectorApiResponse = {
+  envelope?: {
+    state?: unknown;
+    message?: unknown;
+  };
+};
+
 export function buildInternalUtilityHubSelectorApiPath(
   request: UtilityHubSelectorApiClientRequest
 ): string {
@@ -27,4 +40,36 @@ export function buildInternalUtilityHubSelectorApiPath(
 
   const query = params.toString();
   return query ? `${path}?${query}` : path;
+}
+
+function isSelectorApiResponse(value: unknown): value is SelectorApiResponse {
+  return typeof value === "object" && value !== null;
+}
+
+export async function readInternalUtilityHubSelectorApiStub(
+  request: UtilityHubSelectorApiClientRequest,
+  fetcher: (input: string) => Promise<Response> = fetch
+): Promise<UtilityHubSelectorApiStubStatus> {
+  const path = buildInternalUtilityHubSelectorApiPath(request);
+  const response = await fetcher(path);
+
+  if (!response.ok) {
+    return {
+      path,
+      state: "error",
+      message: `Internal selector API returned ${response.status}.`
+    };
+  }
+
+  const body: unknown = await response.json();
+  const envelope = isSelectorApiResponse(body) ? body.envelope : undefined;
+
+  return {
+    path,
+    state: typeof envelope?.state === "string" ? envelope.state : "unknown",
+    message:
+      typeof envelope?.message === "string"
+        ? envelope.message
+        : "Internal selector API returned no message."
+  };
 }

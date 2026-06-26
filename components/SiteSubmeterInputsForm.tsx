@@ -4,6 +4,7 @@ import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { readSheet } from "read-excel-file/browser";
 import writeXlsxFile from "write-excel-file/browser";
 import type { SheetData } from "write-excel-file/browser";
+import { UtilityHubSelectorApiStubStatus } from "@/components/UtilityHubSelectorApiStubStatus";
 import { getBoundaryMeterSelectorResult } from "@/lib/boundary-meter-selector-service";
 import { summariseBoundaryMeterSelectorState } from "@/lib/boundary-reference-selector-state";
 import { isProjectArchived } from "@/lib/project-state";
@@ -545,6 +546,10 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
             <p className="font-medium text-ink/60">Selector issues</p>
             <p className="mt-1">{boundaryMeterSelectorState.selectorValidationIssueCount}</p>
           </div>
+          <UtilityHubSelectorApiStubStatus
+            label="Boundary meter API"
+            resource="boundary-meters"
+          />
         </div>
         <ul className="mt-3 space-y-1 text-sm text-ink/70">
           {boundaryMeterSelectorState.messages.map((message) => (

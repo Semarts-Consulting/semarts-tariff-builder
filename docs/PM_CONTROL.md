@@ -247,7 +247,7 @@ Review risks:
 - Selector UI foundation long run adds local contract-envelope service boundaries for meter, monthly consumption, boundary meter and reference-data selectors. Existing input panels can now show selector counts, validation issue counts and service messages without live UtilityHub API calls, storage migration, tariff calculation changes or tariff-driving conversion.
 - Selector client configuration boundary adds explicit local, live-missing-endpoint and live-configured-not-implemented states. This keeps future UtilityHub endpoint configuration visible without making browser/server network calls or changing tariff-driving behaviour in the same package.
 - UtilityHub selector server client boundary adds endpoint construction and controlled unavailable envelopes for future server-side selector retrieval. It does not perform live fetches, handle authentication, store selected records, or make UtilityHub records tariff-driving.
-- Selector API route stubs add Tariff Builder internal API endpoints for UtilityHub selector resources. They return controlled unavailable envelopes and do not perform live UtilityHub fetches, authentication/session propagation, selected-record persistence or tariff-driving conversion.
+- Selector API route stubs add Tariff Builder internal API endpoints and UI stub-status cards for UtilityHub selector resources. They return controlled unavailable envelopes and do not perform live UtilityHub fetches, authentication/session propagation, selected-record persistence or tariff-driving conversion.
 
 ## QA Staging Warnings
 

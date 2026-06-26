@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildInternalUtilityHubSelectorApiPath } from "@/lib/utilityhub-selector-api-client";
+import {
+  buildInternalUtilityHubSelectorApiPath,
+  readInternalUtilityHubSelectorApiStub
+} from "@/lib/utilityhub-selector-api-client";
 
 describe("UtilityHub selector API client helper", () => {
   it("builds internal selector paths without scope", () => {
@@ -23,5 +26,40 @@ describe("UtilityHub selector API client helper", () => {
     ).toBe(
       "/api/utilityhub/selectors/monthly-consumption?customerId=customer-1&siteId=site-1&tariffYear=2026&referencePeriodStart=2025-01-01&referencePeriodEnd=2025-12-31"
     );
+  });
+
+  it("reads unavailable selector states from the internal API stub", async () => {
+    const status = await readInternalUtilityHubSelectorApiStub(
+      { resource: "meters" },
+      async () =>
+        new Response(
+          JSON.stringify({
+            envelope: {
+              state: "unavailable",
+              message: "Selector unavailable."
+            }
+          }),
+          { status: 200 }
+        )
+    );
+
+    expect(status).toEqual({
+      path: "/api/utilityhub/selectors/meters",
+      state: "unavailable",
+      message: "Selector unavailable."
+    });
+  });
+
+  it("reports internal API errors without throwing into the UI", async () => {
+    const status = await readInternalUtilityHubSelectorApiStub(
+      { resource: "reference-data" },
+      async () => new Response("Not found", { status: 404 })
+    );
+
+    expect(status).toEqual({
+      path: "/api/utilityhub/selectors/reference-data",
+      state: "error",
+      message: "Internal selector API returned 404."
+    });
   });
 });

@@ -24,6 +24,7 @@ External release readiness requires additional evidence and decisions.
 | LIM-006 | Local/cloud storage reconciliation failure cases need broader coverage | Data/storage plus QA | Medium | No | Yes | Add targeted failure-path tests before external release |
 | LIM-007 | Broader UI/browser regression evidence is still required | UI plus QA | Medium | No | Yes | Add route/browser checks and screenshot evidence for release candidate |
 | LIM-008 | Cross-form save-blocking validation policy remains unresolved | PM plus workstream leads | High | No | Yes | Decide when validation blocks save, report approval, or export |
+| LIM-009 | UtilityHub selector API stubs are not live UtilityHub integration | PM plus UtilityHub/UI | High | No | Yes, if live UtilityHub data is required | Confirm endpoint/auth/session handling before replacing controlled unavailable stub states with live selector calls |
 
 ## Demo Guardrails
 
