@@ -26,16 +26,24 @@ export function UtilityHubSelectorApiStubStatus({
     () => ({
       customerId: scope?.customerId,
       siteId: scope?.siteId,
+      userId: scope?.userId,
       tariffYear: scope?.tariffYear,
+      periodStart: scope?.periodStart,
+      periodEnd: scope?.periodEnd,
       referencePeriodStart: scope?.referencePeriodStart,
-      referencePeriodEnd: scope?.referencePeriodEnd
+      referencePeriodEnd: scope?.referencePeriodEnd,
+      referenceTypes: scope?.referenceTypes
     }),
     [
       scope?.customerId,
       scope?.siteId,
+      scope?.userId,
       scope?.tariffYear,
+      scope?.periodStart,
+      scope?.periodEnd,
       scope?.referencePeriodStart,
-      scope?.referencePeriodEnd
+      scope?.referencePeriodEnd,
+      scope?.referenceTypes
     ]
   );
   const path = useMemo(

@@ -1,4 +1,5 @@
 import {
+  fetchUtilityHubSelectorServerClientEnvelope,
   getUtilityHubSelectorServerClientEnvelope,
   type UtilityHubSelectorRequestScope,
   type UtilityHubSelectorResource
@@ -34,9 +35,13 @@ export function getUtilityHubSelectorScopeFromUrl(url: string): UtilityHubSelect
   return {
     customerId: requestUrl.searchParams.get("customerId") ?? undefined,
     siteId: requestUrl.searchParams.get("siteId") ?? undefined,
+    userId: requestUrl.searchParams.get("userId") ?? undefined,
     tariffYear: tariffYear ? Number(tariffYear) : undefined,
+    periodStart: requestUrl.searchParams.get("periodStart") ?? undefined,
+    periodEnd: requestUrl.searchParams.get("periodEnd") ?? undefined,
     referencePeriodStart: requestUrl.searchParams.get("referencePeriodStart") ?? undefined,
-    referencePeriodEnd: requestUrl.searchParams.get("referencePeriodEnd") ?? undefined
+    referencePeriodEnd: requestUrl.searchParams.get("referencePeriodEnd") ?? undefined,
+    referenceTypes: requestUrl.searchParams.get("referenceTypes") ?? undefined
   };
 }
 
@@ -60,6 +65,40 @@ export function createUtilityHubSelectorApiRouteResult(input: {
     config,
     resource: input.resource,
     scope: getUtilityHubSelectorScopeFromUrl(input.url)
+  });
+
+  return {
+    status: 200,
+    body: {
+      resource: input.resource,
+      endpoint: result.endpoint,
+      envelope: result.envelope
+    }
+  };
+}
+
+export async function createLiveUtilityHubSelectorApiRouteResult(input: {
+  resource: string;
+  url: string;
+  config?: UtilityHubSelectorClientConfig;
+  fetcher?: (input: string) => Promise<Response>;
+}): Promise<UtilityHubSelectorApiRouteResult> {
+  if (!isUtilityHubSelectorResource(input.resource)) {
+    return {
+      status: 404,
+      body: {
+        error: `Unknown UtilityHub selector resource: ${input.resource}.`,
+        allowedResources: selectorResources
+      }
+    };
+  }
+
+  const config = input.config ?? resolveUtilityHubSelectorClientConfig();
+  const result = await fetchUtilityHubSelectorServerClientEnvelope({
+    config,
+    resource: input.resource,
+    scope: getUtilityHubSelectorScopeFromUrl(input.url),
+    fetcher: input.fetcher
   });
 
   return {

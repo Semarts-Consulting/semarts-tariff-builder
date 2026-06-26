@@ -14,7 +14,7 @@ The current application can run locally using built-in sample data and browser s
 - Built-in demo/sample data is available when no local projects exist.
 - Supply reference data falls back to built-in records if cloud loading fails.
 - UtilityHub selector surfaces show local contract-envelope or unavailable states.
-- Selector API stubs can be called by the UI and return controlled unavailable states; they do not make live UtilityHub calls.
+- Selector API routes can call UtilityHub when `NEXT_PUBLIC_UTILITYHUB_SELECTOR_MODE=live` and `NEXT_PUBLIC_UTILITYHUB_SELECTOR_BASE_URL` is configured. Without those values, selector surfaces remain local/evidence-only.
 
 ## Run Commands
 
@@ -46,6 +46,20 @@ Local-only mode is not proof of:
 - shared permission enforcement;
 - live meter/consumption/reference-data retrieval.
 - selector authentication or permission enforcement beyond controlled unavailable/access state handling.
+
+## Live UtilityHub Selector Test
+
+When UtilityHub is running locally, set:
+
+```text
+NEXT_PUBLIC_UTILITYHUB_SELECTOR_MODE=live
+NEXT_PUBLIC_UTILITYHUB_SELECTOR_BASE_URL=http://127.0.0.1:5173/api/shared-selectors/tariff
+```
+
+Restart Tariff Builder and use the New Tariff Year page to load customer/site options for:
+
+- `customer-manchester-airport`
+- `user-admin`
 
 ## Follow-Up
 

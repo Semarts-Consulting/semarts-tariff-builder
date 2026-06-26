@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createUtilityHubSelectorApiRouteResult,
+  createLiveUtilityHubSelectorApiRouteResult,
   getUtilityHubSelectorScopeFromUrl,
   isUtilityHubSelectorResource
 } from "@/lib/utilityhub-selector-api-route";
@@ -43,15 +44,19 @@ describe("UtilityHub selector API route helper", () => {
 
   it("extracts tariff-year selector scope from request URLs", () => {
     const scope = getUtilityHubSelectorScopeFromUrl(
-      "https://tariff-builder.example.test/api/utilityhub/selectors/meters?customerId=customer-1&siteId=site-1&tariffYear=2026&referencePeriodStart=2025-01-01&referencePeriodEnd=2025-12-31"
+      "https://tariff-builder.example.test/api/utilityhub/selectors/meters?customerId=customer-1&siteId=site-1&userId=user-admin&tariffYear=2026&periodStart=2025-01-01&periodEnd=2025-12-31&referenceTypes=tlm,cpi"
     );
 
     expect(scope).toEqual({
       customerId: "customer-1",
       siteId: "site-1",
+      userId: "user-admin",
       tariffYear: 2026,
-      referencePeriodStart: "2025-01-01",
-      referencePeriodEnd: "2025-12-31"
+      periodStart: "2025-01-01",
+      periodEnd: "2025-12-31",
+      referencePeriodStart: undefined,
+      referencePeriodEnd: undefined,
+      referenceTypes: "tlm,cpi"
     });
   });
 
@@ -81,10 +86,66 @@ describe("UtilityHub selector API route helper", () => {
     expect(result.status).toBe(200);
     expect(result.body).toMatchObject({
       resource: "boundary-meters",
-      endpoint: "https://utilityhub.example.test/api/tariff-selectors/boundary-meters?siteId=site-1",
+      endpoint: "https://utilityhub.example.test/api/boundary-meters?siteId=site-1",
       envelope: {
         state: "unavailable",
         items: []
+      }
+    });
+  });
+
+  it("returns live selector envelopes through the async API boundary", async () => {
+    const result = await createLiveUtilityHubSelectorApiRouteResult({
+      resource: "reference-data",
+      url: "https://tariff-builder.example.test/api/utilityhub/selectors/reference-data?periodStart=2026-04-01&periodEnd=2027-03-31&referenceTypes=tlm,cpi&userId=user-admin",
+      config: {
+        mode: "live",
+        baseUrl: "https://utilityhub.example.test/api/shared-selectors/tariff",
+        message: "Live mode."
+      },
+      fetcher: async () =>
+        new Response(
+          JSON.stringify({
+            contractVersion: "utilityhub-tariff-selectors.v1",
+            state: "available",
+            permissionStatus: "allowed",
+            retrievedAt: "2026-06-26T09:00:00.000Z",
+            items: [
+              {
+                referenceDataId: "tlm-demo",
+                referenceDataType: "tlm",
+                displayName: "TLM demo",
+                coverageStatus: "complete",
+                validationStatus: "valid",
+                validationIssueCount: 0,
+                source: "UtilityHub",
+                sourceVersion: "demo",
+                lastUpdatedAt: "2026-06-26T09:00:00.000Z",
+                provenance: {
+                  sourceSystem: "utilityhub",
+                  sourceRecordId: "tlm-demo",
+                  retrievedAt: "2026-06-26T09:00:00.000Z",
+                  lastUpdatedAt: "2026-06-26T09:00:00.000Z"
+                }
+              }
+            ]
+          }),
+          { status: 200 }
+        )
+    });
+
+    expect(result.status).toBe(200);
+    expect(result.body).toMatchObject({
+      resource: "reference-data",
+      endpoint:
+        "https://utilityhub.example.test/api/shared-selectors/tariff/reference-data?userId=user-admin&periodStart=2026-04-01&periodEnd=2027-03-31&referenceTypes=tlm%2Ccpi",
+      envelope: {
+        state: "available",
+        items: [
+          {
+            referenceDataId: "tlm-demo"
+          }
+        ]
       }
     });
   });

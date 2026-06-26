@@ -22,14 +22,14 @@ describe("UtilityHub selector client configuration", () => {
     expect(config.message).toContain("no selector base URL");
   });
 
-  it("keeps configured live endpoints explicit but non-calling", () => {
+  it("enables live mode when a selector endpoint is configured", () => {
     const config = resolveUtilityHubSelectorClientConfig({
       NEXT_PUBLIC_UTILITYHUB_SELECTOR_MODE: "live",
       NEXT_PUBLIC_UTILITYHUB_SELECTOR_BASE_URL: "https://utilityhub.example.test"
     });
 
     expect(config).toMatchObject({
-      mode: "live-configured-not-implemented",
+      mode: "live",
       baseUrl: "https://utilityhub.example.test"
     });
   });

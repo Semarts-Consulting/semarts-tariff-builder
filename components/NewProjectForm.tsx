@@ -6,6 +6,8 @@ import { CustomerClassTableEditor } from "@/components/CustomerClassTableEditor"
 import { parseCustomerClasses } from "@/lib/customer-classes";
 import { createProjectId, saveProject } from "@/lib/project-storage";
 import { saveProjectToSupabase } from "@/lib/supabase-sync";
+import { readInternalUtilityHubSelectorApi } from "@/lib/utilityhub-selector-api-client";
+import type { UtilityHubCustomerSiteContextItem } from "@/lib/utilityhub-customer-site-selector-adapter";
 import type { InputReadinessStatus, Project } from "@/types/project";
 
 const todayFormatter = new Intl.DateTimeFormat("en-GB", {
@@ -25,6 +27,12 @@ export function NewProjectForm() {
   const [networkName, setNetworkName] = useState("");
   const [utilityHubCustomerId, setUtilityHubCustomerId] = useState("");
   const [utilityHubSiteId, setUtilityHubSiteId] = useState("");
+  const [utilityHubUserId, setUtilityHubUserId] = useState("user-admin");
+  const [customerSiteOptions, setCustomerSiteOptions] = useState<
+    UtilityHubCustomerSiteContextItem[]
+  >([]);
+  const [selectorStatus, setSelectorStatus] = useState("");
+  const [selectorLoading, setSelectorLoading] = useState(false);
   const [tariffYear, setTariffYear] = useState(new Date().getFullYear().toString());
   const [referencePeriodStart, setReferencePeriodStart] = useState("");
   const [referencePeriodEnd, setReferencePeriodEnd] = useState("");
@@ -82,6 +90,64 @@ export function NewProjectForm() {
       return;
     }
     router.push(`/projects/${project.id}`);
+  }
+
+  async function loadCustomerSiteOptions() {
+    const customerId = utilityHubCustomerId.trim();
+    const userId = utilityHubUserId.trim();
+
+    if (!customerId || !userId) {
+      setSelectorStatus("Enter a UtilityHub customer ref and user ref before loading sites.");
+      return;
+    }
+
+    setSelectorLoading(true);
+    setSelectorStatus("Loading UtilityHub customer/site options.");
+
+    try {
+      const response = await readInternalUtilityHubSelectorApi<UtilityHubCustomerSiteContextItem>({
+        resource: "customer-site-context",
+        scope: {
+          customerId,
+          userId
+        }
+      });
+
+      setCustomerSiteOptions(response.envelope.items);
+      setSelectorStatus(
+        response.envelope.state === "available"
+          ? `${response.envelope.items.length} UtilityHub customer/site option${
+              response.envelope.items.length === 1 ? "" : "s"
+            } loaded.`
+          : (response.envelope.message ?? `UtilityHub selector state: ${response.envelope.state}.`)
+      );
+    } catch (loadError) {
+      setCustomerSiteOptions([]);
+      setSelectorStatus(
+        loadError instanceof Error
+          ? `UtilityHub selector load failed: ${loadError.message}`
+          : "UtilityHub selector load failed."
+      );
+    } finally {
+      setSelectorLoading(false);
+    }
+  }
+
+  function selectCustomerSite(value: string) {
+    const option = customerSiteOptions.find(
+      (candidate) => `${candidate.customerId}|${candidate.siteId}` === value
+    );
+
+    if (!option) {
+      return;
+    }
+
+    setUtilityHubCustomerId(option.customerId);
+    setUtilityHubSiteId(option.siteId);
+
+    if (!networkName.trim()) {
+      setNetworkName(option.siteName);
+    }
   }
 
   return (
@@ -145,6 +211,64 @@ export function NewProjectForm() {
           />
         </label>
       </div>
+
+      <section className="rounded-md border border-line bg-field p-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="font-semibold">UtilityHub customer/site selector</h2>
+            <p className="mt-1 text-sm text-ink/70">
+              Load customer and site options from UtilityHub. Selected values populate the refs
+              above and remain evidence-only until selected-input persistence is approved.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={loadCustomerSiteOptions}
+            disabled={selectorLoading}
+            className="w-fit rounded-md border border-line bg-white px-3 py-2 text-sm font-semibold hover:border-semarts disabled:cursor-not-allowed disabled:bg-ink/10"
+          >
+            {selectorLoading ? "Loading" : "Load sites"}
+          </button>
+        </div>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <label className="block">
+            <span className="text-sm font-medium">UtilityHub user ref</span>
+            <input
+              type="text"
+              value={utilityHubUserId}
+              onChange={(event) => setUtilityHubUserId(event.target.value)}
+              className="mt-2 w-full rounded-md border border-line px-3 py-2 outline-none focus:border-semarts"
+            />
+          </label>
+          <label className="block md:col-span-2">
+            <span className="text-sm font-medium">Available customer/site options</span>
+            <select
+              value={
+                utilityHubCustomerId && utilityHubSiteId
+                  ? `${utilityHubCustomerId}|${utilityHubSiteId}`
+                  : ""
+              }
+              onChange={(event) => selectCustomerSite(event.target.value)}
+              className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 outline-none focus:border-semarts"
+            >
+              <option value="">Select a loaded UtilityHub site</option>
+              {customerSiteOptions.map((option) => (
+                <option
+                  key={`${option.customerId}|${option.siteId}`}
+                  value={`${option.customerId}|${option.siteId}`}
+                >
+                  {option.customerName} / {option.siteName}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        {selectorStatus ? (
+          <p className="mt-3 text-sm font-medium text-semarts-dark">{selectorStatus}</p>
+        ) : null}
+      </section>
 
       <div className="grid gap-5 md:grid-cols-2">
         <label className="block">

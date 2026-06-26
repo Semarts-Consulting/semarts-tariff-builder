@@ -1706,3 +1706,43 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Record selector user test acceptance`
+
+## Package: Live UtilityHub Selector Integration
+
+Files changed:
+
+- `.env.example`
+- `lib/utilityhub-selector-client-config.ts`
+- `lib/utilityhub-selector-server-client.ts`
+- `lib/utilityhub-selector-api-route.ts`
+- `lib/utilityhub-selector-api-client.ts`
+- `app/api/utilityhub/selectors/[resource]/route.ts`
+- `components/UtilityHubSelectorApiStubStatus.tsx`
+- `components/NewProjectForm.tsx`
+- selector tests
+- `docs/LIVE_UTILITYHUB_SELECTOR_INTEGRATION.md`
+- local-only and manager control docs
+
+Reason:
+
+- Consume UtilityHub PR #11 selector envelopes through Tariff Builder's internal selector API.
+- Fix endpoint construction so the UtilityHub base URL appends `customer-site-context`, `meters`, `monthly-consumption`, `boundary-meters` or `reference-data` directly.
+- Add `userId`, `periodStart`, `periodEnd` and `referenceTypes` selector query support.
+- Add a New Project customer/site selector that fills existing UtilityHub refs from live selector options.
+
+Validation performed:
+
+- Focused selector tests passed.
+- Type-check passed.
+- Direct UtilityHub smoke check from this Codex context failed because `http://127.0.0.1:5173` was not reachable here.
+
+Risks or follow-up decisions:
+
+- Nathan must run UtilityHub locally before user testing.
+- Selected UtilityHub records are not persisted as tariff-year input selections yet.
+- UtilityHub meter, consumption, boundary and reference data remain evidence-only.
+- No tariff calculations, imports, exports, storage, shared DTOs or report totals changed.
+
+Suggested commit message:
+
+- `Add live UtilityHub selector integration`
