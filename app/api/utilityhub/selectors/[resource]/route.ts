@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createUtilityHubSelectorApiRouteResult } from "@/lib/utilityhub-selector-api-route";
+import { createLiveUtilityHubSelectorApiRouteResult } from "@/lib/utilityhub-selector-api-route";
 
 type RouteContext = {
   params: Promise<{
@@ -9,7 +9,7 @@ type RouteContext = {
 
 export async function GET(request: Request, context: RouteContext) {
   const params = await context.params;
-  const result = createUtilityHubSelectorApiRouteResult({
+  const result = await createLiveUtilityHubSelectorApiRouteResult({
     resource: params.resource,
     url: request.url
   });

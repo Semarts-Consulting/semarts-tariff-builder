@@ -6,7 +6,8 @@ import type {
 export type UtilityHubSelectorClientMode =
   | "local-contract-envelope"
   | "live-missing-endpoint"
-  | "live-configured-not-implemented";
+  | "live-configured-not-implemented"
+  | "live";
 
 export type UtilityHubSelectorClientEnv = {
   NEXT_PUBLIC_UTILITYHUB_SELECTOR_MODE?: string;
@@ -45,10 +46,9 @@ export function resolveUtilityHubSelectorClientConfig(
   }
 
   return {
-    mode: "live-configured-not-implemented",
+    mode: "live",
     baseUrl,
-    message:
-      "UtilityHub selector live endpoint is configured, but network retrieval is not implemented in this package."
+    message: "UtilityHub selector live endpoint is configured."
   };
 }
 

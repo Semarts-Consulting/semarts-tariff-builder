@@ -18,13 +18,15 @@ describe("UtilityHub selector API client helper", () => {
         scope: {
           customerId: "customer-1",
           siteId: "site-1",
+          userId: "user-admin",
           tariffYear: 2026,
-          referencePeriodStart: "2025-01-01",
-          referencePeriodEnd: "2025-12-31"
+          periodStart: "2025-01-01",
+          periodEnd: "2025-12-31",
+          referenceTypes: "tlm,cpi"
         }
       })
     ).toBe(
-      "/api/utilityhub/selectors/monthly-consumption?customerId=customer-1&siteId=site-1&tariffYear=2026&referencePeriodStart=2025-01-01&referencePeriodEnd=2025-12-31"
+      "/api/utilityhub/selectors/monthly-consumption?customerId=customer-1&siteId=site-1&userId=user-admin&tariffYear=2026&periodStart=2025-01-01&periodEnd=2025-12-31&referenceTypes=tlm%2Ccpi"
     );
   });
 
