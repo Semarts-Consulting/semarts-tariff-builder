@@ -22,6 +22,7 @@ It should not be used to approve unrestricted external production release.
 | --- | --- |
 | Repository branch | `main` after PR #78, or the latest reviewed release-candidate branch. |
 | App route | Local development server. |
+| Local run mode | Supported through browser local storage and built-in fallback/reference data; see `docs/LOCAL_ONLY_RUN_MODE.md`. |
 | Browser | To be recorded during walkthrough. |
 | Tester | To be recorded during walkthrough. |
 | Date/time | To be recorded during walkthrough. |
@@ -43,6 +44,7 @@ It should not be used to approve unrestricted external production release.
 | Open Reports | Stakeholder report view loads. | Pending |
 | Review report evidence sections | Submeter, loss, UtilityHub/Meter Map, methodology cost, asset and supply evidence sections are labelled appropriately. | Pending |
 | Confirm evidence-only boundaries | Evidence-only sections do not appear to change tariff totals automatically. | Pending |
+| Confirm selector API stubs | UtilityHub selector API boundaries return controlled unavailable/evidence-only states until live services are approved. | Pending |
 | Confirm limitations are clear | Remaining blockers are understandable for stakeholder review. | Pending |
 
 ## Required Evidence Notes
@@ -66,6 +68,7 @@ The walkthrough must preserve these boundaries:
 - submeter and TLM evidence remain evidence-only unless reviewed aggregate generation is approved;
 - supply p/kWh affects tariffs only through explicit reviewed application rows;
 - UtilityHub / Meter Map owns shared hierarchy and meter masters;
+- UtilityHub selector route stubs must not be presented as live UtilityHub data integration;
 - methodology cost evidence does not automatically create cost pools;
 - asset evidence does not calculate annuity, depreciation or tariff recovery automatically;
 - formal machine-readable export DTOs remain out of scope.
