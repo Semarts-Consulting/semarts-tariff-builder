@@ -1637,3 +1637,40 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add UtilityHub selector server client boundary`
+
+## Package: Selector API Route Stubs And Local-Only Guardrails
+
+Files changed:
+
+- `app/api/utilityhub/selectors/[resource]/route.ts`
+- `lib/utilityhub-selector-api-route.ts`
+- `lib/utilityhub-selector-api-client.ts`
+- `tests/utilityhub-selector-api-route.test.ts`
+- `tests/utilityhub-selector-api-client.test.ts`
+- `docs/SELECTOR_API_ROUTE_STUBS.md`
+- `docs/LOCAL_ONLY_RUN_MODE.md`
+- first-release walkthrough/readiness docs
+- manager control docs
+
+Reason:
+
+- Add Tariff Builder internal API route stubs for UtilityHub selector resources.
+- Add internal API path helpers for future UI wiring.
+- Record local-only run guardrails because Tariff Builder may be run while cloud services are paused.
+- Prepare walkthrough evidence so selector stubs are not mistaken for live UtilityHub integration.
+
+Validation performed:
+
+- Focused selector API route, API client, server client and config tests passed.
+- Type-check passed after route creation.
+
+Risks or follow-up decisions:
+
+- This package does not call UtilityHub.
+- This package does not wire UI runtime fetch to the internal API route.
+- This package does not persist selected records.
+- Live selector retrieval requires endpoint and authentication confirmation.
+
+Suggested commit message:
+
+- `Add selector API route stubs`
