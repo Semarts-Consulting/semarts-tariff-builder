@@ -1677,3 +1677,32 @@ Risks or follow-up decisions:
 Suggested commit message:
 
 - `Add selector API route stubs`
+
+## Package: Selector User Test Acceptance
+
+Files changed:
+
+- `docs/FIRST_RELEASE_WALKTHROUGH_EVIDENCE.md`
+- `docs/FIRST_RELEASE_READINESS_REVIEW.md`
+- `docs/MVP_TASK_BOARD.md`
+- `docs/PM_CONTROL.md`
+- `docs/LONG_RUN_PROGRESS_LOG.md`
+
+Reason:
+
+- Record that the post-PR #98 user test was completed and accepted.
+- Update release readiness so the walkthrough evidence blocker is no longer pending.
+- Set the next controlled action as a release decision record.
+
+Validation performed:
+
+- Docs-only update; no runtime behaviour changed.
+
+Risks or follow-up decisions:
+
+- This does not approve unrestricted external production release.
+- Live UtilityHub selector retrieval, selected-input persistence, formal exports and tariff-impacting conversions remain separate decisions.
+
+Suggested commit message:
+
+- `Record selector user test acceptance`

@@ -81,12 +81,12 @@ Do not position the current app as externally production-ready if the release re
 | Automatic supply derivation | Tariff Engine plus PM | Approve customer applicability, pass-through, denominator and audit treatment. |
 | Methodology cost mapping | Tariff Engine/Data plus PM | Approve candidate persistence, review status and allocation readiness. |
 | Asset valuation | Tariff Engine plus PM | Approve annual amount or formula-based valuation method. |
-| Browser walkthrough evidence | UI plus QA | Run and record a manual/browser route check on the current build. |
+| Browser walkthrough evidence | UI plus QA | Complete. User test accepted on 2026-06-26 after PR #98. |
 | UtilityHub data ownership and tariff-year model | User plus PM | Align future product shape so UtilityHub owns meters, consumption, boundary meters, supply contracts and reusable reference data while Tariff Builder owns tariff-year methodology and calculation records. |
 
 ## Recommended Next Step
 
-Run a first-release walkthrough against the current app and record the result.
+Record the controlled release decision against the accepted walkthrough result.
 
 Use `docs/FIRST_RELEASE_WALKTHROUGH_EVIDENCE.md` as the walkthrough evidence record.
 
@@ -99,7 +99,7 @@ Minimum walkthrough path:
 5. Confirm report evidence sections.
 6. Confirm import review messages for submeter/TLM duplicates.
 7. Confirm evidence-only boundaries are understandable.
-8. Record defects, blockers and release decision.
+8. Record release decision.
 
 ## Recommended Release Decision
 
@@ -107,8 +107,8 @@ Recommended current decision:
 
 - Accept as first-release candidate for controlled internal and selected stakeholder review.
 - Do not approve unrestricted external production release yet.
-- Complete a manual/browser walkthrough on the current baseline.
-- Then choose whether the next package is tariff model / tariff year contract design, UtilityHub contract integration, formal export design, or targeted walkthrough fixes.
+- Manual/browser walkthrough is accepted.
+- Next choose whether the next package is controlled release decision, UtilityHub live selector integration, selected-input persistence, formal export design, or targeted release hardening.
 
 ## Checks Required Before Final Release Tag
 

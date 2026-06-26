@@ -1,8 +1,8 @@
 # First Release Walkthrough Evidence
 
-Date: 2026-06-24
+Date: 2026-06-26
 
-Status: prepared; manual/browser walkthrough pending.
+Status: accepted for controlled walkthrough.
 
 ## Purpose
 
@@ -20,32 +20,32 @@ It should not be used to approve unrestricted external production release.
 
 | Item | Evidence |
 | --- | --- |
-| Repository branch | `main` after PR #78, or the latest reviewed release-candidate branch. |
+| Repository branch | `main` after PR #98 selector stub UI release batch. |
 | App route | Local development server. |
 | Local run mode | Supported through browser local storage and built-in fallback/reference data; see `docs/LOCAL_ONLY_RUN_MODE.md`. |
-| Browser | To be recorded during walkthrough. |
-| Tester | To be recorded during walkthrough. |
-| Date/time | To be recorded during walkthrough. |
+| Browser | User local browser. |
+| Tester | Nathan. |
+| Date/time | 2026-06-26, after PR #98 merge. |
 
 ## Minimum Walkthrough Path
 
 | Step | Expected result | Result |
 | --- | --- | --- |
-| Open the app and project list | App loads without runtime error. | Pending |
-| Open the demo/private network project | Project context is visible. | Pending |
-| Review aggregate customer-class inputs | Customer classes, annual kWh, customer count and peak demand are understandable. | Pending |
-| Review cost pools | Recoverable cost pools and recoverable percentages are visible. | Pending |
-| Review allocation methods | Allocation basis and customer-class shares are visible. | Pending |
-| Open tariff calculations | Tariff outputs calculate from aggregate inputs. | Pending |
-| Review audit trace | Revenue requirement, allocation, rate and recovery trace entries are visible. | Pending |
-| Review supply energy p/kWh application | Explicit reviewed supply p/kWh impact is understandable and not presented as automatic derivation. | Pending |
-| Open Data Inputs > Site Submeters | Submeter register, consumption, TLM and validation sections are visible. | Pending |
-| Review import duplicate handling | Duplicate review messages are understandable where duplicate rows are present. | Pending |
-| Open Reports | Stakeholder report view loads. | Pending |
-| Review report evidence sections | Submeter, loss, UtilityHub/Meter Map, methodology cost, asset and supply evidence sections are labelled appropriately. | Pending |
-| Confirm evidence-only boundaries | Evidence-only sections do not appear to change tariff totals automatically. | Pending |
-| Confirm selector API stubs | UtilityHub selector API cards show controlled unavailable/evidence-only states until live services are approved. | Pending |
-| Confirm limitations are clear | Remaining blockers are understandable for stakeholder review. | Pending |
+| Open the app and project list | App loads without runtime error. | Accepted |
+| Open the demo/private network project | Project context is visible. | Accepted |
+| Review aggregate customer-class inputs | Customer classes, annual kWh, customer count and peak demand are understandable. | Accepted |
+| Review cost pools | Recoverable cost pools and recoverable percentages are visible. | Accepted |
+| Review allocation methods | Allocation basis and customer-class shares are visible. | Accepted |
+| Open tariff calculations | Tariff outputs calculate from aggregate inputs. | Accepted |
+| Review audit trace | Revenue requirement, allocation, rate and recovery trace entries are visible. | Accepted |
+| Review supply energy p/kWh application | Explicit reviewed supply p/kWh impact is understandable and not presented as automatic derivation. | Accepted |
+| Open Data Inputs > Site Submeters | Submeter register, consumption, TLM and validation sections are visible. | Accepted |
+| Review import duplicate handling | Duplicate review messages are understandable where duplicate rows are present. | Accepted |
+| Open Reports | Stakeholder report view loads. | Accepted |
+| Review report evidence sections | Submeter, loss, UtilityHub/Meter Map, methodology cost, asset and supply evidence sections are labelled appropriately. | Accepted |
+| Confirm evidence-only boundaries | Evidence-only sections do not appear to change tariff totals automatically. | Accepted |
+| Confirm selector API stubs | UtilityHub selector API cards show controlled unavailable/evidence-only states until live services are approved. | Accepted |
+| Confirm limitations are clear | Remaining blockers are understandable for stakeholder review. | Accepted |
 
 ## Required Evidence Notes
 
@@ -84,8 +84,14 @@ Use one of these after the walkthrough:
 | Fixes required before walkthrough | A defect blocks controlled stakeholder review. | Prioritise fixes before release decision. |
 | Scope decision required | Walkthrough raises a business or methodology decision. | Record decision question and stop implementation. |
 
+## Result
+
+Accepted for controlled walkthrough.
+
+No defect was reported from the user test.
+
 ## Current Status
 
-No browser walkthrough result is recorded in this package.
+The browser walkthrough result is recorded as accepted.
 
-Recommended next action: run the app locally and complete the walkthrough table above, then record a release decision or targeted fix list.
+Recommended next action: record the controlled release decision, then decide whether the next workstream is live UtilityHub selector integration, selected-input persistence, or release hardening.
