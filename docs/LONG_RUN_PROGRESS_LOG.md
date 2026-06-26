@@ -1643,6 +1643,8 @@ Suggested commit message:
 Files changed:
 
 - `app/api/utilityhub/selectors/[resource]/route.ts`
+- `components/UtilityHubSelectorApiStubStatus.tsx`
+- selector panel components
 - `lib/utilityhub-selector-api-route.ts`
 - `lib/utilityhub-selector-api-client.ts`
 - `tests/utilityhub-selector-api-route.test.ts`
@@ -1656,6 +1658,7 @@ Reason:
 
 - Add Tariff Builder internal API route stubs for UtilityHub selector resources.
 - Add internal API path helpers for future UI wiring.
+- Wire existing selector panels to show internal API stub status without changing selected data or calculations.
 - Record local-only run guardrails because Tariff Builder may be run while cloud services are paused.
 - Prepare walkthrough evidence so selector stubs are not mistaken for live UtilityHub integration.
 

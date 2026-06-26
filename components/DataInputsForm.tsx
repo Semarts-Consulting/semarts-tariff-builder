@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { UtilityHubSelectorApiStubStatus } from "@/components/UtilityHubSelectorApiStubStatus";
 import {
   createDataInputRow,
   getProjectDataInputs,
@@ -185,6 +186,11 @@ export function DataInputsForm({ projectId }: DataInputsFormProps) {
             <p className="font-medium text-ink/60">Selector issues</p>
             <p className="mt-1">{meterConsumptionSelectorState.selectorValidationIssueCount}</p>
           </div>
+          <UtilityHubSelectorApiStubStatus label="Meter API" resource="meters" />
+          <UtilityHubSelectorApiStubStatus
+            label="Consumption API"
+            resource="monthly-consumption"
+          />
         </div>
         <ul className="mt-3 space-y-1 text-sm text-ink/70">
           {meterConsumptionSelectorState.messages.map((message) => (

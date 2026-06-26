@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { CustomerClassTableEditor } from "@/components/CustomerClassTableEditor";
+import { UtilityHubSelectorApiStubStatus } from "@/components/UtilityHubSelectorApiStubStatus";
 import { getCustomerSiteSelectorResult } from "@/lib/customer-site-selector-service";
 import { summariseCustomerSiteSelectorState } from "@/lib/customer-site-selector-state";
 import {
@@ -275,6 +276,17 @@ export function ProjectSettingsForm({ projectId }: ProjectSettingsFormProps) {
               <p className="font-medium text-ink/60">Service mode</p>
               <p className="mt-1">Local contract envelope</p>
             </div>
+            <UtilityHubSelectorApiStubStatus
+              label="Internal API"
+              resource="customer-site-context"
+              scope={{
+                customerId: project.utilityHubCustomerId,
+                siteId: project.utilityHubSiteId,
+                tariffYear: project.tariffYear,
+                referencePeriodStart: project.referencePeriodStart,
+                referencePeriodEnd: project.referencePeriodEnd
+              }}
+            />
           </div>
         </div>
 

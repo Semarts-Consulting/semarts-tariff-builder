@@ -6,9 +6,39 @@ import {
 } from "@/lib/utilityhub-selector-api-route";
 
 describe("UtilityHub selector API route helper", () => {
+  const resources = [
+    "customer-site-context",
+    "meters",
+    "monthly-consumption",
+    "boundary-meters",
+    "reference-data"
+  ] as const;
+
   it("accepts only known selector resources", () => {
     expect(isUtilityHubSelectorResource("meters")).toBe(true);
     expect(isUtilityHubSelectorResource("unknown")).toBe(false);
+  });
+
+  it("returns controlled unavailable envelopes for every supported selector resource", () => {
+    for (const resource of resources) {
+      const result = createUtilityHubSelectorApiRouteResult({
+        resource,
+        url: `https://tariff-builder.example.test/api/utilityhub/selectors/${resource}`,
+        config: {
+          mode: "local-contract-envelope",
+          message: "Local mode."
+        }
+      });
+
+      expect(result.status).toBe(200);
+      expect(result.body).toMatchObject({
+        resource,
+        envelope: {
+          state: "unavailable",
+          items: []
+        }
+      });
+    }
   });
 
   it("extracts tariff-year selector scope from request URLs", () => {

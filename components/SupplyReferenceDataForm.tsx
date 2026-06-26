@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { UtilityHubSelectorApiStubStatus } from "@/components/UtilityHubSelectorApiStubStatus";
 import { summariseReferenceDataSelectorState } from "@/lib/boundary-reference-selector-state";
 import { getReferenceDataSelectorResult } from "@/lib/reference-data-selector-service";
 import {
@@ -158,6 +159,10 @@ export function SupplyReferenceDataForm() {
             <p className="font-medium text-ink/60">Selector issues</p>
             <p className="mt-1">{referenceDataSelectorState.selectorValidationIssueCount}</p>
           </div>
+          <UtilityHubSelectorApiStubStatus
+            label="Reference API"
+            resource="reference-data"
+          />
         </div>
         <ul className="mt-3 space-y-1 text-sm text-ink/70">
           {referenceDataSelectorState.messages.map((message) => (

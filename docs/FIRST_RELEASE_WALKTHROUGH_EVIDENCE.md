@@ -44,7 +44,7 @@ It should not be used to approve unrestricted external production release.
 | Open Reports | Stakeholder report view loads. | Pending |
 | Review report evidence sections | Submeter, loss, UtilityHub/Meter Map, methodology cost, asset and supply evidence sections are labelled appropriately. | Pending |
 | Confirm evidence-only boundaries | Evidence-only sections do not appear to change tariff totals automatically. | Pending |
-| Confirm selector API stubs | UtilityHub selector API boundaries return controlled unavailable/evidence-only states until live services are approved. | Pending |
+| Confirm selector API stubs | UtilityHub selector API cards show controlled unavailable/evidence-only states until live services are approved. | Pending |
 | Confirm limitations are clear | Remaining blockers are understandable for stakeholder review. | Pending |
 
 ## Required Evidence Notes

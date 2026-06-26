@@ -34,7 +34,7 @@ Recommended status: first-release candidate for controlled internal and selected
 | Submeter and TLM data | Evidence-only | Decision pack blocks tariff-driving use until reviewed aggregate generation is approved. | Do not present as tariff-driving. |
 | Supply energy | Controlled tariff impact only | Explicit reviewed p/kWh rows can affect Energy / kWh; automatic derivation remains blocked. | Demo carefully; do not imply full supply integration. |
 | UtilityHub / Meter Map | Contract-aligned, not integrated | Tariff Builder must consume shared IDs and not create local masters. | Production integration depends on UtilityHub contracts. |
-| Selector API boundary | Stubbed only | Internal route stubs and client boundaries exist, but live UtilityHub fetch/auth are not implemented. | Suitable for controlled local walkthrough; not live integration proof. |
+| Selector API boundary | Stubbed only | Internal route stubs, client boundaries and UI stub-status cards exist, but live UtilityHub fetch/auth are not implemented. | Suitable for controlled local walkthrough; not live integration proof. |
 | Methodology cost evidence | Evidence-only | Mapping proposal recommends reviewed cost-pool candidates before tariff impact. | Do not auto-create cost pools. |
 | Asset evidence | Evidence-only | Valuation pack recommends approved annual amounts before formula-based valuation. | Do not imply annuity/depreciation calculation. |
 | Export DTOs | Not ready | Report view is stakeholder-readable but not a stable export contract. | Needs separate package if required for release. |
