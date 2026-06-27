@@ -30,6 +30,23 @@ describe("UtilityHub selector API client helper", () => {
     );
   });
 
+  it("builds boundary meter selector paths with customer, site and reference period scope", () => {
+    expect(
+      buildInternalUtilityHubSelectorApiPath({
+        resource: "boundary-meters",
+        scope: {
+          customerId: "customer-manchester-airport",
+          siteId: "location-man-t1-retail-1",
+          userId: "user-admin",
+          periodStart: "2026-04-01",
+          periodEnd: "2027-03-31"
+        }
+      })
+    ).toBe(
+      "/api/utilityhub/selectors/boundary-meters?customerId=customer-manchester-airport&siteId=location-man-t1-retail-1&userId=user-admin&periodStart=2026-04-01&periodEnd=2027-03-31"
+    );
+  });
+
   it("reads unavailable selector states from the internal API stub", async () => {
     const status = await readInternalUtilityHubSelectorApiStub(
       { resource: "meters" },

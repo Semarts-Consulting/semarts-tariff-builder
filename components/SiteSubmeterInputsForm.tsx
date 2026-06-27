@@ -9,6 +9,7 @@ import { getBoundaryMeterSelectorResult } from "@/lib/boundary-meter-selector-se
 import { summariseBoundaryMeterSelectorState } from "@/lib/boundary-reference-selector-state";
 import { isProjectArchived } from "@/lib/project-state";
 import {
+  getProjectById,
   getProjectMethodologyInputs,
   saveProjectMethodologyInputs
 } from "@/lib/project-storage";
@@ -144,6 +145,7 @@ function workbookRowsToSheetData(template: WorkbookTemplate): SheetData {
 }
 
 export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProps) {
+  const project = getProjectById(projectId);
   const [inputs, setInputs] = useState<ProjectMethodologyInputs>(() =>
     getProjectMethodologyInputs(projectId)
   );
@@ -549,6 +551,13 @@ export function SiteSubmeterInputsForm({ projectId }: SiteSubmeterInputsFormProp
           <UtilityHubSelectorApiStubStatus
             label="Boundary meter API"
             resource="boundary-meters"
+            scope={{
+              customerId: project.utilityHubCustomerId,
+              siteId: project.utilityHubSiteId,
+              userId: "user-admin",
+              periodStart: project.referencePeriodStart,
+              periodEnd: project.referencePeriodEnd
+            }}
           />
         </div>
         <ul className="mt-3 space-y-1 text-sm text-ink/70">
